@@ -166,6 +166,13 @@ async function tmdb(path) {
   return r.json();
 }
 
+// TMDB fetch without language override (needed for external_ids)
+async function tmdbRaw(path) {
+  const url = `${TMDB_BASE}${path}`;
+  const r = await fetch(url, { headers: TMDB_HEADERS });
+  return r.json();
+}
+
 // Trending / popular
 app.get('/api/media/trending', async (req, res) => {
   try {
@@ -240,16 +247,27 @@ app.get('/api/media/catalogue/:type', async (req, res) => {
 app.get('/api/media/imdb/:type/:id', async (req, res) => {
   try {
     const { type, id } = req.params;
-    const extIds = await tmdb(`/${type}/${id}/external_ids`);
-    const imdbId = extIds.imdb_id;
-    if (!imdbId || !process.env.OMDB_KEY) return res.json({ imdbRating: null });
 
-    const r = await fetch(`https://www.omdbapi.com/?i=${imdbId}&apikey=${process.env.OMDB_KEY}`);
+    // Use tmdbRaw — external_ids doesn't need/support language param
+    const extIds = await tmdbRaw(`/${type}/${id}/external_ids`);
+    const imdbId = extIds.imdb_id;
+
+    console.log(`[IMDb] type=${type} id=${id} imdbId=${imdbId} OMDB_KEY=${process.env.OMDB_KEY ? 'set' : 'MISSING'}`);
+
+    if (!imdbId) return res.json({ imdbRating: null, reason: 'no_imdb_id' });
+    if (!process.env.OMDB_KEY) return res.json({ imdbRating: null, reason: 'no_omdb_key' });
+
+    const omdbUrl = `https://www.omdbapi.com/?i=${imdbId}&apikey=${process.env.OMDB_KEY}`;
+    const r = await fetch(omdbUrl);
     const d = await r.json();
+
+    console.log(`[IMDb] OMDB response: Response=${d.Response} imdbRating=${d.imdbRating} Error=${d.Error}`);
+
     const rating = d.imdbRating && d.imdbRating !== 'N/A' ? parseFloat(d.imdbRating) : null;
     res.json({ imdbRating: rating, imdbId });
   } catch (e) {
-    res.json({ imdbRating: null });
+    console.error('[IMDb] error:', e.message);
+    res.json({ imdbRating: null, error: e.message });
   }
 });
 
