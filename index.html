@@ -143,12 +143,95 @@ body::before {
   padding: 100px 40px 60px;
   border-bottom: 1px solid var(--line);
   position: relative; overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 60px;
+  align-items: center;
+  min-height: calc(100vh - 60px);
 }
-.hero-bg {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(255,255,255,0.03) 0%, transparent 70%);
-  pointer-events: none;
+.hero-left { }
+.hero-right {
+  display: flex; flex-direction: column; gap: 20px;
+  padding-top: 40px;
 }
+
+/* hero right decoration */
+.hero-stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+}
+.hero-stat-cell {
+  border: 1px solid var(--line);
+  padding: 20px 24px;
+  transition: border-color 0.3s;
+}
+.hero-stat-cell:hover { border-color: var(--mid); }
+.hero-stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 52px; line-height: 1;
+  color: var(--white);
+}
+.hero-stat-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--dim); margin-top: 4px;
+}
+
+.hero-circles {
+  display: flex; gap: 16px; align-items: center;
+  padding: 24px;
+  border: 1px solid var(--line);
+}
+.hero-circle {
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.hero-circle-inner {
+  font-family: 'Bebas Neue', sans-serif;
+  color: var(--dim); text-align: center; line-height: 1;
+}
+.hero-circle-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--dim);
+}
+
+.hero-score-preview {
+  border: 1px solid var(--line);
+  padding: 20px 24px;
+}
+.hero-score-preview-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 14px;
+}
+.hero-score-bars { display: flex; flex-direction: column; gap: 8px; }
+.hero-score-bar-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.hero-score-bar-name {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: var(--dim); width: 90px; flex-shrink: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hero-score-bar-track {
+  flex: 1; height: 1px; background: var(--line); position: relative;
+}
+.hero-score-bar-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: var(--white);
+  animation: barGrow 1.5s cubic-bezier(0.25,0.46,0.45,0.94) both;
+}
+@keyframes barGrow {
+  from { width: 0 !important; }
+}
+.hero-score-bar-val {
+  font-family: 'Bebas Neue', sans-serif; font-size: 16px;
+  color: var(--dim); width: 20px; text-align: right;
+}
+
 .hero-label {
   font-family: 'DM Mono', monospace; font-size: 10px;
   letter-spacing: 0.35em; text-transform: uppercase;
@@ -593,19 +676,127 @@ body::before {
 
 /* ── GENRE SECTIONS ── */
 .genre-sections { }
-.genre-section { padding: 0 40px 48px; }
+.genre-section { padding: 0 0 0; margin-bottom: 0; }
+
+.genre-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 32px 40px 16px;
+  border-top: 1px solid var(--line);
+}
 .genre-section-label {
   font-family: 'DM Mono', monospace; font-size: 10px;
   letter-spacing: 0.3em; text-transform: uppercase;
-  color: var(--dim); margin-bottom: 20px;
-  border-top: 1px solid var(--line); padding-top: 32px;
+  color: var(--dim);
 }
-.cards-row {
+.genre-see-all {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--dim); cursor: pointer;
+  border: 1px solid var(--line); padding: 5px 14px;
+  transition: color 0.2s, border-color 0.2s;
+  background: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.genre-see-all:hover { color: var(--white); border-color: var(--white); }
+
+/* full-width horizontal scroll row */
+.cards-scroll-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 40px 28px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mid) transparent;
+}
+.cards-scroll-wrap::-webkit-scrollbar { height: 2px; }
+.cards-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
+.cards-scroll-wrap::-webkit-scrollbar-thumb { background: var(--mid); }
+
+.cards-scroll-row {
+  display: flex; gap: 2px;
+  width: max-content;
+}
+.cards-scroll-row .card {
+  width: 140px; flex-shrink: 0;
+  aspect-ratio: 2/3;
+}
+
+/* ── CATALOGUE PAGE ── */
+#catalogue-page { }
+.catalogue-header {
+  padding: 28px 40px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.catalogue-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 32px;
+  letter-spacing: 0.04em; flex: 1;
+}
+.filter-wrap {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+}
+.filter-select {
+  background: var(--grey); border: 1px solid var(--line);
+  color: var(--dim); padding: 6px 12px;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; outline: none;
+  transition: border-color 0.2s, color 0.2s;
+  -webkit-appearance: none; appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.filter-select:hover, .filter-select:focus { border-color: var(--dim); color: var(--white); }
+.filter-input {
+  background: var(--grey); border: 1px solid var(--line);
+  color: var(--white); padding: 6px 12px;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; outline: none; width: 80px;
+  transition: border-color 0.2s;
+}
+.filter-input:focus { border-color: var(--dim); }
+.filter-input::placeholder { color: var(--dim); }
+.filter-btn {
+  background: var(--white); border: none;
+  color: var(--black); padding: 7px 18px;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.filter-btn:hover { opacity: 0.85; }
+.catalogue-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 2px;
-  overflow: hidden;
+  padding: 24px 40px;
 }
+.catalogue-pagination {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 24px 40px 48px;
+  font-family: 'DM Mono', monospace; font-size: 11px; color: var(--dim);
+}
+.page-btn {
+  background: none; border: 1px solid var(--line);
+  color: var(--dim); padding: 6px 16px;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: border-color 0.2s, color 0.2s;
+}
+.page-btn:hover:not(:disabled) { border-color: var(--white); color: var(--white); }
+.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+  .cards-scroll-wrap { padding: 0 20px 20px; }
+  .genre-section-header { padding: 24px 20px 12px; }
+  .catalogue-grid { padding: 16px 20px; }
+  .catalogue-header { padding: 20px; }
+  .hero { grid-template-columns: 1fr; min-height: auto; }
+  .hero-right { display: none; }
+}
+
 
 /* ── REVIEW CRITERIA NAMED BARS ── */
 .review-criteria-named {
@@ -730,16 +921,89 @@ body::before {
 <!-- HOME PAGE -->
 <div id="home" class="page active">
   <div class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-label">// платформа оценок</div>
-    <h1 class="hero-title">
-      ТВОИ<br/>
-      <em>ОЦЕНКИ</em><br/>
-      ИМЕЮТ<br/>
-      ВЕС
-    </h1>
-    <p class="hero-sub">Математическая система оценки фильмов, сериалов и игр. Не просто звёзды — настоящий анализ.</p>
-    <div class="hero-num">110</div>
+    <div class="hero-left">
+      <div class="hero-bg"></div>
+      <div class="hero-label">// платформа оценок</div>
+      <h1 class="hero-title">
+        ТВОИ<br/>
+        <em>ОЦЕНКИ</em><br/>
+        ИМЕЮТ<br/>
+        ВЕС
+      </h1>
+      <p class="hero-sub">Математическая система оценки фильмов, сериалов и игр. Не просто звёзды — настоящий анализ.</p>
+      <div class="hero-num">110</div>
+    </div>
+
+    <div class="hero-right">
+      <!-- stat grid -->
+      <div class="hero-stat-grid">
+        <div class="hero-stat-cell">
+          <div class="hero-stat-num">110</div>
+          <div class="hero-stat-label">Макс. балл</div>
+        </div>
+        <div class="hero-stat-cell">
+          <div class="hero-stat-num">10</div>
+          <div class="hero-stat-label">Критериев</div>
+        </div>
+        <div class="hero-stat-cell">
+          <div class="hero-stat-num" id="hero-reviews-count">—</div>
+          <div class="hero-stat-label">Отзывов</div>
+        </div>
+        <div class="hero-stat-cell">
+          <div class="hero-stat-num" id="hero-users-count">—</div>
+          <div class="hero-stat-label">Участников</div>
+        </div>
+      </div>
+
+      <!-- circles -->
+      <div class="hero-circles">
+        <div class="hero-circle" style="width:72px;height:72px">
+          <div class="hero-circle-inner" style="font-size:22px">1.3×</div>
+        </div>
+        <div class="hero-circle" style="width:52px;height:52px">
+          <div class="hero-circle-inner" style="font-size:16px">1.2×</div>
+        </div>
+        <div class="hero-circle" style="width:40px;height:40px">
+          <div class="hero-circle-inner" style="font-size:13px">1.1×</div>
+        </div>
+        <div class="hero-circle" style="width:32px;height:32px">
+          <div class="hero-circle-inner" style="font-size:11px">1×</div>
+        </div>
+        <div class="hero-circle-label">Множители весов</div>
+      </div>
+
+      <!-- sample score bars -->
+      <div class="hero-score-preview">
+        <div class="hero-score-preview-label">// пример оценки</div>
+        <div class="hero-score-bars">
+          <div class="hero-score-bar-row">
+            <div class="hero-score-bar-name">Сценарий</div>
+            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:90%"></div></div>
+            <div class="hero-score-bar-val">9</div>
+          </div>
+          <div class="hero-score-bar-row">
+            <div class="hero-score-bar-name">Персонажи</div>
+            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:80%"></div></div>
+            <div class="hero-score-bar-val">8</div>
+          </div>
+          <div class="hero-score-bar-row">
+            <div class="hero-score-bar-name">Атмосфера</div>
+            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:95%"></div></div>
+            <div class="hero-score-bar-val">9.5</div>
+          </div>
+          <div class="hero-score-bar-row">
+            <div class="hero-score-bar-name">Режиссура</div>
+            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:75%"></div></div>
+            <div class="hero-score-bar-val">7.5</div>
+          </div>
+          <div class="hero-score-bar-row">
+            <div class="hero-score-bar-name">Саундтрек</div>
+            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:85%"></div></div>
+            <div class="hero-score-bar-val">8.5</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="tabs">
@@ -757,6 +1021,43 @@ body::before {
   <div class="genre-sections" id="genre-sections">
     <!-- filled by JS -->
   </div>
+</div>
+
+<!-- CATALOGUE PAGE -->
+<div id="catalogue-page" class="page">
+  <div class="back-btn" onclick="showPage('home')">← Назад</div>
+  <div class="catalogue-header">
+    <div class="catalogue-title" id="catalogue-title">КАТАЛОГ</div>
+    <div class="filter-wrap">
+      <select class="filter-select" id="filter-genre" onchange="applyFilters()">
+        <option value="">Все жанры</option>
+        <option value="28">Боевик</option>
+        <option value="27">Хоррор</option>
+        <option value="18">Драма</option>
+        <option value="53">Триллер</option>
+        <option value="878">Фантастика</option>
+        <option value="35">Комедия</option>
+        <option value="80">Криминал</option>
+        <option value="16">Анимация</option>
+        <option value="12">Приключения</option>
+        <option value="10749">Романтика</option>
+        <option value="9648">Мистика</option>
+        <option value="14">Фэнтези</option>
+      </select>
+      <input type="number" class="filter-input" id="filter-year-from" placeholder="С года" min="1900" max="2030" onchange="applyFilters()"/>
+      <input type="number" class="filter-input" id="filter-year-to" placeholder="По год" min="1900" max="2030" onchange="applyFilters()"/>
+      <select class="filter-select" id="filter-sort" onchange="applyFilters()">
+        <option value="popularity.desc">Популярность</option>
+        <option value="vote_average.desc">Рейтинг TMDB</option>
+        <option value="release_date.desc">Дата (новые)</option>
+        <option value="release_date.asc">Дата (старые)</option>
+      </select>
+    </div>
+  </div>
+  <div class="catalogue-grid" id="catalogue-grid">
+    <div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>
+  </div>
+  <div class="catalogue-pagination" id="catalogue-pagination"></div>
 </div>
 
 <!-- MEDIA DETAIL PAGE -->
@@ -794,7 +1095,30 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
   }
   loadTrending();
+  loadHeroStats();
 });
+
+// ─── HERO STATS ──────────────────────────────────────────────────────────────
+async function loadHeroStats() {
+  try {
+    const data = await api('/api/stats');
+    if (data.reviews !== undefined) {
+      animateCount('hero-reviews-count', data.reviews);
+      animateCount('hero-users-count', data.users);
+    }
+  } catch(e) {}
+}
+function animateCount(id, target) {
+  const el = document.getElementById(id);
+  if (!el || !target) return;
+  let start = 0;
+  const step = Math.ceil(target / 40);
+  const iv = setInterval(() => {
+    start = Math.min(start + step, target);
+    el.textContent = start;
+    if (start >= target) clearInterval(iv);
+  }, 30);
+}
 
 // ─── CURSOR ──────────────────────────────────────────────────────────────────
 function initCursor() {
@@ -826,7 +1150,11 @@ function initCursor() {
 // ─── PAGES ───────────────────────────────────────────────────────────────────
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(name === 'media' ? 'media-page' : name === 'profile' ? 'profile-page' : 'home').classList.add('active');
+  const pageId = name === 'media' ? 'media-page'
+               : name === 'profile' ? 'profile-page'
+               : name === 'catalogue' ? 'catalogue-page'
+               : 'home';
+  document.getElementById(pageId).classList.add('active');
   window.scrollTo(0, 0);
   if (name === 'profile') loadProfile();
 }
@@ -840,29 +1168,105 @@ function switchTab(type, btn) {
 }
 
 // ─── GENRE SECTIONS ───────────────────────────────────────────────────────────
+const GENRE_DEFS = [
+  { key: 'newReleases', label: '// новинки',    genreId: '',   sortKey: 'release_date.desc' },
+  { key: 'action',      label: '// боевики',    genreId: '28', sortKey: 'popularity.desc' },
+  { key: 'horror',      label: '// хорроры',    genreId: '27', sortKey: 'popularity.desc' },
+  { key: 'drama',       label: '// драма',      genreId: '18', sortKey: 'popularity.desc' },
+  { key: 'thriller',    label: '// триллеры',   genreId: '53', sortKey: 'popularity.desc' },
+  { key: 'scifi',       label: '// фантастика', genreId: '878',sortKey: 'popularity.desc' },
+  { key: 'comedy',      label: '// комедии',    genreId: '35', sortKey: 'popularity.desc' },
+  { key: 'crime',       label: '// криминал',   genreId: '80', sortKey: 'popularity.desc' },
+  { key: 'animation',   label: '// анимация',   genreId: '16', sortKey: 'popularity.desc' }
+];
+
 async function loadGenreSections(mediaType) {
   const wrap = document.getElementById('genre-sections');
   wrap.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
   try {
     const data = await api(`/api/media/genres/${mediaType}`);
-    const defs = [
-      { key: 'action',      label: '// боевики' },
-      { key: 'horror',      label: '// хорроры' },
-      { key: 'newReleases', label: '// новинки' }
-    ];
-    wrap.innerHTML = defs.map(({ key, label }) => {
+    wrap.innerHTML = GENRE_DEFS.map(({ key, label, genreId, sortKey }) => {
       const items = data[key] || [];
       if (!items.length) return '';
-      const cards = items.map(item => cardHTML(item, mediaType)).join('');
+      const cards = items.map(item => `
+        <div class="card" onclick="openMedia(${item.id}, '${mediaType}')">
+          ${item.poster_path ? `<img src="https://image.tmdb.org/t/p/w342${item.poster_path}" alt="${escHtml(item.title||item.name||'')}" loading="lazy"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
+          <div class="card-overlay">
+            <div class="card-title">${escHtml(item.title||item.name||'')}</div>
+            ${(item.release_date||item.first_air_date||'').slice(0,4) ? `<div class="card-year">${(item.release_date||item.first_air_date||'').slice(0,4)}</div>` : ''}
+          </div>
+          ${item.vote_average ? `<div class="card-score-badge">${item.vote_average.toFixed(1)}</div>` : ''}
+        </div>`).join('');
       return `
         <div class="genre-section">
-          <div class="genre-section-label">${label}</div>
-          <div class="cards-row">${cards}</div>
+          <div class="genre-section-header">
+            <div class="genre-section-label">${label}</div>
+            <button class="genre-see-all" onclick="openCatalogue('${mediaType}', '${genreId}', '${sortKey}', '${label.replace(/\/\/ /,'')}')">Все →</button>
+          </div>
+          <div class="cards-scroll-wrap">
+            <div class="cards-scroll-row">${cards}</div>
+          </div>
         </div>`;
     }).join('');
   } catch(e) {
     wrap.innerHTML = '';
   }
+}
+
+// ─── CATALOGUE ────────────────────────────────────────────────────────────────
+let catalogueState = { mediaType: 'movie', genre: '', sort: 'popularity.desc', page: 1, totalPages: 1 };
+
+function openCatalogue(mediaType, genreId, sort, label) {
+  catalogueState = { mediaType, genre: genreId, sort: sort || 'popularity.desc', page: 1, totalPages: 1 };
+  document.getElementById('catalogue-title').textContent = label ? label.toUpperCase() : 'КАТАЛОГ';
+  document.getElementById('filter-genre').value = genreId;
+  document.getElementById('filter-sort').value = sort || 'popularity.desc';
+  document.getElementById('filter-year-from').value = '';
+  document.getElementById('filter-year-to').value = '';
+  showPage('catalogue');
+  fetchCatalogue();
+}
+
+function applyFilters() {
+  catalogueState.genre    = document.getElementById('filter-genre').value;
+  catalogueState.sort     = document.getElementById('filter-sort').value;
+  catalogueState.page     = 1;
+  fetchCatalogue();
+}
+
+async function fetchCatalogue() {
+  const grid = document.getElementById('catalogue-grid');
+  grid.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  try {
+    const { mediaType, genre, sort, page } = catalogueState;
+    const yearFrom = document.getElementById('filter-year-from').value;
+    const yearTo   = document.getElementById('filter-year-to').value;
+    let qs = `/api/media/catalogue/${mediaType}?sort=${sort}&page=${page}`;
+    if (genre)   qs += `&genre=${genre}`;
+    if (yearFrom) qs += `&year_from=${yearFrom}`;
+    if (yearTo)   qs += `&year_to=${yearTo}`;
+    const data = await api(qs);
+    catalogueState.totalPages = data.total_pages;
+    grid.innerHTML = (data.results||[]).map(item => cardHTML(item, mediaType)).join('') || '<div class="empty-state"><p>Ничего не найдено</p></div>';
+    renderCataloguePagination();
+  } catch(e) {
+    grid.innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
+  }
+}
+
+function renderCataloguePagination() {
+  const { page, totalPages } = catalogueState;
+  const el = document.getElementById('catalogue-pagination');
+  el.innerHTML = `
+    <button class="page-btn" onclick="cataloguePage(${page-1})" ${page<=1?'disabled':''}>← Назад</button>
+    <span>${page} / ${Math.min(totalPages, 500)}</span>
+    <button class="page-btn" onclick="cataloguePage(${page+1})" ${page>=totalPages?'disabled':''}>Вперёд →</button>`;
+}
+
+function cataloguePage(p) {
+  catalogueState.page = p;
+  fetchCatalogue();
+  document.getElementById('catalogue-page').scrollIntoView({ behavior: 'smooth' });
 }
 
 // ─── TRENDING ────────────────────────────────────────────────────────────────
@@ -951,7 +1355,7 @@ async function openMedia(id, type) {
       api(`/api/media/${type}/${id}`),
       api(`/api/reviews/${type}/${id}`),
       api(`/api/criteria/${type}`),
-      api(`/api/media/${type}/${id}/imdb`).catch(() => ({ imdbRating: null }))
+      api(`/api/media/imdb/${type}/${id}`).catch(() => ({ imdbRating: null }))
     ]);
     state.currentMedia = { id, type, media };
     state.criteria = criteriaList;
