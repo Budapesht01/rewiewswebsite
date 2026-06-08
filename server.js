@@ -183,30 +183,61 @@ app.get('/api/media/trending', async (req, res) => {
 });
 
 // Genre sections for home page
-// genre IDs: 28=Action, 27=Horror, 35=Comedy, 18=Drama, 10749=Romance, 878=Sci-Fi
+// genre IDs: 28=Action, 27=Horror, 35=Comedy, 18=Drama, 53=Thriller, 878=Sci-Fi, 16=Animation, 80=Crime
 app.get('/api/media/genres/:type', async (req, res) => {
   try {
-    const { type } = req.params; // 'movie' or 'tv'
+    const { type } = req.params;
     const endpoint = type === 'tv' ? 'tv' : 'movie';
 
-    const [action, horror, newReleases] = await Promise.all([
+    const [newReleases, action, horror, drama, thriller, scifi, comedy, crime, animation] = await Promise.all([
+      tmdb(`/discover/${endpoint}?sort_by=release_date.desc&vote_count.gte=100`),
       tmdb(`/discover/${endpoint}?with_genres=28&sort_by=popularity.desc`),
       tmdb(`/discover/${endpoint}?with_genres=27&sort_by=popularity.desc`),
-      tmdb(`/discover/${endpoint}?sort_by=release_date.desc&vote_count.gte=50`)
+      tmdb(`/discover/${endpoint}?with_genres=18&sort_by=popularity.desc`),
+      tmdb(`/discover/${endpoint}?with_genres=53&sort_by=popularity.desc`),
+      tmdb(`/discover/${endpoint}?with_genres=878&sort_by=popularity.desc`),
+      tmdb(`/discover/${endpoint}?with_genres=35&sort_by=popularity.desc`),
+      tmdb(`/discover/${endpoint}?with_genres=80&sort_by=popularity.desc`),
+      tmdb(`/discover/${endpoint}?with_genres=16&sort_by=popularity.desc`)
     ]);
 
     res.json({
-      action:      action.results?.slice(0, 12) || [],
-      horror:      horror.results?.slice(0, 12) || [],
-      newReleases: newReleases.results?.slice(0, 12) || []
+      newReleases: newReleases.results?.slice(0, 20) || [],
+      action:      action.results?.slice(0, 20) || [],
+      horror:      horror.results?.slice(0, 20) || [],
+      drama:       drama.results?.slice(0, 20) || [],
+      thriller:    thriller.results?.slice(0, 20) || [],
+      scifi:       scifi.results?.slice(0, 20) || [],
+      comedy:      comedy.results?.slice(0, 20) || [],
+      crime:       crime.results?.slice(0, 20) || [],
+      animation:   animation.results?.slice(0, 20) || []
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// IMDb rating via TMDB external IDs + OMDB fallback
-app.get('/api/media/:type/:id/imdb', async (req, res) => {
+// Catalogue page — discover with filters
+app.get('/api/media/catalogue/:type', async (req, res) => {
+  try {
+    const { type } = req.params;
+    const endpoint = type === 'tv' ? 'tv' : 'movie';
+    const { genre, year_from, year_to, sort = 'popularity.desc', page = 1 } = req.query;
+
+    let qs = `sort_by=${sort}&page=${page}&vote_count.gte=50`;
+    if (genre) qs += `&with_genres=${genre}`;
+    if (year_from) qs += `&${endpoint === 'tv' ? 'first_air_date' : 'release_date'}.gte=${year_from}-01-01`;
+    if (year_to)   qs += `&${endpoint === 'tv' ? 'first_air_date' : 'release_date'}.lte=${year_to}-12-31`;
+
+    const data = await tmdb(`/discover/${endpoint}?${qs}`);
+    res.json({ results: data.results || [], total_pages: data.total_pages || 1, page: data.page || 1 });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// IMDb rating via TMDB external IDs + OMDB
+app.get('/api/media/imdb/:type/:id', async (req, res) => {
   try {
     const { type, id } = req.params;
     const extIds = await tmdb(`/${type}/${id}/external_ids`);
@@ -258,6 +289,19 @@ app.get('/api/media/:type/:id', async (req, res) => {
     res.json({ ...detail, credits, ourScore: avgScore, reviewCount: reviews.length });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// Stats for hero
+app.get('/api/stats', async (req, res) => {
+  try {
+    const [reviews, users] = await Promise.all([
+      Review.countDocuments(),
+      User.countDocuments()
+    ]);
+    res.json({ reviews, users });
+  } catch(e) {
+    res.json({ reviews: 0, users: 0 });
   }
 });
 
