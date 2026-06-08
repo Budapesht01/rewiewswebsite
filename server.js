@@ -182,6 +182,46 @@ app.get('/api/media/trending', async (req, res) => {
   }
 });
 
+// Genre sections for home page
+// genre IDs: 28=Action, 27=Horror, 35=Comedy, 18=Drama, 10749=Romance, 878=Sci-Fi
+app.get('/api/media/genres/:type', async (req, res) => {
+  try {
+    const { type } = req.params; // 'movie' or 'tv'
+    const endpoint = type === 'tv' ? 'tv' : 'movie';
+
+    const [action, horror, newReleases] = await Promise.all([
+      tmdb(`/discover/${endpoint}?with_genres=28&sort_by=popularity.desc`),
+      tmdb(`/discover/${endpoint}?with_genres=27&sort_by=popularity.desc`),
+      tmdb(`/discover/${endpoint}?sort_by=release_date.desc&vote_count.gte=50`)
+    ]);
+
+    res.json({
+      action:      action.results?.slice(0, 12) || [],
+      horror:      horror.results?.slice(0, 12) || [],
+      newReleases: newReleases.results?.slice(0, 12) || []
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// IMDb rating via TMDB external IDs + OMDB fallback
+app.get('/api/media/:type/:id/imdb', async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const extIds = await tmdb(`/${type}/${id}/external_ids`);
+    const imdbId = extIds.imdb_id;
+    if (!imdbId || !process.env.OMDB_KEY) return res.json({ imdbRating: null });
+
+    const r = await fetch(`https://www.omdbapi.com/?i=${imdbId}&apikey=${process.env.OMDB_KEY}`);
+    const d = await r.json();
+    const rating = d.imdbRating && d.imdbRating !== 'N/A' ? parseFloat(d.imdbRating) : null;
+    res.json({ imdbRating: rating, imdbId });
+  } catch (e) {
+    res.json({ imdbRating: null });
+  }
+});
+
 // Search
 app.get('/api/media/search', async (req, res) => {
   try {
