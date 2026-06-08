@@ -8,7 +8,11 @@ const path = require('path');
 
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files — works both locally (public/) and on Render
+const publicDir = require('fs').existsSync(path.join(__dirname, 'public'))
+  ? path.join(__dirname, 'public')
+  : __dirname;
+app.use(express.static(publicDir));
 
 // ─── DB CONNECTION ────────────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGODB_URI)
@@ -329,7 +333,7 @@ app.get('/api/profile/:username', async (req, res) => {
 // ─── SPA FALLBACK ─────────────────────────────────────────────────────────────
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
