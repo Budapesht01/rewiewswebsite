@@ -486,6 +486,13 @@ body::before {
 .live-score-num.low { color: #888; }
 .live-score-num.mid { color: var(--white); }
 .live-score-num.high { color: #f2f2f0; text-shadow: 0 0 40px rgba(255,255,255,0.3); }
+.live-score-num.gold {
+  color: #c8a96e;
+  text-shadow: 0 0 60px rgba(200,169,110,0.35), 0 0 20px rgba(200,169,110,0.2);
+  transition: color 0.4s, text-shadow 0.4s;
+}
+.review-score-big.gold { color: #c8a96e; text-shadow: 0 0 40px rgba(200,169,110,0.3); }
+.score-number.gold { color: #c8a96e; text-shadow: 0 0 60px rgba(200,169,110,0.25); }
 .comment-input {
   width: 100%; background: var(--grey); border: 1px solid var(--line);
   color: var(--white); padding: 12px 14px;
@@ -655,6 +662,8 @@ body::before {
 /* ── EMPTY ── */
 .empty-state {
   padding: 80px 40px; text-align: center;
+  grid-column: 1 / -1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.2; }
 .empty-state p { color: var(--dim); font-size: 14px; }
@@ -1524,7 +1533,7 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
           </div>
           ${avgScore ? `
             <div class="score-display">
-              <div class="score-number">${avgScore}</div>
+              <div class="score-number ${avgScore > 100 ? 'gold' : ''}">${avgScore}</div>
               <div>
                 <div class="score-max">/110</div>
                 <div class="score-count">${reviews.length} ${plural(reviews.length, 'оценка','оценки','оценок')}</div>
@@ -1569,7 +1578,7 @@ function renderReviews(reviews, criteriaList) {
       <div class="review-card">
         <div class="review-header">
           <span class="review-user" onclick="showPublicProfile('${escHtml(r.username)}')">@${escHtml(r.username)}</span>
-          <div class="review-score-big">${r.totalScore}<span>/110</span></div>
+          <div class="review-score-big ${r.totalScore > 100 ? 'gold' : ''}">${r.totalScore}<span>/110</span></div>
         </div>
         <div class="review-criteria-named">${bars}</div>
         ${r.comment ? `<p class="review-comment">${escHtml(r.comment)}</p>` : ''}
@@ -1617,6 +1626,9 @@ function renderRatingForm(type, criteriaList, myReview) {
 
 function initSliders(criteriaList) {
   document.querySelectorAll('.score-slider').forEach(sl => {
+    // init gradient
+    const pct = (parseFloat(sl.value) / 10) * 100;
+    sl.style.background = `linear-gradient(to right, #555 0%, #e8e8e8 ${pct}%, var(--line) ${pct}%, var(--line) 100%)`;
     sl.addEventListener('input', () => {
       const scores = getSliderValues();
       const total = calcTotal(criteriaList.map((c,i) => ({ score: scores[i], multiplier: c.multiplier })));
@@ -1629,6 +1641,9 @@ function initSliders(criteriaList) {
 
 function onSlider(el) {
   document.getElementById('sv-' + el.dataset.idx).textContent = el.value;
+  const pct = (parseFloat(el.value) / 10) * 100;
+  // gradient: left = dark grey, thumb position = white
+  el.style.background = `linear-gradient(to right, #555 0%, #e8e8e8 ${pct}%, var(--line) ${pct}%, var(--line) 100%)`;
 }
 
 function getSliderValues() {
@@ -1642,6 +1657,7 @@ function calcTotal(criteria) {
 }
 
 function scoreClass(v) {
+  if (v > 100) return 'gold';
   if (v < 50) return 'low';
   if (v < 80) return 'mid';
   return 'high';
