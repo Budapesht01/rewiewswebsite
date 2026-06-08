@@ -591,14 +591,73 @@ body::before {
 }
 .back-btn:hover { color: var(--white); }
 
-/* ── GENRE CHIPS ── */
-.genre-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+/* ── GENRE SECTIONS ── */
+.genre-sections { }
+.genre-section { padding: 0 40px 48px; }
+.genre-section-label {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 20px;
+  border-top: 1px solid var(--line); padding-top: 32px;
+}
+.cards-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 2px;
+  overflow: hidden;
+}
+
+/* ── REVIEW CRITERIA NAMED BARS ── */
+.review-criteria-named {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 14px;
+}
+.crit-named-row {
+  display: grid;
+  grid-template-columns: 1fr auto 40px;
+  align-items: center; gap: 8px;
+}
+.crit-named-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: var(--dim); letter-spacing: 0.05em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.crit-named-bar {
+  height: 2px; background: var(--line); position: relative;
+}
+.crit-named-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: var(--white); transition: width 1s ease;
+}
+.crit-named-val {
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px;
+  color: var(--dim); text-align: right;
+}
+
+/* ── IMDB BADGE ── */
+.imdb-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.imdb-badge-logo {
+  background: #f5c518; color: #000;
+  font-family: 'DM Mono', monospace; font-weight: 700;
+  font-size: 9px; padding: 2px 5px; letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  .genre-section { padding: 0 20px 36px; }
+  .cards-row { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+}
+
 .genre-chip {
   border: 1px solid var(--line); padding: 3px 10px;
   font-family: 'DM Mono', monospace; font-size: 9px;
   letter-spacing: 0.15em; text-transform: uppercase;
   color: var(--dim);
 }
+
+/* ── GENRE CHIPS ── */
+.genre-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -694,6 +753,10 @@ body::before {
       <div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>
     </div>
   </div>
+
+  <div class="genre-sections" id="genre-sections">
+    <!-- filled by JS -->
+  </div>
 </div>
 
 <!-- MEDIA DETAIL PAGE -->
@@ -776,6 +839,32 @@ function switchTab(type, btn) {
   renderTrending(type);
 }
 
+// ─── GENRE SECTIONS ───────────────────────────────────────────────────────────
+async function loadGenreSections(mediaType) {
+  const wrap = document.getElementById('genre-sections');
+  wrap.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  try {
+    const data = await api(`/api/media/genres/${mediaType}`);
+    const defs = [
+      { key: 'action',      label: '// боевики' },
+      { key: 'horror',      label: '// хорроры' },
+      { key: 'newReleases', label: '// новинки' }
+    ];
+    wrap.innerHTML = defs.map(({ key, label }) => {
+      const items = data[key] || [];
+      if (!items.length) return '';
+      const cards = items.map(item => cardHTML(item, mediaType)).join('');
+      return `
+        <div class="genre-section">
+          <div class="genre-section-label">${label}</div>
+          <div class="cards-row">${cards}</div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    wrap.innerHTML = '';
+  }
+}
+
 // ─── TRENDING ────────────────────────────────────────────────────────────────
 async function loadTrending() {
   try {
@@ -795,6 +884,7 @@ function renderTrending(type) {
     return;
   }
   grid.innerHTML = items.map(item => cardHTML(item, type === 'movies' ? 'movie' : 'tv')).join('');
+  loadGenreSections(type === 'movies' ? 'movie' : 'tv');
 }
 
 function cardHTML(item, mediaType) {
@@ -857,20 +947,21 @@ async function openMedia(id, type) {
   const content = document.getElementById('media-content');
   content.innerHTML = '<div class="loader" style="min-height:60vh"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
   try {
-    const [media, reviews, criteriaList] = await Promise.all([
+    const [media, reviews, criteriaList, imdbData] = await Promise.all([
       api(`/api/media/${type}/${id}`),
       api(`/api/reviews/${type}/${id}`),
-      api(`/api/criteria/${type}`)
+      api(`/api/criteria/${type}`),
+      api(`/api/media/${type}/${id}/imdb`).catch(() => ({ imdbRating: null }))
     ]);
     state.currentMedia = { id, type, media };
     state.criteria = criteriaList;
-    renderMediaPage(media, type, reviews, criteriaList);
+    renderMediaPage(media, type, reviews, criteriaList, imdbData);
   } catch(e) {
     content.innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
   }
 }
 
-function renderMediaPage(media, type, reviews, criteriaList) {
+function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
   const content = document.getElementById('media-content');
   const title = media.title || media.name || '';
   const year = (media.release_date || media.first_air_date || '').slice(0, 4);
@@ -898,6 +989,7 @@ function renderMediaPage(media, type, reviews, criteriaList) {
             ${media.runtime ? `<span>${media.runtime} мин</span>` : ''}
             ${media.number_of_seasons ? `<span>${media.number_of_seasons} сезонов</span>` : ''}
             ${media.vote_average ? `<span>TMDB ${media.vote_average.toFixed(1)}</span>` : ''}
+            ${imdbData.imdbRating ? `<span><span class="imdb-badge"><span class="imdb-badge-logo">IMDb</span>${imdbData.imdbRating}</span></span>` : ''}
           </div>
           ${avgScore ? `
             <div class="score-display">
@@ -932,7 +1024,14 @@ function renderReviews(reviews, criteriaList) {
   return reviews.map(r => {
     const bars = r.criteria.map(c => {
       const pct = (c.score / 10 * 100).toFixed(0);
-      return `<div class="crit-mini"><div class="crit-mini-fill" style="width:${pct}%"></div></div>`;
+      // short label: first word or first 20 chars
+      const label = c.name.split(',')[0].trim();
+      return `
+        <div class="crit-named-row">
+          <div class="crit-named-label">${escHtml(label)}</div>
+          <div class="crit-named-bar" style="width:80px"><div class="crit-named-fill" style="width:${pct}%"></div></div>
+          <div class="crit-named-val">${c.score}</div>
+        </div>`;
     }).join('');
     const date = new Date(r.createdAt).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
     return `
@@ -941,7 +1040,7 @@ function renderReviews(reviews, criteriaList) {
           <span class="review-user" onclick="showPublicProfile('${escHtml(r.username)}')">@${escHtml(r.username)}</span>
           <div class="review-score-big">${r.totalScore}<span>/110</span></div>
         </div>
-        <div class="review-criteria-mini">${bars}</div>
+        <div class="review-criteria-named">${bars}</div>
         ${r.comment ? `<p class="review-comment">${escHtml(r.comment)}</p>` : ''}
         <div class="review-date">${date}</div>
       </div>`;
