@@ -821,11 +821,117 @@ body::before {
   color: var(--dim); text-align: right;
 }
 
+/* ── BURGER BUTTON ── */
+.burger-btn {
+  display: none;
+  flex-direction: column; justify-content: center; align-items: center;
+  gap: 5px; width: 40px; height: 40px;
+  background: none; border: none; cursor: pointer; padding: 0;
+  z-index: 1100;
+}
+.burger-btn span {
+  display: block; width: 22px; height: 1.5px;
+  background: var(--white);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s;
+  transform-origin: center;
+}
+.burger-btn.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.burger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.burger-btn.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+/* ── MOBILE SLIDE MENU ── */
+#mobile-menu {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: min(300px, 85vw);
+  background: #0d0d0d;
+  border-left: 1px solid var(--line);
+  z-index: 1050;
+  display: flex; flex-direction: column;
+  padding: 80px 32px 40px;
+  gap: 0;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none;
+}
+#mobile-menu.open {
+  transform: translateX(0);
+  pointer-events: all;
+}
+#mobile-menu-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1040;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s;
+  backdrop-filter: blur(4px);
+}
+#mobile-menu-overlay.open {
+  opacity: 1; pointer-events: all;
+}
+
+.mob-menu-section {
+  border-top: 1px solid var(--line);
+  padding: 20px 0;
+}
+.mob-menu-section:first-child { border-top: none; padding-top: 0; }
+
+.mob-menu-label {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--line); margin-bottom: 14px;
+}
+
+.mob-menu-btn {
+  display: block; width: 100%;
+  background: none; border: none; text-align: left;
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+  letter-spacing: 0.08em; color: var(--dim);
+  cursor: pointer; padding: 4px 0;
+  transition: color 0.2s, letter-spacing 0.2s;
+  line-height: 1.15;
+}
+.mob-menu-btn:hover, .mob-menu-btn:active { color: var(--white); letter-spacing: 0.12em; }
+
+.mob-menu-btn.accent {
+  color: var(--white);
+  border: 1px solid var(--white);
+  padding: 8px 16px; margin-top: 6px;
+  font-size: 14px; letter-spacing: 0.2em;
+  text-align: center;
+}
+.mob-menu-btn.accent:hover { background: var(--white); color: var(--black); }
+
+#mob-user-section { display: none; }
+#mob-auth-section { display: block; }
+
+/* ── REVIEWS 2-COLUMN GRID ── */
+#reviews-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+/* Fix bar — no gap between bar and number */
+.crit-named-row {
+  grid-template-columns: 68px 1fr 28px;
+}
+
 /* ── MOBILE 425px ── */
+@media (max-width: 600px) {
+  #reviews-list { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .burger-btn { display: flex; }
+  #topbar .nav-right .search-wrap { display: none; }
+  #topbar #auth-btns,
+  #topbar #user-btn { display: none !important; }
+}
+
 @media (max-width: 425px) {
-  .review-card { padding: 16px; }
-  .review-score-big { font-size: 36px; }
-  .crit-named-row { grid-template-columns: 56px 1fr 24px; gap: 5px; }
+  .review-card { padding: 14px; }
+  .review-score-big { font-size: 32px; }
+  .crit-named-row { grid-template-columns: 52px 1fr 24px; gap: 4px; }
   .crit-named-label { font-size: 7px; }
   .crit-named-val { font-size: 11px; }
   .review-section { grid-template-columns: 1fr; padding: 0 14px 32px; }
@@ -900,8 +1006,33 @@ body::before {
       <button class="btn-ghost" onclick="showPage('profile')" id="username-btn"></button>
       <button class="btn-ghost" onclick="logout()">Выйти</button>
     </div>
+    <button class="burger-btn" id="burger-btn" onclick="toggleMobileMenu()" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+
+<!-- MOBILE MENU OVERLAY -->
+<div id="mobile-menu-overlay" onclick="closeMobileMenu()"></div>
+
+<!-- MOBILE SLIDE MENU -->
+<div id="mobile-menu">
+  <div class="mob-menu-section" id="mob-nav-section">
+    <div class="mob-menu-label">// навигация</div>
+    <button class="mob-menu-btn" onclick="closeMobileMenu(); showPage('home')">Главная</button>
+    <button class="mob-menu-btn" onclick="closeMobileMenu(); showPage('profile')" id="mob-profile-btn" style="display:none">Профиль</button>
+  </div>
+  <div class="mob-menu-section" id="mob-auth-section">
+    <div class="mob-menu-label">// аккаунт</div>
+    <button class="mob-menu-btn" onclick="closeMobileMenu(); openModal('login')">Войти</button>
+    <button class="mob-menu-btn accent" onclick="closeMobileMenu(); openModal('register')">Регистрация</button>
+  </div>
+  <div class="mob-menu-section" id="mob-user-section">
+    <div class="mob-menu-label">// аккаунт</div>
+    <button class="mob-menu-btn" id="mob-username-label" onclick="closeMobileMenu(); showPage('profile')" style="color:var(--white)"></button>
+    <button class="mob-menu-btn" onclick="closeMobileMenu(); logout()">Выйти</button>
+  </div>
+</div>
 
 <!-- AUTH MODAL -->
 <div id="modal-overlay" onclick="handleOverlayClick(event)">
@@ -1690,16 +1821,50 @@ function logout() {
 function updateAuthUI() {
   const authBtns = document.getElementById('auth-btns');
   const userBtn  = document.getElementById('user-btn');
+  const mobAuth  = document.getElementById('mob-auth-section');
+  const mobUser  = document.getElementById('mob-user-section');
+  const mobProfileBtn = document.getElementById('mob-profile-btn');
+  const mobUsernameLabel = document.getElementById('mob-username-label');
   if (state.user) {
     authBtns.style.display = 'none';
     userBtn.style.display = 'flex';
     userBtn.style.gap = '10px';
     document.getElementById('username-btn').textContent = state.user.username;
+    mobAuth.style.display = 'none';
+    mobUser.style.display = 'block';
+    if (mobProfileBtn) mobProfileBtn.style.display = 'block';
+    if (mobUsernameLabel) mobUsernameLabel.textContent = '@' + state.user.username;
   } else {
     authBtns.style.display = 'flex';
     userBtn.style.display = 'none';
+    mobAuth.style.display = 'block';
+    mobUser.style.display = 'none';
+    if (mobProfileBtn) mobProfileBtn.style.display = 'none';
   }
 }
+
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const overlay = document.getElementById('mobile-menu-overlay');
+  const btn = document.getElementById('burger-btn');
+  const isOpen = menu.classList.contains('open');
+  if (isOpen) {
+    menu.classList.remove('open');
+    overlay.classList.remove('open');
+    btn.classList.remove('open');
+  } else {
+    menu.classList.add('open');
+    overlay.classList.add('open');
+    btn.classList.add('open');
+  }
+}
+
+function closeMobileMenu() {
+  document.getElementById('mobile-menu').classList.remove('open');
+  document.getElementById('mobile-menu-overlay').classList.remove('open');
+  document.getElementById('burger-btn').classList.remove('open');
+}
+
 
 // ─── API HELPER ───────────────────────────────────────────────────────────────
 async function api(url, method = 'GET', body = null) {
