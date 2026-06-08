@@ -795,18 +795,19 @@ body::before {
 
 /* ── REVIEW CRITERIA NAMED BARS ── */
 .review-criteria-named {
-  display: flex; flex-direction: column; gap: 6px;
+  display: flex; flex-direction: column; gap: 4px;
   margin-bottom: 14px;
 }
 .crit-named-row {
   display: grid;
-  grid-template-columns: 1fr auto 40px;
-  align-items: center; gap: 8px;
+  grid-template-columns: 68px 1fr 28px;
+  align-items: center; gap: 6px;
 }
 .crit-named-label {
-  font-family: 'DM Mono', monospace; font-size: 9px;
-  color: var(--dim); letter-spacing: 0.05em;
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  color: var(--dim); letter-spacing: 0.04em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-transform: uppercase;
 }
 .crit-named-bar {
   height: 2px; background: var(--line); position: relative;
@@ -816,8 +817,24 @@ body::before {
   background: var(--white); transition: width 1s ease;
 }
 .crit-named-val {
-  font-family: 'Bebas Neue', sans-serif; font-size: 14px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px;
   color: var(--dim); text-align: right;
+}
+
+/* ── MOBILE 425px ── */
+@media (max-width: 425px) {
+  .review-card { padding: 16px; }
+  .review-score-big { font-size: 36px; }
+  .crit-named-row { grid-template-columns: 56px 1fr 24px; gap: 5px; }
+  .crit-named-label { font-size: 7px; }
+  .crit-named-val { font-size: 11px; }
+  .review-section { grid-template-columns: 1fr; padding: 0 14px 32px; }
+  .media-hero-content { padding: 30px 14px 24px; }
+  .score-number { font-size: 52px; }
+  #topbar { padding: 0 14px; }
+  .hero { padding: 50px 14px 32px; }
+  .section { padding: 24px 14px; }
+  #profile-page { padding: 70px 14px 32px; }
 }
 
 /* ── IMDB BADGE ── */
@@ -1407,8 +1424,8 @@ function renderReviews(reviews, criteriaList) {
   return reviews.map(r => {
     const bars = r.criteria.map(c => {
       const pct = (c.score / 10 * 100).toFixed(0);
-      // short label: first word or first 20 chars
-      const label = c.name.split(',')[0].trim();
+      // short label: first word only
+      const label = c.name.split(/[\s,]/)[0].trim();
       return `
         <div class="crit-named-row">
           <div class="crit-named-label">${escHtml(label)}</div>
