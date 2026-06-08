@@ -1628,7 +1628,6 @@ function initSliders(criteriaList) {
   document.querySelectorAll('.score-slider').forEach(sl => {
     // init gradient
     const pct = (parseFloat(sl.value) / 10) * 100;
-    sl.style.background = `linear-gradient(to right, #555 0%, #e8e8e8 ${pct}%, var(--line) ${pct}%, var(--line) 100%)`;
     sl.addEventListener('input', () => {
       const scores = getSliderValues();
       const total = calcTotal(criteriaList.map((c,i) => ({ score: scores[i], multiplier: c.multiplier })));
@@ -1642,8 +1641,6 @@ function initSliders(criteriaList) {
 function onSlider(el) {
   document.getElementById('sv-' + el.dataset.idx).textContent = el.value;
   const pct = (parseFloat(el.value) / 10) * 100;
-  // gradient: left = dark grey, thumb position = white
-  el.style.background = `linear-gradient(to right, #555 0%, #e8e8e8 ${pct}%, var(--line) ${pct}%, var(--line) 100%)`;
 }
 
 function getSliderValues() {
