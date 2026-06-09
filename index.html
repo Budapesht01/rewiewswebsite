@@ -311,6 +311,23 @@ body::before {
 }
 .card:hover .card-score-badge { opacity: 1; }
 
+/* Site score badge — bottom left, always visible */
+.card-site-score {
+  position: absolute; bottom: 42px; left: 10px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+  line-height: 1; color: var(--white);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+  pointer-events: none;
+}
+.card-site-score .ssub {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.5); letter-spacing: 0.05em;
+}
+.card-site-score.gold {
+  color: #c8a96e;
+  text-shadow: 0 0 20px rgba(200,169,110,0.5), 0 2px 8px rgba(0,0,0,0.9);
+}
+
 /* ── MEDIA DETAIL PAGE ── */
 #media-page { }
 
@@ -1316,6 +1333,16 @@ const GENRE_DEFS = [
   { key: 'animation',   label: '// анимация',   genreId: '16', sortKey: 'popularity.desc' }
 ];
 
+// Enrich a rendered grid with site scores fetched from API
+async function enrichGridWithScores(grid, items, mediaType) {
+  try {
+    const ids = items.map(i => i.id).join(',');
+    const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
+    // re-render cards with scores
+    grid.innerHTML = items.map(item => cardHTML(item, mediaType, scores[item.id])).join('');
+  } catch(e) { /* fail silently — cards already shown without scores */ }
+}
+
 async function loadGenreSections(mediaType) {
   const wrap = document.getElementById('genre-sections');
   wrap.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
@@ -1324,15 +1351,7 @@ async function loadGenreSections(mediaType) {
     wrap.innerHTML = GENRE_DEFS.map(({ key, label, genreId, sortKey }) => {
       const items = data[key] || [];
       if (!items.length) return '';
-      const cards = items.map(item => `
-        <div class="card" onclick="openMedia(${item.id}, '${mediaType}')">
-          ${item.poster_path ? `<img src="https://image.tmdb.org/t/p/w342${item.poster_path}" alt="${escHtml(item.title||item.name||'')}" loading="lazy"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
-          <div class="card-overlay">
-            <div class="card-title">${escHtml(item.title||item.name||'')}</div>
-            ${(item.release_date||item.first_air_date||'').slice(0,4) ? `<div class="card-year">${(item.release_date||item.first_air_date||'').slice(0,4)}</div>` : ''}
-          </div>
-          ${item.vote_average ? `<div class="card-score-badge">${item.vote_average.toFixed(1)}</div>` : ''}
-        </div>`).join('');
+      const cards = items.map(item => cardHTML(item, mediaType)).join('');
       return `
         <div class="genre-section">
           <div class="genre-section-header">
@@ -1340,10 +1359,16 @@ async function loadGenreSections(mediaType) {
             <button class="genre-see-all" onclick="openCatalogue('${mediaType}', '${genreId}', '${sortKey}', '${label.replace(/\/\/ /,'')}')">Все →</button>
           </div>
           <div class="cards-scroll-wrap">
-            <div class="cards-scroll-row">${cards}</div>
+            <div class="cards-scroll-row" id="genre-row-${key}">${cards}</div>
           </div>
         </div>`;
     }).join('');
+    // enrich each genre row with site scores async
+    GENRE_DEFS.forEach(({ key }) => {
+      const items = data[key] || [];
+      const row = document.getElementById(`genre-row-${key}`);
+      if (items.length && row) enrichGridWithScores(row, items, mediaType);
+    });
   } catch(e) {
     wrap.innerHTML = '';
   }
@@ -1383,8 +1408,10 @@ async function fetchCatalogue() {
     if (yearTo)   qs += `&year_to=${yearTo}`;
     const data = await api(qs);
     catalogueState.totalPages = data.total_pages;
-    grid.innerHTML = (data.results||[]).map(item => cardHTML(item, mediaType)).join('') || '<div class="empty-state"><p>Ничего не найдено</p></div>';
+    const results = data.results || [];
+    grid.innerHTML = results.map(item => cardHTML(item, mediaType)).join('') || '<div class="empty-state"><p>Ничего не найдено</p></div>';
     renderCataloguePagination();
+    if (results.length) enrichGridWithScores(grid, results, mediaType);
   } catch(e) {
     grid.innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
   }
@@ -1416,22 +1443,29 @@ async function loadTrending() {
   }
 }
 
-function renderTrending(type) {
+async function renderTrending(type) {
   const items = type === 'movies' ? state.trendingData.movies : state.trendingData.tv;
+  const mediaType = type === 'movies' ? 'movie' : 'tv';
   const grid = document.getElementById('trending-grid');
   if (!items || !items.length) {
     grid.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
     return;
   }
-  grid.innerHTML = items.map(item => cardHTML(item, type === 'movies' ? 'movie' : 'tv')).join('');
-  loadGenreSections(type === 'movies' ? 'movie' : 'tv');
+  // render without site scores first
+  grid.innerHTML = items.map(item => cardHTML(item, mediaType)).join('');
+  loadGenreSections(mediaType);
+  // then enrich with site scores
+  enrichGridWithScores(grid, items, mediaType);
 }
 
-function cardHTML(item, mediaType) {
+function cardHTML(item, mediaType, siteScore) {
   const poster = item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : '';
   const title = item.title || item.name || '';
   const year = (item.release_date || item.first_air_date || '').slice(0, 4);
   const score = item.vote_average ? item.vote_average.toFixed(1) : '';
+  const siteScoreHTML = siteScore != null
+    ? `<div class="card-site-score ${siteScore > 100 ? 'gold' : ''}">${siteScore}<span class="ssub">/110</span></div>`
+    : '';
   return `
     <div class="card" onclick="openMedia(${item.id}, '${mediaType}')">
       ${poster ? `<img src="${poster}" alt="${escHtml(title)}" loading="lazy"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
@@ -1439,6 +1473,7 @@ function cardHTML(item, mediaType) {
         <div class="card-title">${escHtml(title)}</div>
         ${year ? `<div class="card-year">${year}</div>` : ''}
       </div>
+      ${siteScoreHTML}
       ${score ? `<div class="card-score-badge">${score}</div>` : ''}
     </div>`;
 }
@@ -1626,8 +1661,6 @@ function renderRatingForm(type, criteriaList, myReview) {
 
 function initSliders(criteriaList) {
   document.querySelectorAll('.score-slider').forEach(sl => {
-    // init gradient
-    const pct = (parseFloat(sl.value) / 10) * 100;
     sl.addEventListener('input', () => {
       const scores = getSliderValues();
       const total = calcTotal(criteriaList.map((c,i) => ({ score: scores[i], multiplier: c.multiplier })));
@@ -1640,7 +1673,6 @@ function initSliders(criteriaList) {
 
 function onSlider(el) {
   document.getElementById('sv-' + el.dataset.idx).textContent = el.value;
-  const pct = (parseFloat(el.value) / 10) * 100;
 }
 
 function getSliderValues() {
