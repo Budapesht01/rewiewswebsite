@@ -1804,7 +1804,7 @@ function renderGenreVibes(type, genres) {
   const { genre, vibes } = matchedVibes[0];
   const rows = vibes.map((v, i) => `
     <div class="genre-vibe-row">
-      <div class="genre-vibe-name">${v.emoji} ${escHtml(v.name)}</div>
+      <div class="genre-vibe-name">${escHtml(v.name)}</div>
       <div class="genre-vibe-control">
         <div class="genre-vibe-bar-track-wrap">
           <div class="genre-vibe-bar-track">
