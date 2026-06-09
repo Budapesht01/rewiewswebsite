@@ -862,31 +862,87 @@ body::before {
 
 /* ── REVIEW CRITERIA NAMED BARS ── */
 .review-criteria-named {
-  display: flex; flex-direction: column; gap: 4px;
   margin-bottom: 14px;
 }
-.crit-named-row {
-  display: grid;
-  grid-template-columns: 68px 1fr 28px;
-  align-items: center; gap: 6px;
+
+/* ── MICRO HISTOGRAM ── */
+.micro-histogram {
+  display: flex; align-items: flex-end;
+  gap: 3px; height: 40px;
 }
-.crit-named-label {
-  font-family: 'DM Mono', monospace; font-size: 10px;
-  color: var(--dim); letter-spacing: 0.04em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  text-transform: uppercase;
+.mh-bar-wrap {
+  flex: 1; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  position: relative;
 }
-.crit-named-bar {
-  height: 2px; background: var(--line); position: relative;
+.mh-bar {
+  width: 100%;
+  background: rgba(240,239,233,0.18);
+  transition: background 0.2s;
+  /* height set inline */
 }
-.crit-named-fill {
-  position: absolute; left: 0; top: 0; bottom: 0;
-  background: var(--white); transition: width 1s ease;
+.mh-bar-wrap:hover .mh-bar { background: var(--white); }
+/* tooltip */
+.mh-bar-wrap::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a; border: 1px solid var(--line);
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  color: var(--white); padding: 3px 7px;
+  white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 0.15s;
+  z-index: 20;
 }
-.crit-named-val {
-  font-family: 'Bebas Neue', sans-serif; font-size: 13px;
-  color: var(--dim); text-align: right;
+.mh-bar-wrap:hover::after { opacity: 1; }
+
+/* ── RADAR CHART ── */
+.radar-block {
+  border: 1px solid var(--line);
+  padding: 24px; margin-top: 16px;
 }
+.radar-block-title {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 16px;
+}
+.radar-block-inner {
+  display: flex; gap: 20px; align-items: flex-start;
+}
+.radar-svg-wrap { flex-shrink: 0; }
+.radar-legend-col { flex: 1; }
+.radar-legend-item {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  color: var(--dim); margin-bottom: 8px;
+}
+.radar-legend-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.radar-diff-row {
+  display: grid; grid-template-columns: 1fr 22px 22px 26px;
+  align-items: center; gap: 4px;
+  padding: 5px 0; border-bottom: 1px solid var(--line);
+  font-family: 'DM Mono', monospace; font-size: 8px;
+}
+.radar-diff-row:last-child { border-bottom: none; }
+.radar-diff-name { color: var(--dim); letter-spacing: 0.03em; }
+.radar-diff-avg { color: var(--dim); text-align: right; }
+.radar-diff-mine { color: var(--white); text-align: right; font-weight: 400; }
+.radar-diff-delta { text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 13px; }
+.radar-diff-delta.pos { color: #6db97a; }
+.radar-diff-delta.neg { color: #c46b6b; }
+.radar-diff-delta.neu { color: var(--dim); }
+.radar-diff-header {
+  display: grid; grid-template-columns: 1fr 22px 22px 26px;
+  gap: 4px; padding-bottom: 6px; border-bottom: 1px solid #333;
+  margin-bottom: 4px;
+  font-family: 'DM Mono', monospace; font-size: 7px;
+  letter-spacing: 0.15em; color: #444; text-transform: uppercase;
+}
+.radar-diff-header span { text-align: right; }
+.radar-diff-header span:first-child { text-align: left; }
 
 /* ── BURGER BUTTON ── */
 .burger-btn {
@@ -976,11 +1032,6 @@ body::before {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 2px;
-}
-
-/* Fix bar — no gap between bar and number */
-.crit-named-row {
-  grid-template-columns: 68px 1fr 28px;
 }
 
 /* ── MOBILE 425px ── */
@@ -1655,30 +1706,39 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
     wrap.style.setProperty('--score-pct', Math.min(100,(initVal/110)*100).toFixed(1) + '%');
     if (scoreClass(initVal) === 'gold') wrap.classList.add('gold-state');
   }
+  // build radar if user has their own review
+  buildRadar(reviews, myReview, criteriaList);
 }
 
 function renderReviews(reviews, criteriaList) {
   if (!reviews.length) return `<div class="empty-state"><div class="empty-state-icon">◈</div><p>Пока нет отзывов</p></div>`;
   return reviews.map(r => {
+    const isGold = r.totalScore > 100;
+    // micro-histogram bars
     const bars = r.criteria.map(c => {
-      const pct = (c.score / 10 * 100).toFixed(0);
-      // short label: first word only
+      const pct = Math.round(c.score / 10 * 100);
       const label = c.name.split(/[\s,]/)[0].trim();
-      return `
-        <div class="crit-named-row">
-          <div class="crit-named-label">${escHtml(label)}</div>
-          <div class="crit-named-bar" style="width:80px"><div class="crit-named-fill" style="width:${pct}%"></div></div>
-          <div class="crit-named-val">${c.score}</div>
-        </div>`;
+      const bg = isGold && c.score >= 9
+        ? 'rgba(200,169,110,0.75)'
+        : c.score >= 9 ? 'rgba(240,239,233,0.75)'
+        : c.score >= 7 ? 'rgba(240,239,233,0.4)'
+        : c.score >= 5 ? 'rgba(240,239,233,0.2)'
+        : 'rgba(240,239,233,0.08)';
+      return `<div class="mh-bar-wrap" data-tip="${escHtml(label)}: ${c.score}">
+        <div class="mh-bar" style="height:${pct}%;background:${bg}"></div>
+      </div>`;
     }).join('');
+
     const date = new Date(r.createdAt).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
     return `
       <div class="review-card">
         <div class="review-header">
           <span class="review-user" onclick="showPublicProfile('${escHtml(r.username)}')">@${escHtml(r.username)}</span>
-          <div class="review-score-big ${r.totalScore > 100 ? 'gold' : ''}">${r.totalScore}<span>/110</span></div>
+          <div class="review-score-big ${isGold ? 'gold' : ''}">${r.totalScore}<span>/110</span></div>
         </div>
-        <div class="review-criteria-named">${bars}</div>
+        <div class="review-criteria-named">
+          <div class="micro-histogram">${bars}</div>
+        </div>
         ${r.comment ? `<p class="review-comment">${escHtml(r.comment)}</p>` : ''}
         <div class="review-date">${date}</div>
       </div>`;
@@ -1720,8 +1780,106 @@ function renderRatingForm(type, criteriaList, myReview) {
     <button class="submit-btn" id="submit-review-btn" onclick="submitReview('${myReview ? myReview._id : ''}')">
       ${myReview ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ'}
     </button>
-    ${myReview ? `<button class="btn-ghost" style="width:100%;margin-top:6px" onclick="deleteReview('${myReview._id}')">УДАЛИТЬ ОЦЕНКУ</button>` : ''}`;
+    ${myReview ? `<button class="btn-ghost" style="width:100%;margin-top:6px" onclick="deleteReview('${myReview._id}')">УДАЛИТЬ ОЦЕНКУ</button>` : ''}
+    <div id="radar-block-mount"></div>`;
 }
+
+// ─── RADAR CHART ─────────────────────────────────────────────────────────────
+function buildRadar(reviews, myReview, criteriaList) {
+  const mount = document.getElementById('radar-block-mount');
+  if (!mount || !myReview || reviews.length < 2) return;
+
+  // compute averages of ALL users
+  const avg = criteriaList.map((_, i) => {
+    const sum = reviews.reduce((s, r) => s + (r.criteria[i]?.score || 0), 0);
+    return Math.round((sum / reviews.length) * 10) / 10;
+  });
+  const mine = myReview.criteria.map(c => c.score);
+
+  const N = criteriaList.length;
+  const CX = 110, CY = 110, R = 85;
+  const angle = i => (Math.PI * 2 * i / N) - Math.PI / 2;
+  const pt = (val, idx) => {
+    const r = (val / 10) * R;
+    const a = angle(idx);
+    return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+  };
+  const poly = scores => scores.map((v, i) => pt(v, i).join(',')).join(' ');
+
+  let svg = '';
+
+  // grid rings
+  [2,4,6,8,10].forEach(v => {
+    const pts = criteriaList.map((_, i) => pt(v, i).join(',')).join(' ');
+    svg += `<polygon points="${pts}" fill="none" stroke="#1e1e1e" stroke-width="1"/>`;
+  });
+  // axes
+  criteriaList.forEach((_, i) => {
+    const [x,y] = pt(10, i);
+    svg += `<line x1="${CX}" y1="${CY}" x2="${x}" y2="${y}" stroke="#1e1e1e" stroke-width="1"/>`;
+  });
+  // axis labels
+  criteriaList.forEach((c, i) => {
+    const [x,y] = pt(11.5, i);
+    const anchor = x < CX-4 ? 'end' : x > CX+4 ? 'start' : 'middle';
+    const shortLabel = c.name.split(/[\s,]/)[0].slice(0,4).toUpperCase();
+    svg += `<text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle"
+      font-family="DM Mono,monospace" font-size="7" fill="#555">${shortLabel}</text>`;
+  });
+  // avg polygon
+  svg += `<polygon points="${poly(avg)}" fill="rgba(240,239,233,0.06)" stroke="#444" stroke-width="1.5" stroke-linejoin="round"/>`;
+  // mine polygon
+  const myTotal = myReview.totalScore;
+  const myColor = myTotal > 100 ? '#c8a96e' : 'var(--white, #f0efe9)';
+  const myFill  = myTotal > 100 ? 'rgba(200,169,110,0.08)' : 'rgba(240,239,233,0.06)';
+  svg += `<polygon points="${poly(mine)}" fill="${myFill}" stroke="${myColor}" stroke-width="1.5" stroke-linejoin="round"/>`;
+  // dots
+  mine.forEach((v, i) => {
+    const [x,y] = pt(v, i);
+    svg += `<circle cx="${x}" cy="${y}" r="2" fill="${myColor}"/>`;
+  });
+
+  // diff table rows
+  const diffRows = criteriaList.map((c, i) => {
+    const delta = Math.round((mine[i] - avg[i]) * 10) / 10;
+    const dc = delta > 0 ? 'pos' : delta < 0 ? 'neg' : 'neu';
+    const ds = delta > 0 ? `+${delta}` : delta === 0 ? '—' : `${delta}`;
+    const shortName = c.name.split(/[\s,]/)[0].slice(0,6).toUpperCase();
+    return `<div class="radar-diff-row">
+      <div class="radar-diff-name">${shortName}</div>
+      <div class="radar-diff-avg">${avg[i]}</div>
+      <div class="radar-diff-mine">${mine[i]}</div>
+      <div class="radar-diff-delta ${dc}">${ds}</div>
+    </div>`;
+  }).join('');
+
+  mount.innerHTML = `
+    <div class="radar-block">
+      <div class="radar-block-title">// ты vs все</div>
+      <div class="radar-block-inner">
+        <div class="radar-svg-wrap">
+          <svg width="220" height="220" viewBox="0 0 220 220" overflow="visible">${svg}</svg>
+          <div style="display:flex;gap:14px;margin-top:10px;justify-content:center">
+            <div class="radar-legend-item">
+              <div class="radar-legend-dot" style="background:#333;border:1px solid #444"></div>
+              Все
+            </div>
+            <div class="radar-legend-item">
+              <div class="radar-legend-dot" style="background:${myColor}"></div>
+              Ты
+            </div>
+          </div>
+        </div>
+        <div class="radar-legend-col">
+          <div class="radar-diff-header">
+            <span>Критерий</span><span>Все</span><span>Ты</span><span>Δ</span>
+          </div>
+          ${diffRows}
+        </div>
+      </div>
+    </div>`;
+}
+
 
 function initSliders(criteriaList) {
   let _scoreAnimId = null;
