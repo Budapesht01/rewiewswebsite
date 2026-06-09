@@ -457,14 +457,45 @@ body::before {
 }
 .criterion-row {
   margin-bottom: 16px;
+  padding: 6px 8px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.criterion-row.active {
+  background: rgba(255,255,255,0.04);
+}
+.criterion-row.active .criterion-name {
+  color: rgba(242,242,240,0.75);
 }
 .criterion-name {
-  font-size: 11px; color: var(--dim); margin-bottom: 8px;
+  font-size: 11px; color: #aaa; margin-bottom: 8px;
   font-weight: 300;
+  transition: color 0.15s;
 }
 .criterion-control {
   display: flex; align-items: center; gap: 10px;
 }
+.criterion-comment-btn {
+  background: none; border: none; cursor: pointer;
+  color: #555; font-size: 14px; line-height: 1;
+  padding: 0 2px; transition: color 0.15s;
+  font-family: 'DM Mono', monospace;
+}
+.criterion-comment-btn:hover { color: #aaa; }
+.criterion-comment-btn.active { color: #c8a96e; }
+.criterion-comment-field {
+  display: none; margin-top: 6px;
+}
+.criterion-comment-field.open { display: block; }
+.criterion-comment-field textarea {
+  width: 100%; background: rgba(255,255,255,0.04);
+  border: 1px solid var(--line); border-top: none;
+  color: #bbb; padding: 6px 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 11px;
+  resize: none; height: 48px; outline: none;
+  transition: border-color 0.2s;
+}
+.criterion-comment-field textarea:focus { border-color: #444; }
 .score-slider {
   flex: 1; -webkit-appearance: none; appearance: none;
   height: 2px; background: var(--line); outline: none;
@@ -499,6 +530,59 @@ body::before {
   font-family: 'Bebas Neue', sans-serif; font-size: 64px;
   line-height: 1;
   transition: color 0.3s;
+}
+/* ── GENRE VIBE CRITERIA ── */
+.genre-vibes-wrap {
+  margin-top: 24px; padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.genre-vibes-title {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 16px;
+}
+.genre-vibe-row {
+  margin-bottom: 14px;
+}
+.genre-vibe-name {
+  font-size: 11px; color: #999; margin-bottom: 6px;
+  font-weight: 300;
+}
+.genre-vibe-control {
+  display: flex; align-items: center; gap: 10px;
+}
+.genre-vibe-bar-track {
+  flex: 1; height: 2px; background: var(--line);
+  position: relative;
+}
+.genre-vibe-bar-fill {
+  height: 100%; background: linear-gradient(to right, #553333, #c8a96e);
+  transition: width 0.2s;
+}
+.vibe-slider {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 2px; background: transparent; outline: none;
+  cursor: pointer; position: absolute; top: 0; left: 0; width: 100%; margin: 0;
+}
+.genre-vibe-bar-track-wrap {
+  flex: 1; position: relative; height: 2px;
+}
+.vibe-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 10px; height: 10px;
+  background: #c8a96e; border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.vibe-slider::-webkit-slider-thumb:hover { transform: scale(1.4); }
+.genre-vibe-val {
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+  width: 22px; text-align: right; color: #c8a96e;
+}
+.genre-vibe-note {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: #444; margin-top: 12px; letter-spacing: 0.1em;
+  text-align: center;
 }
 .live-score-num.low { color: #888; }
 .live-score-num.mid { color: var(--white); }
@@ -1634,16 +1718,21 @@ function renderRatingForm(type, criteriaList, myReview) {
     : criteriaList.map(() => 5);
 
   const rows = criteriaList.map((c, i) => `
-    <div class="criterion-row">
+    <div class="criterion-row" id="crow-${i}">
       <div class="criterion-name">${escHtml(c.name)}</div>
       <div class="criterion-control">
-        <input type="range" class="score-slider" min="0" max="10" step="0.5" value="${vals[i]}" data-idx="${i}" oninput="onSlider(this)"/>
+        <input type="range" class="score-slider" min="0" max="10" step="0.5" value="${vals[i]}" data-idx="${i}" oninput="onSlider(this)" onfocus="activateCriterion(${i})" onblur="deactivateCriterion(${i})"/>
         <div class="score-val" id="sv-${i}">${vals[i]}</div>
         <div class="mult-badge">×${c.multiplier}</div>
+        <button class="criterion-comment-btn" title="Добавить заметку" onclick="toggleCriterionComment(${i})">+</button>
+      </div>
+      <div class="criterion-comment-field" id="ccf-${i}">
+        <textarea placeholder="Заметка к критерию…" id="cc-${i}"></textarea>
       </div>
     </div>`).join('');
 
   const initial = calcTotal(criteriaList.map((c,i) => ({ score: vals[i], multiplier: c.multiplier })));
+  const vibesHtml = renderGenreVibes(type, state.currentMedia?.media?.genres || []);
 
   return `
     <div class="rating-form-title">${myReview ? '// ваша оценка' : '// оценить'}</div>
@@ -1652,11 +1741,107 @@ function renderRatingForm(type, criteriaList, myReview) {
       <div class="live-score-label">Ваш итог</div>
       <div class="live-score-num ${scoreClass(initial)}" id="live-score">${initial}</div>
     </div>
+    ${vibesHtml}
     <textarea class="comment-input" id="review-comment" placeholder="Ваш комментарий (необязательно)…">${myReview ? escHtml(myReview.comment || '') : ''}</textarea>
     <button class="submit-btn" id="submit-review-btn" onclick="submitReview('${myReview ? myReview._id : ''}')">
       ${myReview ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ'}
     </button>
     ${myReview ? `<button class="btn-ghost" style="width:100%;margin-top:6px" onclick="deleteReview('${myReview._id}')">УДАЛИТЬ ОЦЕНКУ</button>` : ''}`;
+}
+
+// Genre vibe criteria (visual only, don't affect score)
+const GENRE_VIBES = {
+  27: [ // Horror
+    { name: 'Насколько пугает',          emoji: '👁' },
+    { name: 'Атмосфера тревоги и ужаса', emoji: '🌑' }
+  ],
+  53: [ // Thriller
+    { name: 'Держит в напряжении',        emoji: '⚡' },
+    { name: 'Плотность атмосферы',        emoji: '🌫' }
+  ],
+  28: [ // Action
+    { name: 'Уровень экшена',             emoji: '💥' },
+    { name: 'Зрелищность сцен',           emoji: '🎬' }
+  ],
+  35: [ // Comedy
+    { name: 'Смешное — реально смешное',  emoji: '😄' },
+    { name: 'Лёгкость и настроение',      emoji: '✨' }
+  ],
+  10749: [ // Romance
+    { name: 'Химия между героями',        emoji: '❤' },
+    { name: 'Эмоциональный заряд',        emoji: '🌹' }
+  ],
+  878: [ // Sci-Fi
+    { name: 'Убедительность мира',        emoji: '🪐' },
+    { name: 'Оригинальность идеи',        emoji: '🔭' }
+  ],
+  14: [ // Fantasy
+    { name: 'Богатство мироустройства',   emoji: '🐉' },
+    { name: 'Магия и атмосфера',          emoji: '🌌' }
+  ],
+  80: [ // Crime
+    { name: 'Напряжение и интрига',       emoji: '🔍' },
+    { name: 'Достоверность и стиль',      emoji: '🕵' }
+  ],
+  18: [ // Drama
+    { name: 'Эмоциональный удар',         emoji: '💔' },
+    { name: 'Живость персонажей',         emoji: '🎭' }
+  ],
+  16: [ // Animation
+    { name: 'Визуальный стиль',           emoji: '🎨' },
+    { name: 'Душа и обаяние',             emoji: '⭐' }
+  ]
+};
+
+function renderGenreVibes(type, genres) {
+  if (!genres || !genres.length) return '';
+  const matchedVibes = [];
+  for (const g of genres) {
+    const vibes = GENRE_VIBES[g.id];
+    if (vibes) { matchedVibes.push({ genre: g.name, vibes }); break; } // take first match
+  }
+  if (!matchedVibes.length) return '';
+  const { genre, vibes } = matchedVibes[0];
+  const rows = vibes.map((v, i) => `
+    <div class="genre-vibe-row">
+      <div class="genre-vibe-name">${v.emoji} ${escHtml(v.name)}</div>
+      <div class="genre-vibe-control">
+        <div class="genre-vibe-bar-track-wrap">
+          <div class="genre-vibe-bar-track">
+            <div class="genre-vibe-bar-fill" id="vbf-${i}" style="width:50%"></div>
+          </div>
+          <input type="range" class="vibe-slider" min="1" max="10" step="1" value="5"
+            oninput="onVibeSlider(this,${i})"/>
+        </div>
+        <div class="genre-vibe-val" id="vbv-${i}">5</div>
+      </div>
+    </div>`).join('');
+  return `
+    <div class="genre-vibes-wrap">
+      <div class="genre-vibes-title">// вайб: ${escHtml(genre)}</div>
+      ${rows}
+      <div class="genre-vibe-note">не влияет на итог — только для выбора вечернего фильма</div>
+    </div>`;
+}
+
+function onVibeSlider(el, i) {
+  document.getElementById('vbv-' + i).textContent = el.value;
+  document.getElementById('vbf-' + i).style.width = (el.value / 10 * 100) + '%';
+}
+
+function toggleCriterionComment(i) {
+  const field = document.getElementById('ccf-' + i);
+  const btn = field.previousElementSibling.querySelector('.criterion-comment-btn');
+  const open = field.classList.toggle('open');
+  btn.classList.toggle('active', open);
+  if (open) field.querySelector('textarea').focus();
+}
+
+function activateCriterion(i) {
+  document.getElementById('crow-' + i)?.classList.add('active');
+}
+function deactivateCriterion(i) {
+  document.getElementById('crow-' + i)?.classList.remove('active');
 }
 
 function initSliders(criteriaList) {
@@ -1665,10 +1850,26 @@ function initSliders(criteriaList) {
       const scores = getSliderValues();
       const total = calcTotal(criteriaList.map((c,i) => ({ score: scores[i], multiplier: c.multiplier })));
       const el = document.getElementById('live-score');
-      el.textContent = total;
-      el.className = `live-score-num ${scoreClass(total)}`;
+      animateScore(el, parseFloat(el.textContent) || 0, total);
     });
   });
+}
+
+let _scoreAnimFrame = null;
+function animateScore(el, from, to) {
+  if (_scoreAnimFrame) cancelAnimationFrame(_scoreAnimFrame);
+  const duration = 220;
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const cur = (from + (to - from) * ease).toFixed(1);
+    el.textContent = cur;
+    el.className = `live-score-num ${scoreClass(parseFloat(cur))}`;
+    if (t < 1) _scoreAnimFrame = requestAnimationFrame(step);
+    else { el.textContent = to; el.className = `live-score-num ${scoreClass(to)}`; }
+  };
+  _scoreAnimFrame = requestAnimationFrame(step);
 }
 
 function onSlider(el) {
