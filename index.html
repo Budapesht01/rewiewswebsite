@@ -29,20 +29,38 @@ body {
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   overflow-x: hidden;
-  cursor: none;
-}
-
 /* ── CUSTOM CURSOR ── */
+*, *::before, *::after { cursor: none !important; }
 #cursor {
-  width: 12px; height: 12px;
+  width: 10px; height: 10px;
   background: var(--white);
   border-radius: 50%;
   position: fixed; top: 0; left: 0;
   pointer-events: none; z-index: 9999;
-  transition: transform 0.15s ease, background 0.2s;
+  transition: transform 0.15s ease, background 0.15s, border-radius 0.2s, opacity 0.2s;
   mix-blend-mode: difference;
+  transform-origin: center;
 }
-#cursor.big { transform: scale(4); }
+/* hover state: expands */
+#cursor.big { transform: scale(3.5); }
+/* text/input state: vertical bar */
+#cursor.text {
+  width: 2px; height: 18px;
+  border-radius: 1px;
+  transform: none;
+}
+/* slider state: rotated diamond */
+#cursor.slider {
+  width: 9px; height: 9px;
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+#cursor.slider-drag {
+  width: 9px; height: 9px;
+  border-radius: 0;
+  transform: rotate(0deg);
+  background: var(--white);
+}
 
 /* ── NOISE OVERLAY ── */
 body::before {
@@ -459,7 +477,7 @@ body::before {
   margin-bottom: 16px;
 }
 .criterion-name {
-  font-size: 11px; color: var(--dim); margin-bottom: 8px;
+  font-size: 11px; color: #777; margin-bottom: 8px;
   font-weight: 300;
 }
 .criterion-control {
@@ -468,16 +486,23 @@ body::before {
 .score-slider {
   flex: 1; -webkit-appearance: none; appearance: none;
   height: 2px; background: var(--line); outline: none;
-  cursor: pointer;
+  cursor: none;
 }
 .score-slider::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
-  width: 14px; height: 14px;
-  background: var(--white); border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.2s;
+  width: 10px; height: 10px;
+  background: var(--white); border-radius: 0;
+  cursor: none;
+  transform: rotate(45deg);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
 }
-.score-slider::-webkit-slider-thumb:hover { transform: scale(1.4); }
+.score-slider::-webkit-slider-thumb:hover { transform: rotate(0deg); }
+.score-slider::-moz-range-thumb {
+  width: 10px; height: 10px;
+  background: var(--white); border: none; border-radius: 0;
+  transform: rotate(45deg);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+}
 .score-val {
   font-family: 'Bebas Neue', sans-serif; font-size: 22px;
   width: 28px; text-align: right; color: var(--white);
@@ -498,7 +523,8 @@ body::before {
 .live-score-num {
   font-family: 'Bebas Neue', sans-serif; font-size: 64px;
   line-height: 1;
-  transition: color 0.3s;
+  transition: color 0.4s, text-shadow 0.4s;
+  display: inline-block;
 }
 .live-score-num.low { color: #888; }
 .live-score-num.mid { color: var(--white); }
@@ -1281,22 +1307,37 @@ function initCursor() {
   function tick() {
     cx += (mx - cx) * 0.18;
     cy += (my - cy) * 0.18;
-    c.style.left = (cx - 6) + 'px';
-    c.style.top  = (cy - 6) + 'px';
+    c.style.left = (cx - 5) + 'px';
+    c.style.top  = (cy - 5) + 'px';
     requestAnimationFrame(tick);
   }
   tick();
-  document.querySelectorAll('a,button,.card,.search-item,.tab-btn,.back-btn,.profile-review-card')
-    .forEach(el => {
-      el.addEventListener('mouseenter', () => c.classList.add('big'));
-      el.addEventListener('mouseleave', () => c.classList.remove('big'));
-    });
+
+  function setCursorState(state) {
+    c.className = state ? state : '';
+  }
+
   document.addEventListener('mouseover', e => {
-    if (e.target.matches('a,button,.card,.search-item,.tab-btn,.back-btn,.profile-review-card,[onclick]')) {
-      c.classList.add('big');
+    const t = e.target;
+    if (t.matches('input[type="range"], .score-slider')) {
+      setCursorState('slider');
+    } else if (t.matches('input[type="text"], input[type="email"], input[type="password"], textarea, [contenteditable]')) {
+      setCursorState('text');
+    } else if (t.matches('a, button, .card, .search-item, .tab-btn, .back-btn, .profile-review-card, [onclick], label')) {
+      setCursorState('big');
     } else {
-      c.classList.remove('big');
+      setCursorState('');
     }
+  });
+
+  // slider drag — square while holding
+  document.addEventListener('mousedown', e => {
+    if (e.target.matches('input[type="range"], .score-slider')) setCursorState('slider-drag');
+  });
+  document.addEventListener('mouseup', e => {
+    const t = document.elementFromPoint(e.clientX, e.clientY);
+    if (t && t.matches('input[type="range"], .score-slider')) setCursorState('slider');
+    else setCursorState('');
   });
 }
 
@@ -1660,13 +1701,36 @@ function renderRatingForm(type, criteriaList, myReview) {
 }
 
 function initSliders(criteriaList) {
+  // Animated score counter
+  let _scoreAnimId = null;
+  function animateScore(el, from, to, cls) {
+    if (_scoreAnimId) cancelAnimationFrame(_scoreAnimId);
+    const fromN = parseFloat(from) || 0;
+    const toN = parseFloat(to);
+    const dur = Math.min(280, Math.abs(toN - fromN) * 20);
+    if (dur < 10) { el.textContent = to; el.className = `live-score-num ${cls}`; return; }
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / dur);
+      const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+      const val = fromN + (toN - fromN) * ease;
+      // match format of calcTotal (1 decimal)
+      const str = (Math.round(val * 10) / 10).toString();
+      el.textContent = str.endsWith('.0') ? str.slice(0,-2) : str;
+      if (t < 1) _scoreAnimId = requestAnimationFrame(step);
+      else { el.textContent = to; el.className = `live-score-num ${cls}`; }
+    }
+    el.className = `live-score-num ${cls}`;
+    requestAnimationFrame(step);
+  }
+
   document.querySelectorAll('.score-slider').forEach(sl => {
     sl.addEventListener('input', () => {
       const scores = getSliderValues();
       const total = calcTotal(criteriaList.map((c,i) => ({ score: scores[i], multiplier: c.multiplier })));
       const el = document.getElementById('live-score');
-      el.textContent = total;
-      el.className = `live-score-num ${scoreClass(total)}`;
+      const prev = el.textContent;
+      animateScore(el, prev, total, scoreClass(total));
     });
   });
 }
