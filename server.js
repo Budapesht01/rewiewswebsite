@@ -271,6 +271,26 @@ app.get('/api/media/imdb/:type/:id', async (req, res) => {
   }
 });
 
+// Batch scores — GET /api/media/scores?ids=1,2,3&type=tv
+app.get('/api/media/scores', async (req, res) => {
+  try {
+    const ids = (req.query.ids || '').split(',').map(Number).filter(Boolean);
+    const type = req.query.type || 'tv';
+    if (!ids.length) return res.json({});
+    const reviews = await Review.find({ tmdbId: { $in: ids }, mediaType: type });
+    const map = {};
+    ids.forEach(id => {
+      const rr = reviews.filter(r => r.tmdbId === id);
+      if (rr.length) {
+        map[id] = parseFloat((rr.reduce((s,r) => s + r.totalScore, 0) / rr.length).toFixed(2));
+      }
+    });
+    res.json(map);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Search
 app.get('/api/media/search', async (req, res) => {
   try {
