@@ -182,8 +182,9 @@ body::before {
 
 /* ── SCROLL REVEAL for genre sections ── */
 .genre-section {
-  opacity: 0; transform: translateY(24px);
+  opacity: 0; transform: translateY(20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
+  padding: 0 0 0; margin-bottom: 0;
 }
 .genre-section.revealed {
   opacity: 1; transform: translateY(0);
@@ -858,7 +859,6 @@ body::before {
 
 /* ── GENRE SECTIONS ── */
 .genre-sections { }
-.genre-section { padding: 0 0 0; margin-bottom: 0; }
 
 .genre-section-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -1556,19 +1556,25 @@ function initScrollReveal() {
       if (!entry.isIntersecting) return;
       const section = entry.target;
       section.classList.add('revealed');
-      // stagger cards inside
       const row = section.querySelector('.cards-scroll-row');
       if (row) applyCardStagger(row, 0);
       _revealObserver.unobserve(section);
     });
-  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.01, rootMargin: '200px 0px 200px 0px' });
 }
 
 function observeGenreSections() {
   if (!_revealObserver) return;
-  document.querySelectorAll('.genre-section').forEach(s => {
+  const sections = document.querySelectorAll('.genre-section');
+  sections.forEach((s, i) => {
+    // small stagger so they don't all pop at once
+    s.style.transitionDelay = `${i * 60}ms`;
     _revealObserver.observe(s);
   });
+  // fallback: reveal all after 1.5s in case observer misses them
+  setTimeout(() => {
+    sections.forEach(s => s.classList.add('revealed'));
+  }, 1500);
 }
 
 // ─── 5. ANIMATED SCORE COUNTERS on media page ────────────────────────────────
@@ -1894,7 +1900,9 @@ async function doSearch(q) {
 async function openMedia(id, type) {
   showPage('media');
   const content = document.getElementById('media-content');
+  content.style.opacity = '0';
   content.innerHTML = '<div class="loader" style="min-height:60vh"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  content.style.opacity = '1';
   try {
     const [media, reviews, criteriaList, imdbData] = await Promise.all([
       api(`/api/media/${type}/${id}`),
@@ -1904,7 +1912,12 @@ async function openMedia(id, type) {
     ]);
     state.currentMedia = { id, type, media };
     state.criteria = criteriaList;
-    renderMediaPage(media, type, reviews, criteriaList, imdbData);
+    content.style.transition = 'opacity 0.25s ease';
+    content.style.opacity = '0';
+    setTimeout(() => {
+      renderMediaPage(media, type, reviews, criteriaList, imdbData);
+      content.style.opacity = '1';
+    }, 120);
   } catch(e) {
     content.innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
   }
