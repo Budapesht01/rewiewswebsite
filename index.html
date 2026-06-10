@@ -1063,7 +1063,63 @@ body {
   margin-top: 4px;
 }
 
-/* ── RADAR CHART — full-width under reviews ── */
+/* ── GENRE FILM REEL (full-width) ── */
+.genre-reel-wrap {
+  width: 100%; margin: 0 0 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.genre-reel-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.3em; color: var(--dim); text-transform: uppercase;
+  padding: 16px 40px 0;
+}
+.genre-reel-outer {
+  position: relative; overflow: hidden;
+  background: #050505;
+  padding: 12px 0;
+}
+.genre-reel-holes {
+  position: absolute; left: 0; right: 0; top: 8px;
+  display: flex; gap: 6px; padding: 0 12px;
+  pointer-events: none; z-index: 2;
+}
+.genre-reel-holes-bot { top: auto; bottom: 8px; }
+.genre-reel-hole {
+  width: 14px; height: 10px; flex-shrink: 0;
+  background: var(--black);
+  border: 1px solid #1a1a1a;
+  border-radius: 2px;
+}
+.genre-reel-track {
+  display: flex; gap: 4px;
+  overflow-x: auto; overflow-y: hidden;
+  padding: 28px 16px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+.genre-reel-track:active { cursor: grabbing; }
+.genre-reel-track::-webkit-scrollbar { display: none; }
+.genre-reel-frame {
+  flex-shrink: 0; width: 120px; height: 180px;
+  border: 1px solid #222; overflow: hidden;
+  position: relative; cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.genre-reel-frame:hover { border-color: var(--mid); transform: scaleY(1.04); }
+.genre-reel-frame img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(100%); display: block;
+  transition: filter 0.3s;
+}
+.genre-reel-frame:hover img { filter: grayscale(0%); }
+.genre-reel-frame-score {
+  position: absolute; bottom: 4px; left: 6px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 15px; line-height: 1;
+  color: var(--white); text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}
+.genre-reel-frame-score.gold { color: var(--gold); }
 .radar-block {
   border: 1px solid var(--line);
   padding: 28px 28px 24px;
@@ -1841,35 +1897,13 @@ body {
     </div>
   </div>
 
-  <!-- SPLIT COMPARE -->
-  <div class="split-section" id="split-section">
-    <div class="split-section-header">
-      <div class="split-section-label">// сравни два фильма</div>
-      <div class="split-section-hint">тяни ползунок</div>
-    </div>
-    <div class="split-compare-wrap" id="split-compare-wrap">
-      <div class="split-compare-side split-compare-left" id="scp-left">
-        <div class="scp-bg" style="left:10px">A</div>
-        <div class="split-compare-poster">
-          <div class="scp-title" id="scp-title-a">НАЧАЛО</div>
-          <div class="scp-score" id="scp-score-a">97<span style="font-size:22px;color:var(--dim)">.4</span></div>
-          <div class="scp-sub" id="scp-sub-a">// RATED · 2010</div>
-        </div>
-      </div>
-      <div class="split-compare-side split-compare-right" id="scp-right">
-        <div class="scp-bg" style="right:10px">B</div>
-        <div class="split-compare-poster" style="align-items:flex-end;text-align:right">
-          <div class="scp-title" id="scp-title-b">ДОВОД</div>
-          <div class="scp-score" id="scp-score-b">71<span style="font-size:22px;color:var(--dim)">.8</span></div>
-          <div class="scp-sub" id="scp-sub-b">// RATED · 2020</div>
-        </div>
-      </div>
-      <div class="split-compare-divider" id="scp-div"></div>
-      <div class="split-compare-handle" id="scp-handle">
-        <svg viewBox="0 0 12 12" fill="none"><path d="M3 6L1 3.5M3 6L1 8.5M9 6L11 3.5M9 6L11 8.5" stroke="#080808" stroke-width="1.4" stroke-linecap="round"/></svg>
-      </div>
-      <div class="scp-tag scp-tag-l">A</div>
-      <div class="scp-tag scp-tag-r">B</div>
+  <!-- FILM REEL -->
+  <div class="genre-reel-wrap" id="genre-reel-wrap">
+    <div class="genre-reel-label">// плёночная лента</div>
+    <div class="genre-reel-outer" id="genre-reel-outer">
+      <div class="genre-reel-holes" id="genre-reel-top"></div>
+      <div class="genre-reel-track" id="genre-reel-track"></div>
+      <div class="genre-reel-holes genre-reel-holes-bot" id="genre-reel-bot"></div>
     </div>
   </div>
 
@@ -3103,11 +3137,18 @@ async function renderTrending(type) {
     grid.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
     return;
   }
-  // render first as featured, rest as normal (no stagger yet — enrichGrid will apply it)
   grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, null, idx === 0)).join('');
   loadGenreSections(mediaType);
-  // enrich with site scores — featured only for trending grid
-  enrichGridWithScores(grid, items, mediaType, true);
+  // enrich scores then build reel
+  try {
+    const ids = items.map(i => i.id).join(',');
+    const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
+    grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, scores[item.id], idx === 0)).join('');
+    // attach scores to items for reel
+    items.forEach(item => { item._siteScore = scores[item.id] ?? null; });
+  } catch(e) {}
+  requestAnimationFrame(() => applyCardStagger(grid));
+  buildGenreReel(items, mediaType);
 }
 
 function cardHTML(item, mediaType, siteScore, featured = false) {
@@ -3730,17 +3771,8 @@ function renderProfilePage(user, reviews) {
       </div>
     </div>
     ${reviews.length
-      ? `<div class="profile-reel-section">
-          <div class="profile-reel-label">// плёночная лента</div>
-          <div class="profile-reel-outer" id="profile-reel-outer">
-            <div class="profile-reel-holes" id="profile-reel-top"></div>
-            <div class="profile-reel-track" id="profile-reel-track"></div>
-            <div class="profile-reel-holes profile-reel-holes-bot" id="profile-reel-bot"></div>
-          </div>
-        </div>
-        <div class="profile-reviews-grid fade-in">${cards}</div>`
+      ? `<div class="profile-reviews-grid fade-in">${cards}</div>`
       : '<div class="empty-state"><div class="empty-state-icon">◈</div><p>Нет оценок</p></div>'}`;
-  if (reviews.length) setTimeout(() => buildProfileReel(reviews), 50);
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
@@ -3885,53 +3917,43 @@ function initSplitCompare() {
 }
 
 // ─── PROFILE FILM REEL ───────────────────────────────────────────────────────
-function buildProfileReel(reviews) {
-  const track = document.getElementById('profile-reel-track');
-  const top   = document.getElementById('profile-reel-top');
-  const bot   = document.getElementById('profile-reel-bot');
+function buildGenreReel(items, mediaType) {
+  const track = document.getElementById('genre-reel-track');
+  const top   = document.getElementById('genre-reel-top');
+  const bot   = document.getElementById('genre-reel-bot');
   if (!track) return;
 
-  for (let i = 0; i < 40; i++) {
-    [top, bot].forEach(el => {
+  // perforation holes
+  [top, bot].forEach(el => {
+    el.innerHTML = '';
+    for (let i = 0; i < 60; i++) {
       const h = document.createElement('div');
-      h.className = 'profile-reel-hole';
+      h.className = 'genre-reel-hole';
       el.appendChild(h);
-    });
-  }
+    }
+  });
 
-  reviews.forEach(r => {
+  track.innerHTML = '';
+  items.forEach(item => {
     const frame = document.createElement('div');
-    frame.className = 'profile-reel-frame';
-    frame.onclick = () => openMedia(r.tmdbId, r.mediaType);
-    const posterPath = r.poster;
-    const year = (r.releaseDate || r.release_date || '').slice(0,4);
-    if (posterPath) {
+    frame.className = 'genre-reel-frame';
+    frame.onclick = () => openMedia(item.id, mediaType);
+    if (item.poster_path) {
       const img = document.createElement('img');
-      img.src = 'https://image.tmdb.org/t/p/w342' + posterPath;
-      img.alt = '';
+      img.src = 'https://image.tmdb.org/t/p/w342' + item.poster_path;
       img.loading = 'lazy';
       frame.appendChild(img);
-      const yr = document.createElement('div');
-      yr.className = 'profile-reel-frame-year';
-      yr.textContent = year;
-      frame.appendChild(yr);
+    }
+    if (item._siteScore != null) {
       const sc = document.createElement('div');
-      sc.className = 'profile-reel-frame-score';
-      sc.textContent = r.totalScore;
-      frame.appendChild(sc);
-    } else {
-      const t = document.createElement('div');
-      t.className = 'profile-reel-frame-title';
-      t.textContent = r.title || '';
-      frame.appendChild(t);
-      const sc = document.createElement('div');
-      sc.className = 'profile-reel-frame-score';
-      sc.textContent = r.totalScore;
+      sc.className = 'genre-reel-frame-score' + (item._siteScore > 100 ? ' gold' : '');
+      sc.textContent = item._siteScore;
       frame.appendChild(sc);
     }
     track.appendChild(frame);
   });
 
+  // drag scroll
   let isDrag = false, startX, scrollStart;
   track.addEventListener('mousedown', e => {
     isDrag = true; startX = e.clientX; scrollStart = track.scrollLeft;
@@ -3941,11 +3963,9 @@ function buildProfileReel(reviews) {
     if (!isDrag) return;
     track.scrollLeft = scrollStart - (e.clientX - startX);
   });
-  window.addEventListener('mouseup', () => {
-    isDrag = false;
-    track.style.scrollBehavior = 'smooth';
-  });
+  window.addEventListener('mouseup', () => { isDrag = false; });
 }
+
 
 // ─── API HELPER ───────────────────────────────────────────────────────────────
 async function api(url, method = 'GET', body = null) {
