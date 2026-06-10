@@ -70,7 +70,7 @@ body {
   width: 100%; height: 100%;
   pointer-events: none;
   z-index: 9998;
-  opacity: 0.02;
+  opacity: 0.03;
 }
 
 /* ── SCROLLBAR ── */
@@ -726,50 +726,290 @@ body {
 /* ── AUTH MODAL ── */
 #modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0,0,0,0.92);
   z-index: 5000; display: none;
   align-items: center; justify-content: center;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
+  overflow-y: auto;
+  padding: 40px 20px;
 }
 #modal-overlay.open { display: flex; }
+
+/* ── CONTRACT MODAL WRAPPER ── */
 .modal {
-  background: var(--grey); border: 1px solid var(--mid);
-  width: 400px; padding: 40px;
-  animation: fadeSlideIn 0.25s ease;
+  background: var(--black);
+  width: 560px; max-width: 100%;
+  animation: fadeSlideIn 0.3s ease;
+  position: relative;
 }
-.modal-title {
-  font-family: 'Bebas Neue', sans-serif; font-size: 36px;
-  letter-spacing: 0.04em; margin-bottom: 28px;
+
+/* contract-A document style inside modal */
+.modal-contract {
+  border: 1px solid var(--line);
+  padding: 40px 44px;
+  position: relative;
 }
-.input-group { margin-bottom: 14px; }
-.input-group label {
-  display: block; font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--dim); margin-bottom: 6px;
+.modal-contract::before,
+.modal-contract::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  pointer-events: none;
 }
-.input-group input {
-  width: 100%; background: var(--black); border: 1px solid var(--line);
-  color: var(--white); padding: 10px 14px;
-  font-family: 'DM Sans', sans-serif; font-size: 14px;
-  outline: none; transition: border-color 0.2s;
+.modal-contract::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid var(--white);
+  border-left: 2px solid var(--white);
 }
-.input-group input:focus { border-color: var(--dim); }
+.modal-contract::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid var(--white);
+  border-right: 2px solid var(--white);
+}
+.modal-doc-stamp {
+  position: absolute; top: 32px; right: 44px;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px; letter-spacing: 0.3em;
+  color: var(--line);
+  text-transform: uppercase;
+  text-align: right; line-height: 1.8;
+}
+.modal-doc-header {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.5em;
+  color: var(--dim); margin-bottom: 4px;
+}
+.modal-doc-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px; letter-spacing: 0.06em;
+  line-height: 0.95; margin-bottom: 28px;
+}
+.modal-doc-art {
+  font-size: 11px; line-height: 2.0;
+  color: rgba(242,242,240,0.5);
+  margin-bottom: 16px;
+}
+.modal-art-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.3em;
+  color: var(--dim); display: block;
+  margin-bottom: 6px; margin-top: 20px;
+}
+.modal-doc-art strong { color: rgba(242,242,240,0.8); font-weight: 400; }
+
+/* inline inputs inside document text */
+.doc-inline {
+  display: inline-block;
+  min-width: 140px;
+  border: none;
+  border-bottom: 1px solid var(--mid);
+  background: transparent;
+  color: var(--white);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em;
+  padding: 0 4px 2px;
+  outline: none;
+  vertical-align: baseline;
+  transition: border-color 0.2s;
+  caret-color: var(--white);
+}
+.doc-inline:focus { border-bottom-color: var(--white); }
+.doc-inline::placeholder { color: var(--mid); font-size: 10px; }
+.doc-inline.pw { -webkit-text-security: disc; letter-spacing: 0.2em; }
+
+/* signature section */
+.modal-sig-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.modal-sig-row {
+  display: grid;
+  grid-template-columns: 1fr 110px;
+  gap: 32px;
+  align-items: flex-end;
+}
+.modal-sig-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.3em;
+  color: var(--dim); margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.modal-sig-canvas {
+  display: block; width: 100%; height: 100px;
+  background: var(--black);
+  border: 1px solid var(--line);
+  touch-action: none; cursor: crosshair;
+  transition: border-color 0.2s;
+}
+.modal-sig-canvas.active, .modal-sig-canvas:focus { border-color: var(--dim); }
+.modal-sig-clear {
+  position: relative; margin-top: 6px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.2em; color: var(--line);
+  transition: color 0.2s; padding: 0;
+}
+.modal-sig-clear:hover { color: var(--dim); }
+.modal-sig-hint {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.15em; color: var(--line);
+  margin-top: 6px;
+}
+
+/* seal */
+.modal-seal {
+  width: 100px; height: 100px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  margin: 0 auto;
+  transition: border-color 0.4s;
+}
+.modal-seal.signed { border-color: rgba(242,242,240,0.35); }
+.modal-seal-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; letter-spacing: 0.12em;
+  color: var(--line); transition: color 0.4s;
+}
+.modal-seal.signed .modal-seal-logo { color: rgba(242,242,240,0.7); }
+.modal-seal-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 6px; letter-spacing: 0.2em;
+  color: var(--line); text-align: center;
+  text-transform: uppercase; line-height: 1.8;
+  transition: color 0.4s;
+}
+.modal-seal.signed .modal-seal-text { color: var(--dim); }
+
+.modal-error {
+  font-size: 10px; color: var(--red);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.1em;
+  min-height: 16px; margin-top: 10px;
+}
 .modal-footer {
-  margin-top: 20px; font-size: 12px; color: var(--dim);
-  text-align: center;
+  margin-top: 16px; font-size: 11px; color: var(--dim);
+  font-family: 'DM Mono', monospace;
+  text-align: center; letter-spacing: 0.1em;
 }
 .modal-footer a { color: var(--white); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .modal-close {
   position: absolute; top: 0; right: 0;
-  padding: 20px 24px; background: none; border: none;
-  color: var(--dim); font-size: 20px; cursor: pointer;
+  padding: 16px 20px; background: none; border: none;
+  color: var(--dim); font-size: 18px; cursor: pointer;
+  z-index: 10;
 }
-.modal { position: relative; }
-.modal-error {
-  font-size: 12px; color: var(--red);
-  font-family: 'DM Mono', monospace; margin-bottom: 10px;
-  min-height: 16px;
+
+/* login contract — compact version */
+.login-contract-fields {
+  margin-top: 4px;
 }
+
+/* ── REVIEW CARD SIGNATURE DISPLAY ── */
+.review-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+.review-sig-display {
+  width: 100px; height: 36px;
+  opacity: 0.35;
+  transition: opacity 0.3s;
+  flex-shrink: 0;
+}
+.review-card:hover .review-sig-display { opacity: 0.65; }
+
+/* fingerprint button */
+.fp-btn {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s, transform 0.2s;
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 0;
+}
+.fp-btn:hover { border-color: var(--dim); transform: scale(1.15); }
+.fp-btn.scanned { border-color: rgba(242,242,240,0.4); }
+.fp-btn svg { width: 10px; height: 10px; }
+.fp-overlay {
+  position: fixed; inset: 0; z-index: 6000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.95);
+  animation: fadeIn 0.2s ease;
+  cursor: pointer;
+}
+.fp-overlay .fp-inner {
+  text-align: center;
+}
+.fp-svg-wrap {
+  width: 200px; height: 200px;
+  position: relative; margin: 0 auto 24px;
+}
+.fp-svg-wrap svg {
+  width: 100%; height: 100%;
+  opacity: 0;
+  animation: fpReveal 1.8s ease forwards;
+}
+.fp-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.4em;
+  color: var(--dim); text-transform: uppercase;
+}
+.fp-user {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 0.08em;
+  color: var(--white); margin-top: 4px;
+}
+.fp-dismiss {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.25em;
+  color: var(--line); margin-top: 20px;
+}
+@keyframes fpReveal {
+  0%   { opacity: 0; filter: blur(8px); }
+  30%  { opacity: 0.3; }
+  100% { opacity: 1; filter: blur(0); }
+}
+
+/* rating form sig section */
+.review-sig-wrap {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.review-sig-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 8px;
+}
+.review-sig-canvas {
+  display: block; width: 100%; height: 80px;
+  background: var(--black); border: 1px solid var(--line);
+  touch-action: none; cursor: crosshair;
+  transition: border-color 0.2s;
+}
+.review-sig-canvas.active { border-color: var(--dim); }
+.review-sig-row-controls {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-top: 6px;
+}
+.review-sig-hint {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.15em; color: var(--line);
+}
+.review-sig-clear-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.2em; color: var(--line);
+  transition: color 0.2s; padding: 0;
+}
+.review-sig-clear-btn:hover { color: var(--dim); }
 
 /* ── PROFILE PAGE ── */
 #profile-page { padding: 80px 40px 60px; }
@@ -1317,244 +1557,6 @@ body {
   .genre-section { padding: 0 20px 36px; }
   .cards-row { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
 }
-
-/* ══════════════════════════════════════════════════════
-   CONTRACT AUTH MODAL — ВАРИАНТ A (документ)
-   ══════════════════════════════════════════════════════ */
-#contract-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.92);
-  z-index: 5500; display: none;
-  align-items: center; justify-content: center;
-  backdrop-filter: blur(8px);
-  padding: 20px;
-}
-#contract-overlay.open { display: flex; }
-
-.contract-modal {
-  background: var(--black);
-  border: 1px solid var(--mid);
-  width: 100%; max-width: 680px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  animation: fadeSlideIn 0.3s ease;
-  scrollbar-width: thin;
-  scrollbar-color: var(--mid) transparent;
-}
-.contract-modal::-webkit-scrollbar { width: 3px; }
-.contract-modal::-webkit-scrollbar-thumb { background: var(--mid); }
-
-/* corner marks */
-.contract-modal::before,
-.contract-modal::after {
-  content: '';
-  position: absolute;
-  width: 18px; height: 18px;
-  pointer-events: none; z-index: 2;
-}
-.contract-modal::before {
-  top: -1px; left: -1px;
-  border-top: 2px solid var(--white);
-  border-left: 2px solid var(--white);
-}
-.contract-modal::after {
-  bottom: -1px; right: -1px;
-  border-bottom: 2px solid var(--white);
-  border-right: 2px solid var(--white);
-}
-
-.contract-inner { padding: 44px 52px 48px; }
-@media (max-width: 600px) { .contract-inner { padding: 28px 24px 32px; } }
-
-.contract-close {
-  position: absolute; top: 0; right: 0;
-  padding: 16px 20px; background: none; border: none;
-  color: var(--dim); font-size: 18px; cursor: pointer;
-  z-index: 3; transition: color 0.2s;
-}
-.contract-close:hover { color: var(--white); }
-
-/* stamp top-right */
-.contract-stamp {
-  position: absolute; top: 36px; right: 52px;
-  font-family: 'DM Mono', monospace;
-  font-size: 8px; letter-spacing: 0.3em;
-  color: var(--line); text-transform: uppercase;
-  text-align: right; line-height: 1.9;
-}
-
-/* header */
-.contract-doc-header {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 0.5em;
-  color: var(--dim); margin-bottom: 4px;
-  text-transform: uppercase;
-}
-.contract-doc-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 38px; letter-spacing: 0.05em;
-  line-height: 0.95; margin-bottom: 30px;
-}
-
-/* document body text */
-.contract-art {
-  font-size: 12px; line-height: 2.0;
-  color: rgba(242,242,240,0.5);
-  margin-bottom: 14px;
-}
-.contract-art strong { color: rgba(242,242,240,0.8); font-weight: 400; }
-.art-num {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px; letter-spacing: 0.3em;
-  color: var(--dim); display: block;
-  margin-bottom: 5px; margin-top: 22px;
-}
-
-/* inline input in document text */
-.doc-inline {
-  display: inline-block;
-  min-width: 140px;
-  border: none;
-  border-bottom: 1px solid var(--mid);
-  background: transparent;
-  color: var(--white);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px; letter-spacing: 0.1em;
-  padding: 0 4px 2px;
-  outline: none;
-  vertical-align: baseline;
-  transition: border-color 0.2s;
-  caret-color: var(--white);
-}
-.doc-inline:focus { border-bottom-color: var(--white); }
-.doc-inline::placeholder { color: var(--mid); font-size: 10px; }
-.doc-inline.pw { -webkit-text-security: disc; letter-spacing: 0.2em; }
-.doc-inline.wide { min-width: 200px; }
-
-/* divider before signature */
-.contract-section {
-  margin-top: 28px;
-  padding-top: 24px;
-  border-top: 1px solid var(--line);
-}
-.contract-section-title {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px; letter-spacing: 0.4em;
-  text-transform: uppercase; color: var(--dim);
-  margin-bottom: 12px;
-}
-
-/* sig row: canvas + seal */
-.contract-sig-row {
-  display: grid;
-  grid-template-columns: 1fr 130px;
-  gap: 32px;
-  align-items: flex-start;
-}
-@media (max-width: 500px) {
-  .contract-sig-row { grid-template-columns: 1fr; }
-}
-
-.sig-canvas-wrap { position: relative; }
-.contract-sig-canvas {
-  display: block; width: 100%; height: 100px;
-  background: var(--black);
-  border: 1px solid var(--line);
-  touch-action: none; cursor: crosshair;
-  transition: border-color 0.2s;
-}
-.contract-sig-canvas.active { border-color: var(--dim); }
-.sig-canvas-clear {
-  position: absolute; top: 7px; right: 9px;
-  font-family: 'DM Mono', monospace; font-size: 9px;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--line); background: none; border: none;
-  cursor: pointer; transition: color 0.2s;
-}
-.sig-canvas-clear:hover { color: var(--dim); }
-.sig-hint {
-  font-family: 'DM Mono', monospace; font-size: 9px;
-  letter-spacing: 0.15em; color: var(--line); margin-top: 6px;
-}
-
-/* RATED seal */
-.contract-seal {
-  width: 110px; height: 110px;
-  border: 1px solid var(--line); border-radius: 50%;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  margin: 0 auto;
-  position: relative;
-  transition: border-color 0.4s;
-  cursor: pointer;
-  user-select: none;
-}
-.contract-seal:hover { border-color: var(--dim); }
-.contract-seal.signed { border-color: rgba(242,242,240,0.35); }
-.seal-logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px; letter-spacing: 0.12em;
-  color: var(--line);
-  transition: color 0.4s;
-}
-.contract-seal.signed .seal-logo { color: rgba(242,242,240,0.7); }
-.seal-sub {
-  font-family: 'DM Mono', monospace;
-  font-size: 7px; letter-spacing: 0.2em;
-  color: var(--line); text-align: center;
-  text-transform: uppercase; line-height: 1.9;
-  transition: color 0.4s;
-}
-.contract-seal.signed .seal-sub { color: var(--dim); }
-
-/* fingerprint canvas inside seal */
-.seal-fp-canvas {
-  position: absolute; inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.6s;
-}
-.contract-seal.fp-active .seal-fp-canvas { opacity: 0.55; }
-.contract-seal.fp-active .seal-logo,
-.contract-seal.fp-active .seal-sub { opacity: 0; }
-
-/* error + submit */
-.contract-error {
-  font-family: 'DM Mono', monospace; font-size: 10px;
-  color: var(--red); letter-spacing: 0.1em;
-  min-height: 16px; margin-top: 10px;
-}
-.contract-submit {
-  width: 100%;
-  background: var(--white); color: var(--black);
-  border: none;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 17px; letter-spacing: 0.12em;
-  padding: 14px 0; cursor: pointer;
-  transition: opacity 0.2s;
-  margin-top: 24px;
-}
-.contract-submit:hover { opacity: 0.88; }
-.contract-submit:disabled { opacity: 0.3; cursor: not-allowed; }
-
-.contract-footer {
-  margin-top: 16px; font-size: 12px; color: var(--dim);
-  text-align: center; font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 0.1em;
-}
-.contract-footer a { color: var(--white); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-
-/* ── SIGNATURE ON REVIEW CARD ── */
-.review-sig-display {
-  position: absolute;
-  bottom: 14px; right: 16px;
-  width: 80px; height: 36px;
-  pointer-events: none;
-  opacity: 0.35;
-}
-.review-card { position: relative; } /* ensure positioning context */
 
 .genre-chip {
   border: 1px solid var(--line); padding: 3px 10px;
@@ -2162,121 +2164,120 @@ body {
 <div id="modal-overlay" onclick="handleOverlayClick(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-title" id="modal-title">ВОЙТИ</div>
-    <div class="modal-error" id="modal-error"></div>
-    <div id="register-fields" style="display:none">
-      <div class="input-group">
-        <label>Имя пользователя</label>
-        <input type="text" id="reg-username" placeholder="coolname" />
-      </div>
-    </div>
-    <div class="input-group">
-      <label>Email</label>
-      <input type="email" id="auth-email" placeholder="you@example.com" />
-    </div>
-    <div class="input-group">
-      <label>Пароль</label>
-      <input type="password" id="auth-password" placeholder="••••••••" />
-    </div>
-    <button class="submit-btn" id="modal-submit-btn" onclick="submitAuth()">ВОЙТИ</button>
-    <div class="modal-footer" id="modal-footer">
-      Нет аккаунта? <a onclick="openModal('register')">Зарегистрироваться</a>
-    </div>
-  </div>
-</div>
 
-<!-- CONTRACT AUTH MODAL -->
-<div id="contract-overlay" onclick="handleContractOverlayClick(event)">
-  <div class="contract-modal" id="contract-modal">
-    <button class="contract-close" onclick="closeContractModal()">✕</button>
+    <!-- ══ REGISTRATION CONTRACT ══ -->
+    <div id="modal-register" style="display:none">
+      <div class="modal-contract">
+        <div class="modal-doc-stamp">
+          RATED // Platform<br>
+          Договор пользователя<br>
+          Форма № RGS-001
+        </div>
+        <div class="modal-doc-header">Соглашение об использовании</div>
+        <div class="modal-doc-title">ДОГОВОР<br>ПОЛЬЗОВАТЕЛЯ</div>
 
-    <div class="contract-inner">
-      <!-- stamp -->
-      <div class="contract-stamp" id="contract-stamp">
-        RATED // Platform<br>
-        Договор пользователя<br>
-        Форма № RGS-001
-      </div>
+        <div class="modal-doc-art">
+          <span class="modal-art-num">§ 1 · Стороны</span>
+          Настоящий договор заключается между платформой
+          <strong>RATED</strong> (далее — «Платформа») и пользователем,
+          именуемым далее «Участник», чьи данные указаны ниже.
+        </div>
 
-      <div class="contract-doc-header" id="contract-doc-header">Соглашение об использовании</div>
-      <div class="contract-doc-title" id="contract-doc-title">ДОГОВОР<br>ПОЛЬЗОВАТЕЛЯ</div>
+        <div class="modal-doc-art">
+          <span class="modal-art-num">§ 2 · Идентификация участника</span>
+          Участник настоящим предоставляет следующие учётные данные
+          для регистрации в Платформе:<br><br>
+          Псевдоним: <input class="doc-inline" id="reg-username" placeholder="имя пользователя" maxlength="32" autocomplete="off"/>
+          &nbsp;&nbsp;&nbsp;
+          Почта: <input class="doc-inline" id="reg-email" type="email" placeholder="you@example.com" style="min-width:175px"/>
+          <br>
+          Секретный ключ: <input class="doc-inline pw" id="reg-password" placeholder="••••••••" maxlength="64" autocomplete="new-password"/>
+        </div>
 
-      <!-- §1 Стороны -->
-      <div class="contract-art" id="contract-art-1">
-        <span class="art-num">§ 1 · Стороны</span>
-        Настоящий договор заключается между платформой
-        <strong>RATED</strong> (далее — «Платформа») и пользователем,
-        именуемым далее «Участник», чьи данные указаны ниже.
-      </div>
+        <div class="modal-doc-art">
+          <span class="modal-art-num">§ 3 · Обязательства</span>
+          Участник обязуется оценивать произведения <strong>честно</strong>,
+          оставлять отзывы <strong>по существу</strong>. Любое действие,
+          требующее верификации (публикация отзыва, оценка),
+          должно быть подтверждено личной подписью.
+        </div>
 
-      <!-- §2 Идентификация — поля регистрации / входа -->
-      <div class="contract-art" id="contract-art-register">
-        <span class="art-num">§ 2 · Идентификация участника</span>
-        Участник предоставляет следующие учётные данные для регистрации в Платформе:<br><br>
-        Псевдоним:&nbsp;<input class="doc-inline" id="c-username" placeholder="имя пользователя" maxlength="32" autocomplete="off"/>
-        &nbsp;&nbsp;
-        Почта:&nbsp;<input class="doc-inline wide" id="c-email" type="email" placeholder="you@example.com"/>
-        <br>
-        Секретный ключ:&nbsp;<input class="doc-inline pw" id="c-password" placeholder="••••••••" maxlength="64" autocomplete="new-password"/>
-      </div>
+        <div class="modal-doc-art">
+          <span class="modal-art-num">§ 4 · Подпись как идентификатор</span>
+          Собственноручная подпись Участника является неотъемлемой частью
+          учётных данных и используется в качестве дополнительного фактора
+          верификации при публикации материалов на Платформе.
+        </div>
 
-      <div class="contract-art" id="contract-art-login" style="display:none">
-        <span class="art-num">§ 2 · Идентификация участника</span>
-        Участник подтверждает свою личность для доступа к Платформе:<br><br>
-        Почта:&nbsp;<input class="doc-inline wide" id="c-email-login" type="email" placeholder="you@example.com"/>
-        &nbsp;&nbsp;
-        Секретный ключ:&nbsp;<input class="doc-inline pw" id="c-password-login" placeholder="••••••••" maxlength="64" autocomplete="current-password"/>
-      </div>
-
-      <!-- §3 Обязательства — только при регистрации -->
-      <div class="contract-art" id="contract-art-3">
-        <span class="art-num">§ 3 · Обязательства</span>
-        Участник обязуется оценивать произведения <strong>честно</strong>,
-        оставлять отзывы <strong>по существу</strong> и не нарушать
-        права других участников. Любое действие, требующее верификации
-        (публикация отзыва, оценка), должно быть подтверждено личной подписью.
-      </div>
-
-      <!-- §4 Подпись — только при регистрации -->
-      <div class="contract-art" id="contract-art-4">
-        <span class="art-num">§ 4 · Подпись как идентификатор</span>
-        Собственноручная подпись Участника является неотъемлемой частью
-        учётных данных и используется в качестве дополнительного фактора
-        верификации при публикации материалов на Платформе.
-        Нажмите на печать <strong>RATED</strong> для генерации цифрового отпечатка.
-      </div>
-
-      <!-- Signature section — только при регистрации -->
-      <div class="contract-section" id="contract-sig-section">
-        <div class="contract-sig-row">
-          <div>
-            <div class="contract-section-title">Подпись участника</div>
-            <div class="sig-canvas-wrap">
-              <canvas class="contract-sig-canvas" id="contractSigCanvas"></canvas>
-              <button class="sig-canvas-clear" onclick="clearContractSig()">очистить</button>
+        <div class="modal-sig-section">
+          <div class="modal-sig-row">
+            <div>
+              <div class="modal-sig-label">Подпись участника</div>
+              <canvas class="modal-sig-canvas" id="regSigCanvas"></canvas>
+              <div class="review-sig-row-controls">
+                <div class="modal-sig-hint">// расписитесь для подтверждения договора</div>
+                <button class="modal-sig-clear" onclick="clearModalSig()">очистить</button>
+              </div>
             </div>
-            <div class="sig-hint">// распишитесь в поле выше для подтверждения</div>
+            <div style="text-align:center">
+              <div class="modal-sig-label">Печать</div>
+              <div class="modal-seal" id="regSeal">
+                <div class="modal-seal-logo">RATED</div>
+                <div class="modal-seal-text">платформа<br>// оцени всё</div>
+              </div>
+            </div>
           </div>
-          <div style="text-align:center">
-            <div class="contract-section-title">Печать платформы</div>
-            <div class="contract-seal" id="contractSeal" onclick="triggerFingerprint()">
-              <canvas class="seal-fp-canvas" id="fpCanvas"></canvas>
-              <div class="seal-logo">RATED</div>
-              <div class="seal-sub">платформа<br>// оцени всё</div>
-            </div>
-            <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;color:var(--line);margin-top:8px">// нажмите для отпечатка</div>
+          <div class="modal-error" id="modal-error-reg"></div>
+          <button class="submit-btn" id="modal-submit-reg" onclick="submitRegister()">
+            ПОДПИСАТЬ ДОГОВОР И СОЗДАТЬ АККАУНТ
+          </button>
+          <div class="modal-footer">
+            Уже есть аккаунт? <a onclick="openModal('login')">Войти</a>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="contract-error" id="contract-error"></div>
-      <button class="contract-submit" id="contract-submit-btn" onclick="submitContractAuth()">
-        ПОДПИСАТЬ ДОГОВОР И СОЗДАТЬ АККАУНТ
-      </button>
-      <div class="contract-footer" id="contract-footer">
-        Уже есть аккаунт? <a onclick="openContractModal('login')">Войти</a>
+    <!-- ══ LOGIN CONTRACT ══ -->
+    <div id="modal-login" style="display:none">
+      <div class="modal-contract">
+        <div class="modal-doc-stamp">
+          RATED // Platform<br>
+          Верификация<br>
+          Форма № AUTH-001
+        </div>
+        <div class="modal-doc-header">Идентификация участника</div>
+        <div class="modal-doc-title">ВХОД<br>В СИСТЕМУ</div>
+
+        <div class="modal-doc-art">
+          <span class="modal-art-num">§ 1 · Авторизация</span>
+          Платформа <strong>RATED</strong> запрашивает подтверждение
+          личности Участника. Укажите зарегистрированные учётные данные.
+        </div>
+
+        <div class="modal-doc-art">
+          <span class="modal-art-num">§ 2 · Учётные данные</span>
+          Почта: <input class="doc-inline" id="login-email" type="email" placeholder="you@example.com" style="min-width:200px"/><br>
+          Секретный ключ: <input class="doc-inline pw" id="login-password" placeholder="••••••••" maxlength="64" autocomplete="current-password"/>
+        </div>
+
+        <div class="modal-doc-art">
+          <span class="modal-art-num">§ 3 · Доступ</span>
+          После успешной проверки Участнику предоставляется доступ
+          ко всем функциям Платформы, включая публикацию оценок
+          и просмотр аналитики.
+        </div>
+
+        <div class="modal-error" id="modal-error-login"></div>
+        <button class="submit-btn" id="modal-submit-login" onclick="submitLogin()" style="margin-top:24px">
+          ПОДТВЕРДИТЬ ЛИЧНОСТЬ И ВОЙТИ
+        </button>
+        <div class="modal-footer" style="margin-top:16px">
+          Нет аккаунта? <a onclick="openModal('register')">Зарегистрироваться</a>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -4019,6 +4020,9 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
   // init sliders
   if (!myReview) initSliders(criteriaList);
 
+  // init review signature canvas
+  requestAnimationFrame(() => initReviewSig());
+
   // cinematic backdrop reveal
   requestAnimationFrame(() => setTimeout(cinematicReveal, 30));
 
@@ -4088,9 +4092,19 @@ function renderReviews(reviews, criteriaList) {
           <div class="micro-histogram">${bars}</div>
         </div>
         ${r.comment ? `<p class="review-comment">${escHtml(r.comment)}</p>` : ''}
-        <div class="review-date">${date}</div>
+        <div class="review-footer">
+          <div class="review-date">${date}</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${r.signatureData ? `<img class="review-sig-display" src="${r.signatureData}" alt="подпись"/>` : ''}
+            <button class="fp-btn${r.signatureData ? ' scanned' : ''}" onclick="showFingerprint('${escHtml(r.username)}','${r._id}')" title="Отпечаток">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" opacity="0.3"/>
+                <path d="M12 6c-3.3 0-6 2.7-6 6M12 8c-2.2 0-4 1.8-4 4M12 10c-1.1 0-2 .9-2 2M12 12v.01"/>
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>`;
-  }).join('');
 }
 
 function renderRatingForm(type, criteriaList, myReview) {
@@ -4125,6 +4139,14 @@ function renderRatingForm(type, criteriaList, myReview) {
       <div class="live-score-sub">/ 110</div>
     </div>
     <textarea class="comment-input" id="review-comment" placeholder="Ваш комментарий (необязательно)…">${myReview ? escHtml(myReview.comment || '') : ''}</textarea>
+    <div class="review-sig-wrap">
+      <div class="review-sig-label">// подпись · верификация отзыва</div>
+      <canvas class="review-sig-canvas" id="reviewSigCanvas"></canvas>
+      <div class="review-sig-row-controls">
+        <div class="review-sig-hint">// та же подпись что при регистрации</div>
+        <button class="review-sig-clear-btn" onclick="clearReviewSig()">очистить</button>
+      </div>
+    </div>
     <button class="submit-btn" id="submit-review-btn" onclick="submitReview('${myReview ? myReview._id : ''}')">
       ${myReview ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ'}
     </button>
@@ -4315,24 +4337,157 @@ function scoreClass(v) {
   return 'high';
 }
 
+/* ── REVIEW SIGNATURE ENGINE ── */
+const reviewSig = { ctx: null, drawing: false, hasData: false, canvas: null, _inited: false };
+
+function initReviewSig() {
+  const canvas = document.getElementById('reviewSigCanvas');
+  if (!canvas) return;
+  reviewSig._inited = false; // reinit each time form renders
+  reviewSig.canvas = canvas;
+  reviewSig.hasData = false;
+  const ctx = canvas.getContext('2d');
+  reviewSig.ctx = ctx;
+
+  function resize() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    ctx.strokeStyle = '#f2f2f0';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    // try to restore saved sig from localStorage
+    if (!reviewSig.hasData && state.user) {
+      const saved = localStorage.getItem('rated_sig_' + state.user.username);
+      if (saved) {
+        const img = new Image();
+        img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); reviewSig.hasData = true; };
+        img.src = saved;
+      }
+    }
+  }
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return [(src.clientX - rect.left) * (canvas.width / rect.width),
+            (src.clientY - rect.top)  * (canvas.height / rect.height)];
+  }
+
+  let lx = 0, ly = 0;
+  function start(e) { e.preventDefault(); reviewSig.drawing = true; canvas.classList.add('active'); [lx, ly] = getPos(e); ctx.beginPath(); ctx.moveTo(lx, ly); }
+  function move(e) {
+    if (!reviewSig.drawing) return; e.preventDefault();
+    const [x, y] = getPos(e);
+    ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y);
+    lx = x; ly = y; reviewSig.hasData = true;
+  }
+  function end() { reviewSig.drawing = false; canvas.classList.remove('active'); }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+}
+
+function clearReviewSig() {
+  if (!reviewSig.ctx) return;
+  reviewSig.ctx.clearRect(0, 0, reviewSig.canvas.width, reviewSig.canvas.height);
+  reviewSig.hasData = false;
+}
+
+/* ── FINGERPRINT OVERLAY ── */
+function showFingerprint(username, reviewId) {
+  // generate deterministic-ish fingerprint SVG from username+reviewId seed
+  const seed = (username + reviewId).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const rng = (() => { let s = seed; return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; }; })();
+
+  // build concentric arch paths simulating a fingerprint
+  const cx = 100, cy = 110;
+  let paths = '';
+  for (let i = 0; i < 14; i++) {
+    const r = 12 + i * 7;
+    const warp = () => (rng() - 0.5) * 6;
+    // arc from left to right with slight distortion
+    const startA = Math.PI + 0.1 + rng() * 0.15;
+    const endA = -0.1 - rng() * 0.15;
+    // create a wavy path
+    let d = `M ${cx + Math.cos(startA) * r + warp()} ${cy + Math.sin(startA) * r + warp()}`;
+    const steps = 20;
+    for (let j = 1; j <= steps; j++) {
+      const a = startA + (endA - startA) * (j / steps);
+      const noise = (rng() - 0.5) * 4;
+      const rx = r + noise * (i % 3 === 0 ? 1.5 : 0.7);
+      d += ` L ${cx + Math.cos(a) * rx + warp() * 0.3} ${cy + Math.sin(a) * rx + warp() * 0.3}`;
+    }
+    // random gap in some arches for realism
+    if (rng() > 0.65) {
+      const breakPt = 5 + Math.floor(rng() * 10);
+      d = d.split(' L ').slice(0, breakPt).join(' L ');
+    }
+    paths += `<path d="${d}" fill="none" stroke="rgba(242,242,240,0.7)" stroke-width="${0.9 + rng()*0.4}" stroke-linecap="round"/>`;
+  }
+  // add a whorl/loop center detail
+  for (let i = 0; i < 4; i++) {
+    const r2 = 4 + i * 3.5;
+    paths += `<circle cx="${cx + (rng()-0.5)*4}" cy="${cy - 5 + (rng()-0.5)*4}" r="${r2}" fill="none" stroke="rgba(242,242,240,0.5)" stroke-width="0.8"/>`;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'fp-overlay';
+  overlay.innerHTML = `
+    <div class="fp-inner">
+      <div class="fp-svg-wrap">
+        <svg viewBox="0 20 200 180" xmlns="http://www.w3.org/2000/svg"
+             style="filter: url(#grain)">
+          <defs>
+            <filter id="grain">
+              <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+              <feColorMatrix type="saturate" values="0"/>
+              <feBlend in="SourceGraphic" mode="overlay" result="blend"/>
+              <feComposite in="blend" in2="SourceGraphic" operator="in"/>
+            </filter>
+          </defs>
+          ${paths}
+        </svg>
+      </div>
+      <div class="fp-label">отпечаток верифицирован</div>
+      <div class="fp-user">@${escHtml(username)}</div>
+      <div class="fp-dismiss">// нажмите чтобы закрыть</div>
+    </div>`;
+  overlay.onclick = () => document.body.removeChild(overlay);
+  document.body.appendChild(overlay);
+}
+
 async function submitReview(existingId) {
   if (!state.user) { openModal('login'); return; }
+  if (!reviewSig.hasData) {
+    showToast('// поставьте подпись для публикации', true);
+    document.getElementById('reviewSigCanvas')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   const btn = document.getElementById('submit-review-btn');
   btn.disabled = true; btn.textContent = '…';
   try {
     const scores   = getSliderValues();
     const comment  = document.getElementById('review-comment').value.trim();
     const criteria = state.criteria.map((c,i) => ({ name: c.name, score: scores[i], multiplier: c.multiplier }));
+    const signatureData = reviewSig.canvas ? reviewSig.canvas.toDataURL('image/png') : null;
     const { id, type } = state.currentMedia;
 
     if (existingId) {
-      await api(`/api/reviews/${existingId}`, 'PUT', { criteria, comment });
+      await api(`/api/reviews/${existingId}`, 'PUT', { criteria, comment, signatureData });
       showToast('Оценка обновлена');
     } else {
-      await api('/api/reviews', 'POST', { tmdbId: id, mediaType: type, criteria, comment });
+      await api('/api/reviews', 'POST', { tmdbId: id, mediaType: type, criteria, comment, signatureData });
       showToast('Оценка опубликована');
     }
-    // Reload media page
     openMedia(id, type);
   } catch(e) {
     showToast(e.message || 'Ошибка', true);
@@ -4424,19 +4579,18 @@ function renderProfilePage(user, reviews) {
 function openModal(mode) {
   state.authMode = mode;
   document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('modal-error').textContent = '';
-  document.getElementById('auth-email').value = '';
-  document.getElementById('auth-password').value = '';
+  document.getElementById('modal-error-reg').textContent = '';
+  document.getElementById('modal-error-login').textContent = '';
   if (mode === 'register') {
-    document.getElementById('modal-title').textContent = 'РЕГИСТРАЦИЯ';
-    document.getElementById('register-fields').style.display = 'block';
-    document.getElementById('modal-submit-btn').textContent = 'СОЗДАТЬ АККАУНТ';
-    document.getElementById('modal-footer').innerHTML = 'Уже есть аккаунт? <a onclick="openModal(\'login\')">Войти</a>';
+    document.getElementById('modal-register').style.display = 'block';
+    document.getElementById('modal-login').style.display = 'none';
+    // init signature canvas after it becomes visible
+    setTimeout(() => initModalSig(), 50);
   } else {
-    document.getElementById('modal-title').textContent = 'ВОЙТИ';
-    document.getElementById('register-fields').style.display = 'none';
-    document.getElementById('modal-submit-btn').textContent = 'ВОЙТИ';
-    document.getElementById('modal-footer').innerHTML = 'Нет аккаунта? <a onclick="openModal(\'register\')">Зарегистрироваться</a>';
+    document.getElementById('modal-register').style.display = 'none';
+    document.getElementById('modal-login').style.display = 'block';
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
   }
 }
 
@@ -4448,21 +4602,132 @@ function handleOverlayClick(e) {
   if (e.target === document.getElementById('modal-overlay')) closeModal();
 }
 
-async function submitAuth() {
-  const btn = document.getElementById('modal-submit-btn');
-  const errEl = document.getElementById('modal-error');
-  btn.disabled = true;
-  errEl.textContent = '';
-  try {
-    const email    = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value;
-    let data;
-    if (state.authMode === 'register') {
-      const username = document.getElementById('reg-username').value.trim();
-      data = await api('/api/auth/register', 'POST', { username, email, password });
-    } else {
-      data = await api('/api/auth/login', 'POST', { email, password });
+/* ── MODAL SIGNATURE ENGINE ── */
+const modalSig = { ctx: null, drawing: false, hasData: false, canvas: null };
+
+function initModalSig() {
+  const canvas = document.getElementById('regSigCanvas');
+  if (!canvas || modalSig._inited) return;
+  modalSig.canvas = canvas;
+  const ctx = canvas.getContext('2d');
+  modalSig.ctx = ctx;
+  modalSig._inited = true;
+
+  function resize() {
+    const tmp = canvas.toDataURL();
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    ctx.strokeStyle = '#f2f2f0';
+    ctx.lineWidth = 1.8;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (modalSig.hasData) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = tmp;
     }
+  }
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return [(src.clientX - rect.left) * (canvas.width / rect.width),
+            (src.clientY - rect.top)  * (canvas.height / rect.height)];
+  }
+
+  let lx = 0, ly = 0;
+  function start(e) {
+    e.preventDefault(); modalSig.drawing = true;
+    canvas.classList.add('active');
+    [lx, ly] = getPos(e);
+    ctx.beginPath(); ctx.moveTo(lx, ly);
+  }
+  function move(e) {
+    if (!modalSig.drawing) return;
+    e.preventDefault();
+    const [x, y] = getPos(e);
+    ctx.lineTo(x, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y);
+    lx = x; ly = y;
+    modalSig.hasData = true;
+    updateRegSeal();
+  }
+  function end() { modalSig.drawing = false; canvas.classList.remove('active'); }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+}
+
+function clearModalSig() {
+  if (!modalSig.ctx) return;
+  modalSig.ctx.clearRect(0, 0, modalSig.canvas.width, modalSig.canvas.height);
+  modalSig.hasData = false;
+  updateRegSeal();
+}
+
+function updateRegSeal() {
+  const seal = document.getElementById('regSeal');
+  if (!seal) return;
+  if (modalSig.hasData) seal.classList.add('signed');
+  else seal.classList.remove('signed');
+}
+
+function getModalSigData() {
+  if (!modalSig.hasData || !modalSig.canvas) return null;
+  return modalSig.canvas.toDataURL('image/png');
+}
+
+async function submitRegister() {
+  const btn = document.getElementById('modal-submit-reg');
+  const errEl = document.getElementById('modal-error-reg');
+  errEl.textContent = '';
+  const username = document.getElementById('reg-username').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  if (!username) { errEl.textContent = '// псевдоним обязателен'; return; }
+  if (!email || !email.includes('@')) { errEl.textContent = '// укажите корректную почту'; return; }
+  if (password.length < 6) { errEl.textContent = '// пароль минимум 6 символов'; return; }
+  if (!modalSig.hasData) { errEl.textContent = '// подпись обязательна для подтверждения договора'; return; }
+  btn.disabled = true; btn.textContent = '// ОБРАБОТКА...';
+  try {
+    const signatureData = getModalSigData();
+    const data = await api('/api/auth/register', 'POST', { username, email, password, signatureData });
+    state.token = data.token;
+    state.user  = data.user;
+    localStorage.setItem('rated_token', data.token);
+    localStorage.setItem('rated_user', JSON.stringify(data.user));
+    // store signature locally for review use
+    if (signatureData) localStorage.setItem('rated_sig_' + data.user.username, signatureData);
+    updateAuthUI();
+    closeModal();
+    showToast('Договор подписан. Добро пожаловать, ' + data.user.username + '!');
+  } catch(e) {
+    errEl.textContent = e.message || '// ошибка';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'ПОДПИСАТЬ ДОГОВОР И СОЗДАТЬ АККАУНТ';
+  }
+}
+
+async function submitLogin() {
+  const btn = document.getElementById('modal-submit-login');
+  const errEl = document.getElementById('modal-error-login');
+  errEl.textContent = '';
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !email.includes('@')) { errEl.textContent = '// укажите корректную почту'; return; }
+  if (!password) { errEl.textContent = '// введите пароль'; return; }
+  btn.disabled = true; btn.textContent = '// ВЕРИФИКАЦИЯ...';
+  try {
+    const data = await api('/api/auth/login', 'POST', { email, password });
     state.token = data.token;
     state.user  = data.user;
     localStorage.setItem('rated_token', data.token);
@@ -4471,10 +4736,17 @@ async function submitAuth() {
     closeModal();
     showToast('Добро пожаловать, ' + data.user.username + '!');
   } catch(e) {
-    errEl.textContent = e.message || 'Ошибка';
+    errEl.textContent = e.message || '// ошибка';
   } finally {
     btn.disabled = false;
+    btn.textContent = 'ПОДТВЕРДИТЬ ЛИЧНОСТЬ И ВОЙТИ';
   }
+}
+
+/* keep old submitAuth as alias for enter-key handler */
+function submitAuth() {
+  if (state.authMode === 'register') submitRegister();
+  else submitLogin();
 }
 
 function logout() {
