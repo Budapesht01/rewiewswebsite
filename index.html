@@ -1556,8 +1556,6 @@ function initScrollReveal() {
       if (!entry.isIntersecting) return;
       const section = entry.target;
       section.classList.add('revealed');
-      const row = section.querySelector('.cards-scroll-row');
-      if (row) applyCardStagger(row, 0);
       _revealObserver.unobserve(section);
     });
   }, { threshold: 0.01, rootMargin: '200px 0px 200px 0px' });
@@ -1697,7 +1695,9 @@ async function enrichGridWithScores(grid, items, mediaType, featuredFirst = fals
     const ids = items.map(i => i.id).join(',');
     const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
     grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, scores[item.id], featuredFirst && idx === 0)).join('');
-  } catch(e) { /* fail silently */ }
+  } catch(e) { /* fail silently — cards already visible */ }
+  // apply stagger after cards are in DOM (works whether api succeeded or not)
+  requestAnimationFrame(() => applyCardStagger(grid));
 }
 
 async function loadGenreSections(mediaType) {
@@ -1810,9 +1810,8 @@ async function renderTrending(type) {
     grid.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
     return;
   }
-  // render first as featured, rest as normal
+  // render first as featured, rest as normal (no stagger yet — enrichGrid will apply it)
   grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, null, idx === 0)).join('');
-  applyCardStagger(grid);
   loadGenreSections(mediaType);
   // enrich with site scores — featured only for trending grid
   enrichGridWithScores(grid, items, mediaType, true);
