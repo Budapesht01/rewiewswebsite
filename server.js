@@ -121,9 +121,19 @@ app.post('/api/auth/register', async (req, res) => {
     if (password.length < 6)
       return res.status(400).json({ error: 'Минимум 6 символов' });
 
-    const exists = await User.findOne({ $or: [{ email }, { username }] });
-    if (exists) return res.status(400).json({ error: 'Пользователь уже существует' });
+    console.log('REGISTER BODY:', req.body);
 
+const exists = await User.findOne({
+  $or: [{ email }, { username }]
+});
+
+console.log('FOUND USER:', exists);
+
+if (exists) {
+  return res.status(400).json({
+    error: 'Пользователь уже существует'
+  });
+}
     const hash = await bcrypt.hash(password, 12);
     const user = await User.create({ username, email, password: hash });
     const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '30d' });
