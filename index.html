@@ -29,6 +29,8 @@ body {
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   overflow-x: hidden;
+}
+
 /* ── CUSTOM CURSOR ── */
 *, *::before, *::after { cursor: none !important; }
 #cursor {
@@ -69,6 +71,7 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
   pointer-events: none; z-index: 9998;
   opacity: 0.35;
+  animation: noiseShift 0.25s steps(1) infinite;
 }
 
 /* ── SCROLLBAR ── */
@@ -1245,9 +1248,6 @@ body::before {
   75%  { transform: translate(2px, 1px); }
   100% { transform: translate(0,0); }
 }
-body::before {
-  animation: noiseShift 0.25s steps(1) infinite;
-}
 
 /* ── CURSOR TRAIL ── */
 .cursor-trail {
@@ -1899,15 +1899,21 @@ function cinematicReveal() {
   const heroContent = document.querySelector('.media-hero-content');
   if (!backdrop || !heroContent) return;
 
+  // 1. Set start state immediately (no transition yet)
+  backdrop.style.transition = 'none';
+  heroContent.style.transition = 'none';
   backdrop.classList.add('cinematic-start');
   heroContent.classList.add('content-start');
 
+  // 2. Force a paint, then enable transitions and animate to done state
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
+      backdrop.style.transition = '';
+      heroContent.style.transition = '';
       backdrop.classList.add('cinematic-done');
       heroContent.classList.add('content-done');
-      // trigger counter animations
-      setTimeout(animateCounters, 200);
+      // trigger counter animations after content is visible
+      setTimeout(animateCounters, 400);
     });
   });
 }
@@ -2198,9 +2204,7 @@ async function doSearch(q) {
 async function openMedia(id, type) {
   showPage('media');
   const content = document.getElementById('media-content');
-  content.style.opacity = '0';
   content.innerHTML = '<div class="loader" style="min-height:60vh"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
-  content.style.opacity = '1';
   try {
     const [media, reviews, criteriaList, imdbData] = await Promise.all([
       api(`/api/media/${type}/${id}`),
@@ -2210,12 +2214,7 @@ async function openMedia(id, type) {
     ]);
     state.currentMedia = { id, type, media };
     state.criteria = criteriaList;
-    content.style.transition = 'opacity 0.25s ease';
-    content.style.opacity = '0';
-    setTimeout(() => {
-      renderMediaPage(media, type, reviews, criteriaList, imdbData);
-      content.style.opacity = '1';
-    }, 120);
+    renderMediaPage(media, type, reviews, criteriaList, imdbData);
   } catch(e) {
     content.innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
   }
@@ -2241,7 +2240,7 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
       ${backdrop ? `<div class="media-backdrop" style="background-image:url('${backdrop}')"></div>` : ''}
       <div class="media-hero-content">
         ${poster ? `<div class="media-poster"><img src="${poster}" alt="${escHtml(title)}"/></div>` : ''}
-        <div class="media-info fade-in">
+        <div class="media-info">
           <div class="media-type-badge">// ${typeLabel}</div>
           <h1 class="media-title">${escHtml(title)}</h1>
           <div class="media-meta">
