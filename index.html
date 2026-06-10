@@ -1312,6 +1312,65 @@ body {
   mix-blend-mode: screen;
 }
 
+/* ── POSTER FILM EFFECT (pre-1999) ── */
+.media-poster.film-vintage {
+  position: relative;
+}
+.media-poster.film-vintage::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center,
+    transparent 50%,
+    rgba(0,0,0,0.45) 78%,
+    rgba(0,0,0,0.75) 100%);
+  z-index: 2; pointer-events: none;
+}
+.poster-perforations {
+  position: absolute; inset: 0;
+  z-index: 3; pointer-events: none;
+  display: flex; justify-content: space-between;
+}
+.poster-perf-strip {
+  width: 14px;
+  background: rgba(0,0,0,0.68);
+  display: flex; flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}
+.poster-perf-hole {
+  width: 6px; height: 9px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+.poster-grain-canvas,
+.poster-scratch-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+.poster-grain-canvas   { z-index: 4; opacity: 0.15; mix-blend-mode: screen; }
+.poster-scratch-canvas { z-index: 5; mix-blend-mode: screen; }
+
+/* ── HERO BURN EFFECT (pre-1999) ── */
+.hero-burn-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+.hero-grain-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: screen;
+  z-index: 4;
+  image-rendering: pixelated;
+}
+
 /* ── INTRO OVERLAY ── */
 #intro-overlay {
   position: fixed; inset: 0;
@@ -1945,6 +2004,155 @@ function runScratch() {
   filmScratch.animId = requestAnimationFrame(drawFrame);
 }
 
+// ─── POSTER FILM EFFECT (pre-1999) ───────────────────────────────────────────
+function initPosterFilmEffect() {
+  const perfL = document.getElementById('poster-perf-l');
+  const perfR = document.getElementById('poster-perf-r');
+  const grain = document.getElementById('poster-grain');
+  const scratch = document.getElementById('poster-scratch');
+  if (!perfL || !perfR || !grain || !scratch) return;
+
+  // Build perforation holes
+  [perfL, perfR].forEach(strip => {
+    strip.innerHTML = '';
+    const count = Math.floor((strip.offsetHeight || 270) / 22);
+    for (let i = 0; i < count; i++) {
+      const h = document.createElement('div');
+      h.className = 'poster-perf-hole';
+      strip.appendChild(h);
+    }
+  });
+
+  // Grain animation
+  function drawGrain(c) {
+    c.width  = c.offsetWidth  || 180;
+    c.height = c.offsetHeight || 270;
+    const ctx = c.getContext('2d');
+    const img = ctx.createImageData(c.width, c.height);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const v = Math.random() * 255 | 0;
+      d[i] = d[i+1] = d[i+2] = v; d[i+3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  let grainLast = 0;
+  (function grainTick(now) {
+    if (!document.getElementById('poster-grain')) return; // poster removed
+    if (now - grainLast > 125) { drawGrain(grain); grainLast = now; }
+    requestAnimationFrame(grainTick);
+  })(0);
+
+  // Scratch animation
+  const sCtx = scratch.getContext('2d');
+  function scheduleScratch() {
+    setTimeout(runScratch, 3500 + Math.random() * 9000);
+  }
+  function runScratch() {
+    if (!document.getElementById('poster-scratch')) return;
+    scratch.width  = scratch.offsetWidth  || 180;
+    scratch.height = scratch.offsetHeight || 270;
+    const W = scratch.width, H = scratch.height;
+    const lc = 1 + Math.floor(Math.random() * 2);
+    const lines = Array.from({ length: lc }, () => ({
+      x: 14 + Math.random() * (W - 28),
+      w: Math.random() < 0.7 ? 1 : 2,
+      op: 0.35 + Math.random() * 0.45,
+      wobble: (Math.random() - 0.5) * 2,
+      segs: 4 + Math.floor(Math.random() * 5),
+    }));
+    const START = performance.now();
+    const DUR = 100 + Math.random() * 180;
+    (function frame(now) {
+      if (!document.getElementById('poster-scratch')) return;
+      const t = now - START;
+      if (t > DUR) { sCtx.clearRect(0,0,W,H); scheduleScratch(); return; }
+      sCtx.clearRect(0,0,W,H);
+      lines.forEach(s => {
+        sCtx.save();
+        sCtx.globalAlpha = s.op * (1 - t / DUR * 0.3);
+        sCtx.strokeStyle = '#ffffff';
+        sCtx.lineWidth = s.w;
+        sCtx.beginPath();
+        let py = 0;
+        while (py < H) {
+          const sh = H / s.segs;
+          const gap = Math.random() < 0.2 ? sh * Math.random() * 0.3 : 0;
+          const nx = s.x + s.wobble * (Math.random() - 0.5) * 2;
+          sCtx.moveTo(nx, py + gap);
+          sCtx.lineTo(nx + (Math.random() - 0.5) * 0.5, py + sh - gap);
+          py += sh;
+        }
+        sCtx.stroke();
+        sCtx.restore();
+      });
+      requestAnimationFrame(frame);
+    })(performance.now());
+  }
+  scheduleScratch();
+}
+
+// ─── HERO FILM EFFECT — burn strip (pre-1999) ─────────────────────────────────
+function initHeroFilmEffect() {
+  const burnCanvas  = document.getElementById('hero-burn-canvas');
+  const grainCanvas = document.getElementById('hero-grain-canvas');
+  if (!burnCanvas || !grainCanvas) return;
+
+  // Grain
+  let grainLast = 0;
+  (function grainTick(now) {
+    if (!document.getElementById('hero-grain-canvas')) return;
+    if (now - grainLast > 160) {
+      grainCanvas.width  = grainCanvas.offsetWidth  || window.innerWidth;
+      grainCanvas.height = grainCanvas.offsetHeight || 500;
+      const ctx = grainCanvas.getContext('2d');
+      const img = ctx.createImageData(grainCanvas.width, grainCanvas.height);
+      const d = img.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const v = Math.random() * 255 | 0;
+        d[i] = d[i+1] = d[i+2] = v; d[i+3] = 255;
+      }
+      ctx.putImageData(img, 0, 0);
+      grainLast = now;
+    }
+    requestAnimationFrame(grainTick);
+  })(0);
+
+  // Burn strip
+  function runBurn() {
+    if (!document.getElementById('hero-burn-canvas')) return;
+    const W = burnCanvas.offsetWidth  || window.innerWidth;
+    const H = burnCanvas.offsetHeight || 500;
+    burnCanvas.width = W; burnCanvas.height = H;
+    const ctx = burnCanvas.getContext('2d');
+    const stripH = H * 0.14;
+    let y = -stripH;
+    const speed = H / 3000; // px/ms
+    let lastT = null;
+    (function frame(now) {
+      if (!document.getElementById('hero-burn-canvas')) return;
+      if (!lastT) lastT = now;
+      const dt = now - lastT; lastT = now;
+      y += speed * dt;
+      ctx.clearRect(0,0,W,H);
+      if (y < H + stripH) {
+        const grad = ctx.createLinearGradient(0, y - stripH, 0, y + stripH);
+        grad.addColorStop(0,   'rgba(255,255,255,0)');
+        grad.addColorStop(0.4, 'rgba(255,255,255,0.05)');
+        grad.addColorStop(0.6, 'rgba(255,255,255,0.05)');
+        grad.addColorStop(1,   'rgba(255,255,255,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, y - stripH, W, stripH * 2);
+        requestAnimationFrame(frame);
+      } else {
+        ctx.clearRect(0,0,W,H);
+        setTimeout(runBurn, 10000 + Math.random() * 6000);
+      }
+    })(performance.now());
+  }
+  setTimeout(runBurn, 1500 + Math.random() * 2000);
+}
+
 // ─── AUDIO FEEDBACK ───────────────────────────────────────────────────────────
 let _audioCtx = null;
 function getAudioCtx() {
@@ -1974,21 +2182,30 @@ function playClick(type = 'card') {
       gain.connect(ctx.destination);
       src.start(now);
     } else if (type === 'scratch') {
-      // Vinyl crackle — high freq noise burst
-      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.015, ctx.sampleRate);
+      // Film projector rattle — layered mechanical noise burst
+      const dur = 0.22;
+      const sr  = ctx.sampleRate;
+      const buf = ctx.createBuffer(1, sr * dur, sr);
       const data = buf.getChannelData(0);
       for (let i = 0; i < data.length; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / data.length * 8) * 0.2;
+        const t = i / sr;
+        const rumble = (Math.random() * 2 - 1) * Math.exp(-t * 18) * 0.28;
+        const rattle = (Math.random() * 2 - 1) * Math.exp(-t * 35)
+                       * (0.5 + 0.5 * Math.sin(2 * Math.PI * 48 * t)) * 0.18;
+        const hiss   = (Math.random() * 2 - 1) * Math.exp(-t * 9) * 0.07;
+        data[i] = rumble + rattle + hiss;
       }
       const src = ctx.createBufferSource();
       src.buffer = buf;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.value = 3000;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 900;
+      bp.Q.value = 0.6;
       const gain = ctx.createGain();
-      gain.gain.value = 0.6;
-      src.connect(filter);
-      filter.connect(gain);
+      gain.gain.setValueAtTime(0.55, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      src.connect(bp);
+      bp.connect(gain);
       gain.connect(ctx.destination);
       src.start(now);
     }
@@ -2716,11 +2933,24 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
 
   const myReview = state.user ? reviews.find(r => r.userId === state.user._id || r.userId === state.user.id) : null;
 
+  const releaseYear = parseInt((media.release_date || media.first_air_date || '0').slice(0, 4));
+
   content.innerHTML = `
     <div class="media-hero">
       ${backdrop ? `<div class="media-backdrop" style="background-image:url('${backdrop}')"></div>` : ''}
+      ${releaseYear > 0 && releaseYear <= 1999 ? `
+        <canvas class="hero-burn-canvas" id="hero-burn-canvas"></canvas>
+        <canvas class="hero-grain-canvas" id="hero-grain-canvas"></canvas>` : ''}
       <div class="media-hero-content">
-        ${poster ? `<div class="media-poster"><img src="${poster}" alt="${escHtml(title)}"/></div>` : ''}
+        ${poster ? `<div class="media-poster${releaseYear > 0 && releaseYear <= 1999 ? ' film-vintage' : ''}"><img src="${poster}" alt="${escHtml(title)}"/>
+          ${releaseYear > 0 && releaseYear <= 1999 ? `
+            <div class="poster-perforations">
+              <div class="poster-perf-strip" id="poster-perf-l"></div>
+              <div class="poster-perf-strip" id="poster-perf-r"></div>
+            </div>
+            <canvas class="poster-grain-canvas"   id="poster-grain"></canvas>
+            <canvas class="poster-scratch-canvas" id="poster-scratch"></canvas>` : ''}
+        </div>` : ''}
         <div class="media-info">
           <div class="media-type-badge">// ${typeLabel}</div>
           <h1 class="media-title">${escHtml(title)}</h1>
@@ -2762,10 +2992,13 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
   // cinematic backdrop reveal
   requestAnimationFrame(() => setTimeout(cinematicReveal, 30));
 
-  // film scratch for pre-1999 films
-  const releaseYear = parseInt((media.release_date || media.first_air_date || '0').slice(0, 4));
+  // film effects for pre-1999
   if (releaseYear > 0 && releaseYear <= 1999) {
     startFilmScratch();
+    requestAnimationFrame(() => {
+      initPosterFilmEffect();
+      initHeroFilmEffect();
+    });
   } else {
     stopFilmScratch();
   }
