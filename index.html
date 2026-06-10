@@ -1342,43 +1342,41 @@ body {
 
 /* ── TRACKING ERROR HERO ── */
 @keyframes trackingShift {
-  0%,91%,100% { transform: translateX(0) skewX(0deg); filter: none; }
-  92%          { transform: translateX(-3px) skewX(-0.4deg); filter: brightness(1.08) hue-rotate(15deg); }
-  93%          { transform: translateX(4px)  skewX(0.3deg);  filter: brightness(0.95); }
-  94%          { transform: translateX(-1px) skewX(0deg);    filter: none; }
-  95%          { transform: translateX(2px);                  filter: brightness(1.04) hue-rotate(-10deg); }
-  96%,99%      { transform: translateX(0);                    filter: none; }
+  0%,94%,100% { transform: translateX(0) skewX(0deg); filter: none; }
+  95%          { transform: translateX(-1.5px) skewX(-0.2deg); filter: brightness(1.04) hue-rotate(8deg); }
+  96%          { transform: translateX(2px) skewX(0.15deg);    filter: brightness(0.97); }
+  97%          { transform: translateX(0) skewX(0deg);          filter: none; }
+  98%          { transform: translateX(1px);                    filter: brightness(1.02) hue-rotate(-5deg); }
 }
 @keyframes titleTrackGlitch {
-  0%,91%,100% { text-shadow: none; transform: none; }
-  92% { text-shadow: -2px 0 rgba(180,40,20,0.7), 2px 0 rgba(20,60,200,0.7); transform: translateX(2px); }
-  93% { text-shadow:  3px 0 rgba(180,40,20,0.8), -3px 0 rgba(20,60,200,0.8); transform: translateX(-1px); }
-  94% { text-shadow: none; transform: none; }
-  95% { text-shadow: -1px 0 rgba(0,180,140,0.5), 1px 0 rgba(200,0,80,0.4); transform: translateX(1px); }
+  0%,94%,100% { text-shadow: none; transform: none; }
+  95% { text-shadow: -1px 0 rgba(180,40,20,0.35), 1px 0 rgba(20,60,200,0.35); transform: translateX(1px); }
+  96% { text-shadow:  1.5px 0 rgba(180,40,20,0.4), -1.5px 0 rgba(20,60,200,0.4); transform: translateX(-0.5px); }
+  97% { text-shadow: none; transform: none; }
+  98% { text-shadow: -0.5px 0 rgba(0,180,140,0.25), 0.5px 0 rgba(200,0,80,0.2); transform: translateX(0.5px); }
 }
 @keyframes glitchBarsHero {
-  0%,91%,96%,100% { opacity: 0; }
-  92% { opacity: 1; background:
-    linear-gradient(transparent 22%, rgba(180,40,20,0.15) 23%, rgba(180,40,20,0.15) 24.5%, transparent 25.5%),
-    linear-gradient(transparent 68%, rgba(20,60,200,0.12) 69%, rgba(20,60,200,0.12) 70.5%, transparent 71%);
+  0%,94%,98%,100% { opacity: 0; }
+  95% { opacity: 1; background:
+    linear-gradient(transparent 22%, rgba(180,40,20,0.07) 23%, rgba(180,40,20,0.07) 24.5%, transparent 25.5%),
+    linear-gradient(transparent 68%, rgba(20,60,200,0.06) 69%, rgba(20,60,200,0.06) 70.5%, transparent 71%);
   }
-  93%,95% { opacity: 0; }
-  94% { opacity: 1; background: linear-gradient(transparent 47%, rgba(0,180,140,0.1) 48%, rgba(0,180,140,0.1) 49%, transparent 50%); }
+  96%,97% { opacity: 0; }
 }
 
 .hero-title {
-  animation: titleTrackGlitch 9s infinite;
-  animation-delay: 2s;
+  animation: titleTrackGlitch 14s infinite;
+  animation-delay: 3s;
 }
 .hero-glitch-bars {
   position: absolute; inset: 0;
   pointer-events: none; z-index: 2;
-  animation: glitchBarsHero 9s infinite;
-  animation-delay: 2s;
+  animation: glitchBarsHero 14s infinite;
+  animation-delay: 3s;
 }
 .hero-bg {
-  animation: trackingShift 9s infinite;
-  animation-delay: 2s;
+  animation: trackingShift 14s infinite;
+  animation-delay: 3s;
 }
 
 /* ── VHS REWIND CANVAS ── */
@@ -1388,6 +1386,44 @@ body {
   pointer-events: none;
   z-index: 88888;
   opacity: 0;
+}
+
+/* ── TYPEWRITER OVERVIEW ── */
+.media-overview {
+  position: relative;
+}
+.media-overview .tw-cursor {
+  display: inline-block;
+  width: 7px; height: 1em;
+  background: var(--dim);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: twBlink 0.85s steps(1) infinite;
+}
+@keyframes twBlink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* ── MORSE LOADER (replaces 3 dots) ── */
+.morse-loader {
+  display: flex; align-items: center; gap: 4px;
+}
+.morse-unit {
+  background: var(--mid);
+  height: 5px; border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.06s;
+}
+.morse-unit.dot  { width: 5px; }
+.morse-unit.dash { width: 13px; }
+
+/* ── DEAD PIXEL RAIN ── */
+#pixel-rain-cv {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 6;
 }
   width: 6px; height: 6px;
   background: var(--white);
@@ -1829,6 +1865,7 @@ body {
 <canvas id="film-scratch-canvas"></canvas>
 <canvas id="cursor-explosion-canvas"></canvas>
 <canvas id="vhs-rewind-canvas"></canvas>
+<canvas id="pixel-rain-cv"></canvas>
 <div id="intro-overlay">
   <div id="intro-logo-wrap">RATED</div>
   <div id="intro-sub">// оцени всё</div>
@@ -2036,13 +2073,15 @@ let state = {
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  initIntro();       // runs first — blocks until intro done
+  initIntro();
   initNoise();
   initFilmScratch();
+  initDeadPixelRain();
   initCursor();
   initCursorTrail();
   initCursorExplosion();
   initAudioFeedback();
+  initMorseLoaders();
   initSearch();
   initParallax();
   initScrollReveal();
@@ -2839,6 +2878,171 @@ function slotMachineScore(el, target, isGold, onDone) {
   });
 }
 
+// ─── DEAD PIXEL RAIN ─────────────────────────────────────────────────────────
+function initDeadPixelRain() {
+  const cv = document.getElementById('pixel-rain-cv');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+
+  function resize() {
+    cv.width  = window.innerWidth;
+    cv.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const pixels = Array.from({ length: 4 }, () => spawnPixel(cv));
+
+  function spawnPixel(cv, fromTop = false) {
+    return {
+      x: Math.floor(Math.random() * cv.width),
+      y: fromTop ? -2 : Math.random() * cv.height,
+      vy: 22 + Math.random() * 18,
+      opacity: 0.45 + Math.random() * 0.35,
+      size: Math.random() < 0.6 ? 1 : 2,
+      life: 1,
+    };
+  }
+
+  let last = 0;
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+
+    pixels.forEach((p, i) => {
+      p.y += p.vy * dt;
+      // fade out in bottom 20%
+      if (p.y > cv.height * 0.8) p.life -= dt * 1.1;
+      if (p.life <= 0 || p.y > cv.height + 4) {
+        pixels[i] = spawnPixel(cv, true);
+        return;
+      }
+      ctx.fillStyle = `rgba(242,242,240,${(p.opacity * p.life).toFixed(3)})`;
+      ctx.fillRect(p.x, Math.floor(p.y), p.size, p.size);
+    });
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// ─── MORSE LOADER ─────────────────────────────────────────────────────────────
+// L = ·−·· O = −−− A = ·− D = −··  (LOAD)
+const MORSE_LOAD = [
+  ['dot','dash','dot','dot'],   // L
+  ['dash','dash','dash'],       // O
+  ['dot','dash'],               // A
+  ['dash','dot','dot'],         // D
+];
+
+// ─── MORSE LOADER ─────────────────────────────────────────────────────────────
+// L·−·· O−−− A·− D−·· (LOAD)
+const MORSE_LOAD_DEF = [
+  ['dot','dash','dot','dot'],
+  ['dash','dash','dash'],
+  ['dot','dash'],
+  ['dash','dot','dot'],
+];
+
+function morseLoaderHTML(style = '') {
+  const styleAttr = style ? ` style="${style}"` : '';
+  return `<div class="loader"${styleAttr}><div class="morse-loader" data-morse-init="1">${
+    MORSE_LOAD_DEF.map(letter =>
+      letter.map(t => `<div class="morse-unit ${t}"></div>`).join('') +
+      '<div style="width:6px;flex-shrink:0"></div>'
+    ).join('')
+  }</div></div>`;
+}
+
+function animateMorseLoader(wrap) {
+  if (!wrap || wrap._morseRunning) return;
+  wrap._morseRunning = true;
+  const units = wrap.querySelectorAll('.morse-unit');
+  const UNIT = 140;
+
+  function cycle() {
+    if (!wrap.isConnected) return; // stop if removed from DOM
+    let t = 0;
+    units.forEach(u => { u.style.opacity = '0'; });
+
+    let cursor = 0;
+    MORSE_LOAD_DEF.forEach(letter => {
+      letter.forEach(type => {
+        const dur = type === 'dash' ? UNIT * 3 : UNIT;
+        const u = units[cursor++];
+        if (!u) return;
+        const startAt = t;
+        const endAt   = t + dur;
+        setTimeout(() => { if(u.isConnected) u.style.opacity = '1'; }, startAt);
+        setTimeout(() => { if(u.isConnected) u.style.opacity = '0'; }, endAt);
+        t = endAt + UNIT;
+      });
+      t += UNIT * 2;
+    });
+
+    setTimeout(cycle, t + UNIT * 2);
+  }
+  cycle();
+}
+
+// Observe DOM for new morse loaders (MutationObserver)
+function initMorseLoaders() {
+  // Animate existing static ones
+  document.querySelectorAll('[data-morse-init]').forEach(animateMorseLoader);
+  // Replace old-style loader-dots if any remain
+  document.querySelectorAll('.loader-dots').forEach(el => {
+    const loader = el.closest('.loader');
+    if (loader) loader.outerHTML = morseLoaderHTML();
+  });
+
+  // Watch for new ones added dynamically
+  const obs = new MutationObserver(mutations => {
+    mutations.forEach(m => {
+      m.addedNodes.forEach(node => {
+        if (node.nodeType !== 1) return;
+        node.querySelectorAll('[data-morse-init]').forEach(wrap => {
+          if (!wrap._morseRunning) animateMorseLoader(wrap);
+        });
+        if (node.matches?.('[data-morse-init]')) animateMorseLoader(node);
+      });
+    });
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
+}
+
+function replaceMorseInElement(el) {
+  if (!el) return;
+  el.querySelectorAll('[data-morse-init]').forEach(animateMorseLoader);
+}
+
+// ─── TYPEWRITER OVERVIEW ─────────────────────────────────────────────────────
+function typewriterReveal(el, text, speedMs = 22) {
+  if (!el || !text) return;
+  el.textContent = '';
+  const cursor = document.createElement('span');
+  cursor.className = 'tw-cursor';
+  el.appendChild(cursor);
+
+  let i = 0;
+  function type() {
+    if (i >= text.length) {
+      // keep cursor blinking for 2s then remove
+      setTimeout(() => cursor.remove(), 2000);
+      return;
+    }
+    const ch = text[i++];
+    const node = document.createTextNode(ch);
+    el.insertBefore(node, cursor);
+    // slight variation: spaces faster, punctuation slight pause
+    const delay = ch === ' ' ? speedMs * 0.6
+                : /[.,!?—]/.test(ch) ? speedMs * 3
+                : speedMs + Math.random() * speedMs * 0.5;
+    setTimeout(type, delay);
+  }
+  type();
+}
+
 // ─── NOISE GRAIN ─────────────────────────────────────────────────────────────
 function initNoise() {
   const canvas = document.getElementById('noise-canvas');
@@ -3164,7 +3368,7 @@ async function enrichGridWithScores(grid, items, mediaType, featuredFirst = fals
 
 async function loadGenreSections(mediaType) {
   const wrap = document.getElementById('genre-sections');
-  wrap.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  wrap.innerHTML = morseLoaderHTML();
   try {
     const data = await api(`/api/media/genres/${mediaType}`);
     wrap.innerHTML = GENRE_DEFS.map(({ key, label, genreId, sortKey }) => {
@@ -3220,7 +3424,7 @@ function applyFilters() {
 
 async function fetchCatalogue() {
   const grid = document.getElementById('catalogue-grid');
-  grid.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  grid.innerHTML = morseLoaderHTML();
   try {
     const { mediaType, genre, sort, page } = catalogueState;
     const yearFrom = document.getElementById('filter-year-from').value;
@@ -3294,7 +3498,7 @@ async function renderTrending(type) {
   const mediaType = type === 'movies' ? 'movie' : 'tv';
   const grid = document.getElementById('trending-grid');
   if (!items || !items.length) {
-    grid.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+    grid.innerHTML = morseLoaderHTML();
     return;
   }
   grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, null, idx === 0)).join('');
@@ -3395,7 +3599,7 @@ async function doSearch(q) {
 async function openMedia(id, type) {
   showPage('media');
   const content = document.getElementById('media-content');
-  content.innerHTML = '<div class="loader" style="min-height:60vh"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  content.innerHTML = morseLoaderHTML('min-height:60vh');
   try {
     const [media, reviews, criteriaList, imdbData] = await Promise.all([
       api(`/api/media/${type}/${id}`),
@@ -3498,6 +3702,15 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
 
   // gold burst for high-score reviews
   requestAnimationFrame(() => observeGoldReviews());
+
+  // typewriter on overview + morse loaders
+  requestAnimationFrame(() => {
+    const overviewEl = document.querySelector('.media-overview');
+    if (overviewEl && media.overview) {
+      typewriterReveal(overviewEl, media.overview, 20);
+    }
+    replaceMorseInElement(document.getElementById('media-content'));
+  });
   // init progress bar
   const wrap = document.getElementById('live-score-wrap');
   if (wrap) {
@@ -3811,7 +4024,7 @@ async function deleteReview(id) {
 async function loadProfile() {
   if (!state.user) { showPage('home'); openModal('login'); return; }
   const content = document.getElementById('profile-content');
-  content.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  content.innerHTML = morseLoaderHTML();
   try {
     const reviews = await api('/api/profile/reviews');
     renderProfilePage(state.user, reviews);
@@ -3823,7 +4036,7 @@ async function loadProfile() {
 async function showPublicProfile(username) {
   showPage('profile');
   const content = document.getElementById('profile-content');
-  content.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  content.innerHTML = morseLoaderHTML();
   try {
     const data = await api(`/api/profile/${username}`);
     renderProfilePage(data.user, data.reviews);
