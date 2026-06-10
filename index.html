@@ -1302,6 +1302,75 @@ body {
   animation: breathe 3s ease-in-out infinite;
   transform-origin: left center;
 }
+
+/* ── FILM SCRATCH ── */
+#film-scratch-canvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 9997;
+  width: 100%; height: 100%;
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+
+/* ── INTRO OVERLAY ── */
+#intro-overlay {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  gap: 0;
+}
+#intro-overlay.hidden { display: none; }
+#intro-logo-wrap {
+  position: relative;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(60px, 12vw, 140px);
+  letter-spacing: 0.12em;
+  color: transparent;
+  user-select: none;
+}
+.intro-dot {
+  position: absolute;
+  width: 3px; height: 3px;
+  background: var(--white);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.05s;
+}
+#intro-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--dim);
+  opacity: 0;
+  margin-top: 12px;
+  transition: opacity 0.3s;
+}
+
+/* ── SLOT MACHINE SCORE ── */
+.score-slot-wrap {
+  display: inline-flex;
+  align-items: flex-end;
+  overflow: hidden;
+  height: 1.1em;
+  vertical-align: bottom;
+}
+.score-slot-digit {
+  display: inline-flex;
+  flex-direction: column;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: inherit;
+  line-height: 1;
+  transition: transform 0s;
+}
+
+/* ── CURSOR EXPLOSION ── */
+#cursor-explosion-canvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 9996;
+  width: 100%; height: 100%;
+}
 </style>
 </head>
 <body>
@@ -1309,6 +1378,12 @@ body {
 <div id="cursor"></div>
 <canvas id="noise-canvas"></canvas>
 <canvas id="gold-canvas"></canvas>
+<canvas id="film-scratch-canvas"></canvas>
+<canvas id="cursor-explosion-canvas"></canvas>
+<div id="intro-overlay">
+  <div id="intro-logo-wrap">RATED</div>
+  <div id="intro-sub">// оцени всё</div>
+</div>
 <div id="toast"></div>
 
 <!-- TOPBAR -->
@@ -1542,9 +1617,13 @@ let state = {
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  initIntro();       // runs first — blocks until intro done
   initNoise();
+  initFilmScratch();
   initCursor();
   initCursorTrail();
+  initCursorExplosion();
+  initAudioFeedback();
   initSearch();
   initParallax();
   initScrollReveal();
@@ -1571,6 +1650,9 @@ function showPage(name) {
   const current = document.querySelector('.page.active');
   const next = document.getElementById(pageId);
   if (current === next) return;
+
+  // stop film scratch when leaving media page
+  if (name !== 'media') stopFilmScratch();
 
   if (current) {
     current.classList.add('page-transition-out');
@@ -1646,40 +1728,6 @@ function observeGenreSections() {
   }, 1500);
 }
 
-// ─── 5. ANIMATED SCORE COUNTERS on media page ────────────────────────────────
-function animateCounters() {
-  // score-number (e.g. 95.2)
-  document.querySelectorAll('.score-number[data-target]').forEach(el => {
-    const target = parseFloat(el.dataset.target);
-    const dur = 600;
-    const start = performance.now();
-    function tick(now) {
-      const t = Math.min(1, (now - start) / dur);
-      const ease = 1 - Math.pow(1 - t, 3);
-      const val = target * ease;
-      const str = (Math.round(val * 10) / 10).toFixed(1);
-      el.textContent = str.endsWith('.0') ? str.slice(0,-2) : str;
-      if (t < 1) requestAnimationFrame(tick);
-      else el.textContent = str.endsWith('.0') ? str.slice(0,-2) : str;
-    }
-    requestAnimationFrame(tick);
-  });
-  // score-count (e.g. 12 оценок)
-  document.querySelectorAll('.score-count[data-target]').forEach(el => {
-    const target = parseInt(el.dataset.target);
-    const suffix = el.dataset.suffix || '';
-    const dur = 500;
-    const start = performance.now();
-    function tick(now) {
-      const t = Math.min(1, (now - start) / dur);
-      const ease = 1 - Math.pow(1 - t, 3);
-      el.textContent = Math.round(target * ease) + suffix;
-      if (t < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  });
-}
-
 // ─── WHEEL SCROLL (legacy passthrough — momentum handled by initMomentumScroll) ──
 function initWheelScroll() {
   // momentum scroll handles wheel + touch; this is now a no-op stub
@@ -1709,6 +1757,411 @@ async function loadHeroStats() {
   // stats counters removed — no-op
 }
 function animateCount(id, target) {}
+
+// ─── INTRO OVERLAY ───────────────────────────────────────────────────────────
+function initIntro() {
+  const overlay = document.getElementById('intro-overlay');
+  if (!overlay) return;
+
+  // Only show once per session
+  if (sessionStorage.getItem('rated_intro_seen')) {
+    overlay.classList.add('hidden');
+    return;
+  }
+
+  const logoWrap = document.getElementById('intro-logo-wrap');
+  const sub = document.getElementById('intro-sub');
+  const text = 'RATED';
+  const W = logoWrap.offsetWidth || 300;
+  const H = logoWrap.offsetHeight || 140;
+
+  // Phase 1: dots randomly appear across logo bounding box (0–700ms)
+  const DOT_COUNT = 180;
+  const dots = [];
+  for (let i = 0; i < DOT_COUNT; i++) {
+    const d = document.createElement('div');
+    d.className = 'intro-dot';
+    d.style.left = (Math.random() * W) + 'px';
+    d.style.top  = (Math.random() * H) + 'px';
+    logoWrap.appendChild(d);
+    dots.push(d);
+  }
+
+  // Stagger dots appearing
+  dots.forEach((d, i) => {
+    setTimeout(() => { d.style.opacity = '1'; }, i * (700 / DOT_COUNT));
+  });
+
+  // Phase 2: at 700ms — text materialises, dots fade
+  setTimeout(() => {
+    logoWrap.style.color = 'var(--white)';
+    logoWrap.style.transition = 'color 0.25s ease';
+    sub.style.opacity = '1';
+    dots.forEach(d => { d.style.opacity = '0'; });
+  }, 700);
+
+  // Phase 3: at 1400ms — flash white and vanish
+  setTimeout(() => {
+    overlay.style.transition = 'opacity 0.15s ease';
+    overlay.style.opacity = '0';
+  }, 1400);
+
+  setTimeout(() => {
+    overlay.classList.add('hidden');
+    sessionStorage.setItem('rated_intro_seen', '1');
+  }, 1560);
+}
+
+// ─── FILM SCRATCH (pre-1999 films only) ──────────────────────────────────────
+const filmScratch = {
+  active: false,
+  canvas: null,
+  ctx: null,
+  animId: null,
+};
+
+function initFilmScratch() {
+  filmScratch.canvas = document.getElementById('film-scratch-canvas');
+  if (!filmScratch.canvas) return;
+  filmScratch.ctx = filmScratch.canvas.getContext('2d');
+  resizeFilmScratch();
+  window.addEventListener('resize', resizeFilmScratch);
+}
+
+function resizeFilmScratch() {
+  if (!filmScratch.canvas) return;
+  filmScratch.canvas.width  = window.innerWidth;
+  filmScratch.canvas.height = window.innerHeight;
+}
+
+function startFilmScratch() {
+  if (filmScratch.active) return;
+  filmScratch.active = true;
+  filmScratch.canvas.style.opacity = '1';
+  scheduleNextScratch();
+}
+
+function stopFilmScratch() {
+  filmScratch.active = false;
+  filmScratch.canvas.style.opacity = '0';
+  cancelAnimationFrame(filmScratch.animId);
+  if (filmScratch.ctx) {
+    filmScratch.ctx.clearRect(0, 0, filmScratch.canvas.width, filmScratch.canvas.height);
+  }
+}
+
+function scheduleNextScratch() {
+  if (!filmScratch.active) return;
+  // random interval 4–14s
+  const delay = 4000 + Math.random() * 10000;
+  setTimeout(() => {
+    if (!filmScratch.active) return;
+    runScratch();
+  }, delay);
+}
+
+function runScratch() {
+  const canvas = filmScratch.canvas;
+  const ctx = filmScratch.ctx;
+  if (!ctx || !filmScratch.active) return;
+
+  // Play vinyl crackle sound in sync
+  playClick('scratch');
+
+  const W = canvas.width, H = canvas.height;
+  // 1–3 scratch lines per event
+  const lineCount = 1 + Math.floor(Math.random() * 3);
+  const scratches = Array.from({ length: lineCount }, () => ({
+    x: Math.random() * W,
+    width: Math.random() < 0.7 ? 1 : 2,
+    opacity: 0.4 + Math.random() * 0.5,
+    wobble: (Math.random() - 0.5) * 3,
+    segs: Math.floor(4 + Math.random() * 6), // broken segments
+  }));
+
+  // Also add random dust specks
+  const specks = Array.from({ length: Math.floor(Math.random() * 8) }, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    r: Math.random() * 2 + 0.5,
+    op: 0.3 + Math.random() * 0.5,
+  }));
+
+  const START = performance.now();
+  const DUR = 120 + Math.random() * 200; // 120–320ms
+
+  function drawFrame(now) {
+    const elapsed = now - START;
+    if (elapsed > DUR || !filmScratch.active) {
+      ctx.clearRect(0, 0, W, H);
+      scheduleNextScratch();
+      return;
+    }
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Vertical scratches
+    scratches.forEach(s => {
+      ctx.save();
+      ctx.globalAlpha = s.opacity * (1 - elapsed / DUR * 0.3);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = s.width;
+      ctx.beginPath();
+      let py = 0;
+      while (py < H) {
+        const segH = H / s.segs;
+        const gap  = Math.random() < 0.2 ? segH * Math.random() * 0.4 : 0;
+        const nx   = s.x + s.wobble * (Math.random() - 0.5) * 2;
+        ctx.moveTo(nx, py + gap);
+        ctx.lineTo(nx + (Math.random() - 0.5), py + segH - gap);
+        py += segH;
+      }
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Dust specks
+    specks.forEach(sp => {
+      ctx.save();
+      ctx.globalAlpha = sp.op * (1 - elapsed / DUR);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Vignette flicker: slight brightness pulse
+    if (Math.random() < 0.3) {
+      ctx.save();
+      ctx.globalAlpha = 0.04 + Math.random() * 0.06;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    filmScratch.animId = requestAnimationFrame(drawFrame);
+  }
+
+  filmScratch.animId = requestAnimationFrame(drawFrame);
+}
+
+// ─── AUDIO FEEDBACK ───────────────────────────────────────────────────────────
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+function playClick(type = 'card') {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+
+    if (type === 'card') {
+      // Short low thud — mechanical key feel
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        const t = i / ctx.sampleRate;
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 180) * 0.35;
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      src.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(now);
+    } else if (type === 'scratch') {
+      // Vinyl crackle — high freq noise burst
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.015, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / data.length * 8) * 0.2;
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 3000;
+      const gain = ctx.createGain();
+      gain.gain.value = 0.6;
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(now);
+    }
+  } catch(e) { /* audio not available */ }
+}
+
+function initAudioFeedback() {
+  // Attach click sound to cards and interactive elements
+  document.addEventListener('click', e => {
+    const t = e.target.closest('.card, .card-featured, .profile-review-card, .search-item');
+    if (t) { playClick('card'); return; }
+    const btn = e.target.closest('button, .tab-btn, .back-btn, .genre-see-all, .page-btn');
+    if (btn) { playClick('card'); }
+  }, true);
+}
+
+// ─── CURSOR EXPLOSION ─────────────────────────────────────────────────────────
+function initCursorExplosion() {
+  const canvas = document.getElementById('cursor-explosion-canvas');
+  if (!canvas) return;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  window.addEventListener('resize', () => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+
+  document.addEventListener('click', e => {
+    const n = 7 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < n; i++) {
+      const angle = (Math.PI * 2 / n) * i + Math.random() * 0.4;
+      const speed = 2.5 + Math.random() * 3.5;
+      particles.push({
+        x: e.clientX, y: e.clientY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: Math.random() * 2 + 1,
+        life: 1,
+        decay: 0.055 + Math.random() * 0.04,
+      });
+    }
+  });
+
+  let running = false;
+  function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    for (const p of particles) {
+      if (p.life <= 0) continue;
+      alive = true;
+      p.x += p.vx; p.y += p.vy;
+      p.vy += 0.08; // tiny gravity
+      p.life -= p.decay;
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = '#f2f2f0';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // clean dead particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      if (particles[i].life <= 0) particles.splice(i, 1);
+    }
+    if (alive) requestAnimationFrame(loop);
+    else running = false;
+  }
+
+  document.addEventListener('click', () => {
+    if (!running) { running = true; loop(); }
+  });
+}
+
+// ─── SLOT MACHINE SCORE ───────────────────────────────────────────────────────
+function animateCounters() {
+  document.querySelectorAll('.score-number[data-target]').forEach(el => {
+    const target = parseFloat(el.dataset.target);
+    const isGold = el.classList.contains('gold');
+    slotMachineScore(el, target, isGold);
+  });
+
+  document.querySelectorAll('.score-count[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    const dur = 500, start = performance.now();
+    function tick(now) {
+      const t = Math.min(1, (now - start) / dur);
+      const ease = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(target * ease) + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+function slotMachineScore(el, target, isGold) {
+  // Format: e.g. "95.3" → digits ["9","5",".","3"]
+  const str = (Math.round(target * 10) / 10).toFixed(1);
+  const formatted = str.endsWith('.0') ? str.slice(0, -2) : str;
+  const digits = formatted.split('');
+
+  // Build slot structure
+  el.innerHTML = '';
+  el.style.animation = 'none'; // pause breathe during slot
+  el.style.display = 'inline-flex';
+  el.style.alignItems = 'flex-end';
+  el.style.overflow = 'hidden';
+  el.style.lineHeight = '1';
+
+  const slotEls = digits.map((ch, i) => {
+    if (ch === '.') {
+      const dot = document.createElement('span');
+      dot.textContent = '.';
+      dot.style.cssText = `font-family:'Bebas Neue',sans-serif;align-self:flex-end;padding-bottom:2px;`;
+      el.appendChild(dot);
+      return null;
+    }
+    const wrap = document.createElement('span');
+    wrap.style.cssText = `display:inline-block;overflow:hidden;height:1em;vertical-align:bottom;`;
+
+    const drum = document.createElement('span');
+    drum.style.cssText = `display:flex;flex-direction:column;will-change:transform;`;
+
+    // Fill drum: 0–9 then final digit again at bottom
+    const finalDigit = parseInt(ch);
+    for (let d = 0; d <= 9; d++) {
+      const s = document.createElement('span');
+      s.textContent = d;
+      s.style.cssText = `display:block;line-height:1;font-family:'Bebas Neue',sans-serif;font-size:inherit;`;
+      drum.appendChild(s);
+    }
+    // Add final digit one more time at bottom so it lands correctly
+    const landing = document.createElement('span');
+    landing.textContent = finalDigit;
+    landing.style.cssText = `display:block;line-height:1;font-family:'Bebas Neue',sans-serif;font-size:inherit;`;
+    drum.appendChild(landing);
+
+    wrap.appendChild(drum);
+    el.appendChild(wrap);
+    return { wrap, drum, finalDigit, colIdx: i };
+  });
+
+  if (isGold) el.style.color = '#c8a96e';
+
+  // Animate each digit with staggered delay: hundreds first, then tens, then units
+  const validSlots = slotEls.filter(Boolean);
+  validSlots.forEach((slot, i) => {
+    const delay = i * 120; // stagger 120ms per digit
+    const spinDur = 400 + i * 120; // each subsequent digit spins longer
+
+    setTimeout(() => {
+      // Start from top (0) and spin down to finalDigit
+      const totalDigits = 11; // 0-9 + landing
+      const targetRow = 9 - slot.finalDigit + 1; // row index from bottom
+      const targetTranslate = -(totalDigits - 1 - slot.finalDigit) / totalDigits * 100;
+
+      slot.drum.style.transition = `transform ${spinDur}ms cubic-bezier(0.25, 0.1, 0.2, 1.4)`;
+      // translateY: move up so finalDigit row is visible
+      const rowH = slot.wrap.offsetHeight;
+      const translatePx = -slot.finalDigit * rowH;
+      slot.drum.style.transform = `translateY(${translatePx}px)`;
+
+      // After slot finishes, restore breathe animation
+      if (i === validSlots.length - 1) {
+        setTimeout(() => {
+          el.style.animation = '';
+        }, spinDur + 100);
+      }
+    }, delay);
+  });
+}
 
 // ─── NOISE GRAIN ─────────────────────────────────────────────────────────────
 function initNoise() {
@@ -2308,6 +2761,14 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
 
   // cinematic backdrop reveal
   requestAnimationFrame(() => setTimeout(cinematicReveal, 30));
+
+  // film scratch for pre-1999 films
+  const releaseYear = parseInt((media.release_date || media.first_air_date || '0').slice(0, 4));
+  if (releaseYear > 0 && releaseYear <= 1999) {
+    startFilmScratch();
+  } else {
+    stopFilmScratch();
+  }
 
   // gold burst for high-score reviews
   requestAnimationFrame(() => observeGoldReviews());
