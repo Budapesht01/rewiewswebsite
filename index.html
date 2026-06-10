@@ -299,6 +299,63 @@ body::before {
   gap: 2px;
 }
 
+/* ── FEATURED FIRST CARD ── */
+.card-featured {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+  aspect-ratio: unset !important;
+}
+.card-featured img {
+  filter: grayscale(30%) !important;
+}
+.card-featured:hover img {
+  filter: grayscale(0%) !important;
+  transform: scale(1.03) !important;
+}
+/* featured always-visible overlay */
+.card-featured-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(8,8,8,0.97) 0%,
+    rgba(8,8,8,0.55) 35%,
+    rgba(8,8,8,0.1) 65%,
+    transparent 100%
+  );
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 26px 22px;
+  opacity: 1 !important;
+}
+/* override default overlay for featured */
+.card-featured .card-overlay { display: none; }
+
+.feat-badge {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  letter-spacing: 0.35em; color: var(--dim); text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.feat-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 0.95; letter-spacing: 0.04em; margin-bottom: 8px;
+}
+.feat-overview {
+  font-size: 11px; color: rgba(242,242,240,0.55); line-height: 1.6;
+  max-width: 280px; margin-bottom: 12px;
+  display: -webkit-box; -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.feat-meta {
+  display: flex; align-items: baseline; gap: 10px;
+}
+.feat-score {
+  font-family: 'Bebas Neue', sans-serif; font-size: 26px; line-height: 1;
+}
+.feat-score.gold { color: #c8a96e; text-shadow: 0 0 20px rgba(200,169,110,0.4); }
+.feat-score-sub {
+  font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim);
+}
+
 .card {
   position: relative; overflow: hidden;
   aspect-ratio: 2/3; cursor: pointer;
@@ -444,10 +501,16 @@ body::before {
 }
 .review-user:hover { color: var(--white); }
 .review-score-big {
-  font-family: 'Bebas Neue', sans-serif; font-size: 48px;
+  font-family: 'Bebas Neue', sans-serif;
   line-height: 1; color: var(--white);
+  transition: font-size 0.3s, color 0.3s;
 }
-.review-score-big span { font-size: 14px; color: var(--dim); font-family: 'DM Mono', monospace; }
+/* tier sizes */
+.review-score-big.tier-low  { font-size: 36px; color: #555; }
+.review-score-big.tier-mid  { font-size: 44px; color: var(--mid); }
+.review-score-big.tier-high { font-size: 52px; color: var(--white); }
+.review-score-big.gold      { font-size: 64px; color: #c8a96e; text-shadow: 0 0 50px rgba(200,169,110,0.35), 0 0 20px rgba(200,169,110,0.15); }
+.review-score-big span { font-size: 13px; color: var(--dim); font-family: 'DM Mono', monospace; }
 .review-criteria-mini {
   display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
   margin-bottom: 12px;
@@ -548,7 +611,6 @@ body::before {
   text-shadow: 0 0 60px rgba(200,169,110,0.35), 0 0 20px rgba(200,169,110,0.2);
   transition: color 0.4s, text-shadow 0.4s;
 }
-.review-score-big.gold { color: #c8a96e; text-shadow: 0 0 40px rgba(200,169,110,0.3); }
 .score-number.gold { color: #c8a96e; text-shadow: 0 0 60px rgba(200,169,110,0.25); }
 .comment-input {
   width: 100%; background: var(--grey); border: 1px solid var(--line);
@@ -1464,9 +1526,8 @@ async function enrichGridWithScores(grid, items, mediaType) {
   try {
     const ids = items.map(i => i.id).join(',');
     const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
-    // re-render cards with scores
-    grid.innerHTML = items.map(item => cardHTML(item, mediaType, scores[item.id])).join('');
-  } catch(e) { /* fail silently — cards already shown without scores */ }
+    grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, scores[item.id], idx === 0)).join('');
+  } catch(e) { /* fail silently */ }
 }
 
 async function loadGenreSections(mediaType) {
@@ -1577,21 +1638,41 @@ async function renderTrending(type) {
     grid.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
     return;
   }
-  // render without site scores first
-  grid.innerHTML = items.map(item => cardHTML(item, mediaType)).join('');
+  // render first as featured, rest as normal
+  grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, null, idx === 0)).join('');
   loadGenreSections(mediaType);
   // then enrich with site scores
   enrichGridWithScores(grid, items, mediaType);
 }
 
-function cardHTML(item, mediaType, siteScore) {
+function cardHTML(item, mediaType, siteScore, featured = false) {
   const poster = item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : '';
+  const posterLg = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
   const title = item.title || item.name || '';
   const year = (item.release_date || item.first_air_date || '').slice(0, 4);
   const score = item.vote_average ? item.vote_average.toFixed(1) : '';
   const siteScoreHTML = siteScore != null
     ? `<div class="card-site-score ${siteScore > 100 ? 'gold' : ''}">${siteScore}<span class="ssub">/110</span></div>`
     : '';
+  const typeLabel = mediaType === 'movie' ? 'Фильм' : 'Сериал';
+
+  if (featured) {
+    const siteScoreFeat = siteScore != null
+      ? `<div class="feat-score ${siteScore > 100 ? 'gold' : ''}">${siteScore}<span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)">/110</span></div>
+         <div class="feat-score-sub">${score ? `TMDB ${score} ·` : ''} ${year}</div>`
+      : `<div class="feat-score-sub">${typeLabel}${year ? ` · ${year}` : ''}</div>`;
+    return `
+      <div class="card card-featured" onclick="openMedia(${item.id}, '${mediaType}')">
+        ${posterLg ? `<img src="${posterLg}" alt="${escHtml(title)}" loading="eager"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
+        <div class="card-featured-overlay">
+          <div class="feat-badge">// #1 в тренде · ${typeLabel}</div>
+          <div class="feat-title">${escHtml(title)}</div>
+          ${item.overview ? `<div class="feat-overview">${escHtml(item.overview)}</div>` : ''}
+          <div class="feat-meta">${siteScoreFeat}</div>
+        </div>
+      </div>`;
+  }
+
   return `
     <div class="card" onclick="openMedia(${item.id}, '${mediaType}')">
       ${poster ? `<img src="${poster}" alt="${escHtml(title)}" loading="lazy"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
@@ -1756,7 +1837,7 @@ function renderReviews(reviews, criteriaList) {
       <div class="review-card">
         <div class="review-header">
           <span class="review-user" onclick="showPublicProfile('${escHtml(r.username)}')">@${escHtml(r.username)}</span>
-          <div class="review-score-big ${isGold ? 'gold' : ''}">${r.totalScore}<span>/110</span></div>
+          <div class="review-score-big ${scoreTierClass(r.totalScore)}">${r.totalScore}<span>/110</span></div>
         </div>
         <div class="review-criteria-named">
           <div class="micro-histogram">${bars}</div>
@@ -1973,6 +2054,13 @@ function calcTotal(criteria) {
   const raw    = criteria.reduce((s,c) => s + c.score * c.multiplier, 0);
   const maxRaw = criteria.reduce((s,c) => s + 10 * c.multiplier, 0);
   return parseFloat(((raw / maxRaw) * 110).toFixed(1));
+}
+
+function scoreTierClass(v) {
+  if (v > 100) return 'gold';
+  if (v >= 90) return 'tier-high';
+  if (v >= 80) return 'tier-mid';
+  return 'tier-low';
 }
 
 function scoreClass(v) {
