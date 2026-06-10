@@ -1522,11 +1522,11 @@ const GENRE_DEFS = [
 ];
 
 // Enrich a rendered grid with site scores fetched from API
-async function enrichGridWithScores(grid, items, mediaType) {
+async function enrichGridWithScores(grid, items, mediaType, featuredFirst = false) {
   try {
     const ids = items.map(i => i.id).join(',');
     const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
-    grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, scores[item.id], idx === 0)).join('');
+    grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, scores[item.id], featuredFirst && idx === 0)).join('');
   } catch(e) { /* fail silently */ }
 }
 
@@ -1641,8 +1641,8 @@ async function renderTrending(type) {
   // render first as featured, rest as normal
   grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, null, idx === 0)).join('');
   loadGenreSections(mediaType);
-  // then enrich with site scores
-  enrichGridWithScores(grid, items, mediaType);
+  // enrich with site scores — featured only for trending grid
+  enrichGridWithScores(grid, items, mediaType, true);
 }
 
 function cardHTML(item, mediaType, siteScore, featured = false) {
