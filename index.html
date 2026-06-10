@@ -448,14 +448,18 @@ body {
 }
 .card:hover .card-score-badge { opacity: 1; }
 
-/* Site score badge — bottom left, always visible */
+/* Site score badge — hidden until hover (score reveal effect) */
 .card-site-score {
   position: absolute; bottom: 42px; left: 10px;
   font-family: 'Bebas Neue', sans-serif; font-size: 22px;
   line-height: 1; color: var(--white);
   text-shadow: 0 2px 8px rgba(0,0,0,0.9);
   pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
+.card:hover .card-site-score { opacity: 1; transform: translateY(0); }
 .card-site-score .ssub {
   font-family: 'DM Mono', monospace; font-size: 9px;
   color: rgba(255,255,255,0.5); letter-spacing: 0.05em;
@@ -464,6 +468,28 @@ body {
   color: #c8a96e;
   text-shadow: 0 0 20px rgba(200,169,110,0.5), 0 2px 8px rgba(0,0,0,0.9);
 }
+/* Ghost score — faint number visible before hover */
+.card-score-ghost {
+  position: absolute; bottom: 42px; left: 10px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+  line-height: 1; color: rgba(242,242,240,0.1);
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.card:hover .card-score-ghost { opacity: 0; }
+
+/* Grain noise overlay on cards */
+.card-grain {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  transition: opacity 0.5s;
+  z-index: 2;
+}
+.card:hover .card-grain { opacity: 0.04; }
 
 /* ── MEDIA DETAIL PAGE ── */
 #media-page { }
@@ -1430,6 +1456,212 @@ body {
   pointer-events: none; z-index: 9996;
   width: 100%; height: 100%;
 }
+
+/* ── GLITCH SCORE REVEAL (B&W palette) ── */
+.score-number {
+  position: relative;
+}
+.score-number::before,
+.score-number::after {
+  content: attr(data-glitch-text);
+  position: absolute; top: 0; left: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: inherit; line-height: 1;
+  color: inherit;
+  opacity: 0; pointer-events: none;
+}
+.score-number.glitching::before {
+  color: #b0b0b0;
+  clip-path: polygon(0 18%, 100% 18%, 100% 46%, 0 46%);
+  animation: sn-glitch-a 0.38s steps(3) forwards;
+  opacity: 1;
+}
+.score-number.glitching::after {
+  color: #3a3a3a;
+  clip-path: polygon(0 54%, 100% 54%, 100% 82%, 0 82%);
+  animation: sn-glitch-b 0.38s steps(3) forwards;
+  opacity: 1;
+}
+@keyframes sn-glitch-a {
+  0%   { transform: translateX(-5px) skewX(-1deg); }
+  33%  { transform: translateX(4px)  skewX(1deg); }
+  66%  { transform: translateX(-2px); }
+  100% { transform: translateX(0); opacity: 0; }
+}
+@keyframes sn-glitch-b {
+  0%   { transform: translateX(5px)  skewX(1deg); }
+  33%  { transform: translateX(-4px) skewX(-1deg); }
+  66%  { transform: translateX(2px); }
+  100% { transform: translateX(0); opacity: 0; }
+}
+
+/* ── DNA PROFILE IN MEDIA PAGE ── */
+.dna-block {
+  border: 1px solid var(--line);
+  padding: 24px 20px 20px;
+  margin-top: 2px;
+  border-top: none;
+}
+.dna-block-title {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 18px;
+}
+.dna-bars-outer { overflow-x: auto; }
+.dna-bars-wrap {
+  display: flex; gap: 4px; align-items: flex-end;
+  height: 100px; min-width: 320px;
+}
+.dna-bar-strand {
+  flex: 1; display: flex; flex-direction: column-reverse; gap: 2px;
+  cursor: pointer;
+}
+.dna-bar-cell {
+  height: 9px; border-radius: 1px;
+  transition: opacity 0.2s, background 0.2s;
+}
+.dna-bar-meta {
+  display: flex; gap: 4px; margin-top: 12px; min-width: 320px;
+}
+.dna-bar-col {
+  flex: 1; text-align: center;
+  transition: all 0.2s;
+}
+.dna-bar-col .dna-lbl {
+  font-family: 'DM Mono', monospace; font-size: 7px;
+  color: var(--dim); display: block; margin-bottom: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.2s;
+}
+.dna-bar-col .dna-val {
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px;
+  color: var(--dim); display: block;
+  transition: color 0.2s, font-size 0.15s;
+}
+.dna-bar-col.active .dna-lbl { color: var(--white); }
+.dna-bar-col.active .dna-val { color: var(--white); font-size: 18px; }
+
+/* ── FILM REEL (profile) ── */
+.profile-reel-section {
+  padding: 0 0 24px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0;
+}
+.profile-reel-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--dim); padding: 20px 40px 12px;
+}
+.profile-reel-outer {
+  position: relative; overflow: hidden;
+  border-top: 3px solid var(--line); border-bottom: 3px solid var(--line);
+}
+.profile-reel-holes {
+  display: flex; position: absolute;
+  top: 5px; left: 0; right: 0; pointer-events: none;
+}
+.profile-reel-holes-bot { top: auto; bottom: 5px; }
+.profile-reel-hole {
+  width: 16px; height: 11px; border: 1px solid var(--mid);
+  border-radius: 2px; margin-right: 8px; flex-shrink: 0;
+  background: var(--black);
+}
+.profile-reel-track {
+  display: flex; gap: 3px; padding: 26px 40px;
+  overflow-x: auto; scrollbar-width: none; cursor: grab;
+}
+.profile-reel-track:active { cursor: grabbing; }
+.profile-reel-track::-webkit-scrollbar { display: none; }
+.profile-reel-frame {
+  flex-shrink: 0; width: 90px; height: 134px;
+  border: 1px solid var(--line); position: relative;
+  overflow: hidden; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.profile-reel-frame:hover { border-color: var(--mid); }
+.profile-reel-frame img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(90%) contrast(1.05);
+  transition: filter 0.35s;
+}
+.profile-reel-frame:hover img { filter: grayscale(0%); }
+.profile-reel-frame-score {
+  position: absolute; bottom: 4px; right: 5px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 15px;
+  color: var(--white); text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}
+.profile-reel-frame-title {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 10px;
+  color: var(--mid); text-align: center; padding: 4px;
+  background: var(--grey);
+}
+.profile-reel-frame-year {
+  position: absolute; top: 4px; left: 5px;
+  font-family: 'DM Mono', monospace; font-size: 6px; color: var(--dim);
+}
+
+/* ── SPLIT COMPARE section on home ── */
+.split-section {
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+}
+.split-section-header {
+  padding: 20px 40px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.split-section-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.35em; text-transform: uppercase; color: var(--dim);
+}
+.split-section-hint {
+  font-family: 'DM Mono', monospace; font-size: 8px; color: var(--line);
+  letter-spacing: 0.1em;
+}
+.split-compare-wrap {
+  position: relative; height: 240px;
+  cursor: col-resize; user-select: none; overflow: hidden;
+}
+.split-compare-side {
+  position: absolute; top: 0; bottom: 0;
+  display: flex; align-items: flex-end;
+}
+.split-compare-left  { left: 0; right: 50%; background: linear-gradient(135deg,#1c1c1c,#111); }
+.split-compare-right { right: 0; left: 50%; background: linear-gradient(135deg,#0e0e0e,#181818); }
+.split-compare-divider {
+  position: absolute; top: 0; bottom: 0;
+  width: 1px; background: var(--white); left: 50%;
+  transform: translateX(-50%); z-index: 10; pointer-events: none;
+}
+.split-compare-handle {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--white); z-index: 11; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+}
+.split-compare-handle svg { width: 12px; height: 12px; }
+.split-compare-poster {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  justify-content: flex-end; padding: 16px;
+}
+.scp-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; margin-bottom: 2px; }
+.scp-score { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; }
+.scp-sub { font-family: 'DM Mono', monospace; font-size: 7px; color: var(--dim); margin-top: 2px; }
+.scp-tag {
+  position: absolute; top: 12px;
+  font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); letter-spacing: 0.2em;
+}
+.scp-tag-l { left: 12px; }
+.scp-tag-r { right: 12px; }
+.scp-bg {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  font-family: 'Bebas Neue', sans-serif; font-size: 80px;
+  opacity: 0.04; pointer-events: none; white-space: nowrap;
+}
+
 </style>
 </head>
 <body>
@@ -1609,6 +1841,38 @@ body {
     </div>
   </div>
 
+  <!-- SPLIT COMPARE -->
+  <div class="split-section" id="split-section">
+    <div class="split-section-header">
+      <div class="split-section-label">// сравни два фильма</div>
+      <div class="split-section-hint">тяни ползунок</div>
+    </div>
+    <div class="split-compare-wrap" id="split-compare-wrap">
+      <div class="split-compare-side split-compare-left" id="scp-left">
+        <div class="scp-bg" style="left:10px">A</div>
+        <div class="split-compare-poster">
+          <div class="scp-title" id="scp-title-a">НАЧАЛО</div>
+          <div class="scp-score" id="scp-score-a">97<span style="font-size:22px;color:var(--dim)">.4</span></div>
+          <div class="scp-sub" id="scp-sub-a">// RATED · 2010</div>
+        </div>
+      </div>
+      <div class="split-compare-side split-compare-right" id="scp-right">
+        <div class="scp-bg" style="right:10px">B</div>
+        <div class="split-compare-poster" style="align-items:flex-end;text-align:right">
+          <div class="scp-title" id="scp-title-b">ДОВОД</div>
+          <div class="scp-score" id="scp-score-b">71<span style="font-size:22px;color:var(--dim)">.8</span></div>
+          <div class="scp-sub" id="scp-sub-b">// RATED · 2020</div>
+        </div>
+      </div>
+      <div class="split-compare-divider" id="scp-div"></div>
+      <div class="split-compare-handle" id="scp-handle">
+        <svg viewBox="0 0 12 12" fill="none"><path d="M3 6L1 3.5M3 6L1 8.5M9 6L11 3.5M9 6L11 8.5" stroke="#080808" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </div>
+      <div class="scp-tag scp-tag-l">A</div>
+      <div class="scp-tag scp-tag-r">B</div>
+    </div>
+  </div>
+
   <div class="genre-sections" id="genre-sections">
     <!-- filled by JS -->
   </div>
@@ -1687,6 +1951,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initParallax();
   initScrollReveal();
   initMomentumScroll();
+  initSplitCompare();
   initScrambleHero();
   const saved = localStorage.getItem('rated_token');
   const savedUser = localStorage.getItem('rated_user');
@@ -2368,11 +2633,15 @@ function slotMachineScore(el, target, isGold) {
       const translatePx = -slot.finalDigit * rowH;
       slot.drum.style.transform = `translateY(${translatePx}px)`;
 
-      // After slot finishes, restore breathe animation
+      // After slot finishes, restore breathe animation + fire glitch
       if (i === validSlots.length - 1) {
         setTimeout(() => {
           el.style.animation = '';
-        }, spinDur + 100);
+          // Glitch burst in B&W tones
+          el.dataset.glitchText = el.textContent || String(target);
+          el.classList.add('glitching');
+          setTimeout(() => el.classList.remove('glitching'), 420);
+        }, spinDur + 80);
       }
     }, delay);
   });
@@ -2798,8 +3067,31 @@ async function loadTrending() {
     const data = await api('/api/media/trending');
     state.trendingData = data;
     renderTrending(state.activeTab);
+    updateSplitCompare(data.movies);
   } catch (e) {
     document.getElementById('trending-grid').innerHTML = '<div class="empty-state"><p>Ошибка загрузки данных</p></div>';
+  }
+}
+
+function updateSplitCompare(movies) {
+  if (!movies || movies.length < 2) return;
+  const a = movies[0], b = movies[1];
+  const getTitle = m => (m.title || m.name || '').toUpperCase().slice(0, 12);
+  const getYear  = m => (m.release_date || m.first_air_date || '').slice(0, 4);
+  const ta = document.getElementById('scp-title-a'); if (ta) ta.textContent = getTitle(a);
+  const tb = document.getElementById('scp-title-b'); if (tb) tb.textContent = getTitle(b);
+  const sa = document.getElementById('scp-sub-a');   if (sa) sa.textContent = `// В тренде · ${getYear(a)}`;
+  const sb = document.getElementById('scp-sub-b');   if (sb) sb.textContent = `// В тренде · ${getYear(b)}`;
+  // Scores will be enriched separately; for now show TMDB as placeholder
+  const sca = document.getElementById('scp-score-a');
+  const scb = document.getElementById('scp-score-b');
+  if (sca && a.vote_average) {
+    const v = (a.vote_average * 10).toFixed(0);
+    sca.innerHTML = `${v}<span style="font-size:22px;color:var(--dim)"> </span>`;
+  }
+  if (scb && b.vote_average) {
+    const v = (b.vote_average * 10).toFixed(0);
+    scb.innerHTML = `${v}<span style="font-size:22px;color:var(--dim)"> </span>`;
   }
 }
 
@@ -2853,6 +3145,8 @@ function cardHTML(item, mediaType, siteScore, featured = false) {
         <div class="card-title">${escHtml(title)}</div>
         ${year ? `<div class="card-year">${year}</div>` : ''}
       </div>
+      <div class="card-grain"></div>
+      ${siteScore != null ? `<div class="card-score-ghost">${siteScore}</div>` : ''}
       ${siteScoreHTML}
       ${score ? `<div class="card-score-badge">${score}</div>` : ''}
     </div>`;
@@ -3012,6 +3306,8 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
   }
   // build radar if user has their own review
   buildRadar(reviews, myReview, criteriaList);
+  // Build DNA profile from reviews
+  buildDnaProfile(reviews, criteriaList);
   // animate score counters
   requestAnimationFrame(() => animateCounters());
 }
@@ -3089,6 +3385,64 @@ function renderRatingForm(type, criteriaList, myReview) {
       ${myReview ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ'}
     </button>
     ${myReview ? `<button class="btn-ghost" style="width:100%;margin-top:6px" onclick="deleteReview('${myReview._id}')">УДАЛИТЬ ОЦЕНКУ</button>` : ''}`;
+}
+
+// ─── DNA PROFILE ────────────────────────────────────────────────────────────
+function buildDnaProfile(reviews, criteriaList) {
+  const mount = document.getElementById('radar-block-mount');
+  if (!mount || !reviews.length || !criteriaList.length) return;
+
+  // Compute avg score per criterion
+  const avgs = criteriaList.map((c, i) => {
+    const vals = reviews.map(r => (r.criteria[i] ? r.criteria[i].score : 0));
+    return { name: c.name, avg: vals.reduce((a,b) => a+b, 0) / vals.length };
+  });
+
+  const maxScore = 10, cells = 10;
+
+  const strandHTML = avgs.map((c, i) => {
+    const filled = Math.round((c.avg / maxScore) * cells);
+    const cellsHTML = Array.from({length: cells}, (_, j) => {
+      const isFilled = j < filled;
+      const bg = isFilled ? 'var(--white)' : 'var(--line)';
+      return `<div style="height:9px;border-radius:1px;background:${bg};transition:opacity 0.2s,background 0.2s" data-filled="${isFilled}"></div>`;
+    }).join('');
+    return `<div class="dna-bar-strand" data-idx="${i}" style="flex:1;display:flex;flex-direction:column-reverse;gap:2px;cursor:pointer">${cellsHTML}</div>`;
+  }).join('');
+
+  const metaHTML = avgs.map((c, i) => {
+    const short = c.name.split(/[\s,]/)[0].slice(0, 5);
+    return `<div class="dna-bar-col" data-idx="${i}" style="flex:1;text-align:center">
+      <span class="dna-lbl">${short}</span>
+      <span class="dna-val">${c.avg.toFixed(1)}</span>
+    </div>`;
+  }).join('');
+
+  const dnaEl = document.createElement('div');
+  dnaEl.className = 'dna-block';
+  dnaEl.innerHTML = `
+    <div class="dna-block-title">// профиль критериев</div>
+    <div class="dna-bars-outer">
+      <div class="dna-bars-wrap" id="dna-bars-wrap">${strandHTML}</div>
+      <div class="dna-bar-meta" id="dna-bar-meta">${metaHTML}</div>
+    </div>`;
+  mount.appendChild(dnaEl);
+
+  // Hover interactivity
+  const strands = dnaEl.querySelectorAll('.dna-bar-strand');
+  const metaCols = dnaEl.querySelectorAll('.dna-bar-col');
+  strands.forEach((strand, i) => {
+    strand.addEventListener('mouseenter', () => {
+      strands.forEach(s => s.querySelectorAll('[data-filled="true"]').forEach(c => c.style.opacity='0.2'));
+      strand.querySelectorAll('[data-filled="true"]').forEach(c => c.style.opacity='1');
+      metaCols.forEach(m => m.classList.remove('active'));
+      metaCols[i] && metaCols[i].classList.add('active');
+    });
+    strand.addEventListener('mouseleave', () => {
+      strands.forEach(s => s.querySelectorAll('[data-filled="true"]').forEach(c => c.style.opacity='1'));
+      metaCols.forEach(m => m.classList.remove('active'));
+    });
+  });
 }
 
 // ─── RADAR CHART ─────────────────────────────────────────────────────────────
@@ -3376,8 +3730,17 @@ function renderProfilePage(user, reviews) {
       </div>
     </div>
     ${reviews.length
-      ? `<div class="profile-reviews-grid fade-in">${cards}</div>`
+      ? `<div class="profile-reel-section">
+          <div class="profile-reel-label">// плёночная лента</div>
+          <div class="profile-reel-outer" id="profile-reel-outer">
+            <div class="profile-reel-holes" id="profile-reel-top"></div>
+            <div class="profile-reel-track" id="profile-reel-track"></div>
+            <div class="profile-reel-holes profile-reel-holes-bot" id="profile-reel-bot"></div>
+          </div>
+        </div>
+        <div class="profile-reviews-grid fade-in">${cards}</div>`
       : '<div class="empty-state"><div class="empty-state-icon">◈</div><p>Нет оценок</p></div>'}`;
+  if (reviews.length) setTimeout(() => buildProfileReel(reviews), 50);
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
@@ -3493,6 +3856,96 @@ function closeMobileMenu() {
   document.getElementById('burger-btn').classList.remove('open');
 }
 
+
+// ─── SPLIT COMPARE ──────────────────────────────────────────────────────────
+function initSplitCompare() {
+  const wrap   = document.getElementById('split-compare-wrap');
+  const left   = document.getElementById('scp-left');
+  const right  = document.getElementById('scp-right');
+  const div    = document.getElementById('scp-div');
+  const handle = document.getElementById('scp-handle');
+  if (!wrap) return;
+  let dragging = false;
+
+  function setPos(x) {
+    const rect = wrap.getBoundingClientRect();
+    const pct = Math.min(85, Math.max(15, ((x - rect.left) / rect.width) * 100));
+    left.style.right  = (100 - pct) + '%';
+    right.style.left  = pct + '%';
+    div.style.left    = pct + '%';
+    handle.style.left = pct + '%';
+  }
+
+  wrap.addEventListener('mousedown',  e => { dragging = true; setPos(e.clientX); });
+  window.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
+  window.addEventListener('mouseup',   () => { dragging = false; });
+  wrap.addEventListener('touchstart',  e => { dragging = true; setPos(e.touches[0].clientX); }, {passive:true});
+  window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, {passive:true});
+  window.addEventListener('touchend',  () => { dragging = false; });
+}
+
+// ─── PROFILE FILM REEL ───────────────────────────────────────────────────────
+function buildProfileReel(reviews) {
+  const track = document.getElementById('profile-reel-track');
+  const top   = document.getElementById('profile-reel-top');
+  const bot   = document.getElementById('profile-reel-bot');
+  if (!track) return;
+
+  for (let i = 0; i < 40; i++) {
+    [top, bot].forEach(el => {
+      const h = document.createElement('div');
+      h.className = 'profile-reel-hole';
+      el.appendChild(h);
+    });
+  }
+
+  reviews.forEach(r => {
+    const frame = document.createElement('div');
+    frame.className = 'profile-reel-frame';
+    frame.onclick = () => openMedia(r.tmdbId, r.mediaType);
+    const posterPath = r.poster;
+    const year = (r.releaseDate || r.release_date || '').slice(0,4);
+    if (posterPath) {
+      const img = document.createElement('img');
+      img.src = 'https://image.tmdb.org/t/p/w342' + posterPath;
+      img.alt = '';
+      img.loading = 'lazy';
+      frame.appendChild(img);
+      const yr = document.createElement('div');
+      yr.className = 'profile-reel-frame-year';
+      yr.textContent = year;
+      frame.appendChild(yr);
+      const sc = document.createElement('div');
+      sc.className = 'profile-reel-frame-score';
+      sc.textContent = r.totalScore;
+      frame.appendChild(sc);
+    } else {
+      const t = document.createElement('div');
+      t.className = 'profile-reel-frame-title';
+      t.textContent = r.title || '';
+      frame.appendChild(t);
+      const sc = document.createElement('div');
+      sc.className = 'profile-reel-frame-score';
+      sc.textContent = r.totalScore;
+      frame.appendChild(sc);
+    }
+    track.appendChild(frame);
+  });
+
+  let isDrag = false, startX, scrollStart;
+  track.addEventListener('mousedown', e => {
+    isDrag = true; startX = e.clientX; scrollStart = track.scrollLeft;
+    track.style.scrollBehavior = 'auto';
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDrag) return;
+    track.scrollLeft = scrollStart - (e.clientX - startX);
+  });
+  window.addEventListener('mouseup', () => {
+    isDrag = false;
+    track.style.scrollBehavior = 'smooth';
+  });
+}
 
 // ─── API HELPER ───────────────────────────────────────────────────────────────
 async function api(url, method = 'GET', body = null) {
