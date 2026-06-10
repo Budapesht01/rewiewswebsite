@@ -1237,11 +1237,86 @@ body::before {
   #search-input:focus { width: 180px; }
   .tabs { padding: 0 20px; overflow-x: auto; }
 }
+
+@keyframes noiseShift {
+  0%   { transform: translate(0,0); }
+  25%  { transform: translate(-2px, 1px); }
+  50%  { transform: translate(1px, -2px); }
+  75%  { transform: translate(2px, 1px); }
+  100% { transform: translate(0,0); }
+}
+body::before {
+  animation: noiseShift 0.25s steps(1) infinite;
+}
+
+/* ── CURSOR TRAIL ── */
+.cursor-trail {
+  width: 6px; height: 6px;
+  background: var(--white);
+  border-radius: 50%;
+  position: fixed; top: 0; left: 0;
+  pointer-events: none; z-index: 9990;
+  mix-blend-mode: difference;
+  will-change: transform, opacity;
+}
+
+/* ── MAGNETIC HINT: elements subtle scale on hover removed — done in JS ── */
+
+/* ── SCRAMBLE HERO: characters invisible before scramble plays ── */
+.hero-title .scramble-char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+.hero-title br { display: block; }
+
+/* ── GOLD PARTICLE CANVAS ── */
+#gold-canvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 7000;
+  width: 100%; height: 100%;
+}
+
+/* ── CINEMATIC BACKDROP REVEAL ── */
+.media-backdrop {
+  transition: transform 0.9s cubic-bezier(0.16,1,0.3,1), filter 0.6s ease;
+  transform-origin: center top;
+}
+.media-backdrop.cinematic-start {
+  transform: scale(1.12);
+  filter: grayscale(100%) brightness(0.4);
+}
+.media-backdrop.cinematic-done {
+  transform: scale(1);
+  filter: grayscale(100%);
+}
+.media-hero-content {
+  transition: transform 0.8s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
+}
+.media-hero-content.content-start {
+  transform: translateY(60px);
+  opacity: 0;
+}
+.media-hero-content.content-done {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ── BREATHING SCORE ── */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.022); }
+}
+.score-number {
+  display: inline-block;
+  animation: breathe 3s ease-in-out infinite;
+  transform-origin: left center;
+}
 </style>
 </head>
 <body>
 
 <div id="cursor"></div>
+<canvas id="gold-canvas"></canvas>
 <div id="toast"></div>
 
 <!-- TOPBAR -->
@@ -1476,9 +1551,12 @@ let state = {
 // ─── INIT ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initCursor();
+  initCursorTrail();
   initSearch();
   initParallax();
   initScrollReveal();
+  initMomentumScroll();
+  initScrambleHero();
   const saved = localStorage.getItem('rated_token');
   const savedUser = localStorage.getItem('rated_user');
   if (saved && savedUser) {
@@ -1609,14 +1687,28 @@ function animateCounters() {
   });
 }
 
-// ─── WHEEL SCROLL FOR HORIZONTAL ROWS ────────────────────────────────────────
+// ─── WHEEL SCROLL (legacy passthrough — momentum handled by initMomentumScroll) ──
 function initWheelScroll() {
-  document.addEventListener('wheel', e => {
-    const wrap = e.target.closest('.cards-scroll-wrap');
-    if (!wrap) return;
-    e.preventDefault();
-    wrap.scrollLeft += e.deltaY * 1.5;
-  }, { passive: false });
+  // momentum scroll handles wheel + touch; this is now a no-op stub
+}
+
+// ─── GOLD BURST OBSERVER ─────────────────────────────────────────────────────
+function observeGoldReviews() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const card = entry.target;
+      const scoreEl = card.querySelector('.review-score-big');
+      if (!scoreEl) return;
+      const rect = scoreEl.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      goldBurst(x, y);
+      obs.unobserve(card);
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.gold-review').forEach(card => obs.observe(card));
 }
 
 // ─── HERO STATS ──────────────────────────────────────────────────────────────
@@ -1625,46 +1717,253 @@ async function loadHeroStats() {
 }
 function animateCount(id, target) {}
 
-// ─── CURSOR ──────────────────────────────────────────────────────────────────
+// ─── CURSOR (MAGNETIC) ───────────────────────────────────────────────────────
 function initCursor() {
   const c = document.getElementById('cursor');
   let mx = 0, my = 0, cx = 0, cy = 0;
+
+  // Raw mouse position
   document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+  // Magnetic pull: find nearest magnetic element and offset target
+  function getMagneticTarget() {
+    const MAGNETIC_SELECTOR = 'button, .card, .tab-btn, .back-btn, .profile-review-card, .search-item, .genre-see-all, .page-btn, .slider-theme-option';
+    const RADIUS = 80, STRENGTH = 0.35;
+    const els = document.querySelectorAll(MAGNETIC_SELECTOR);
+    let best = null, bestDist = Infinity;
+    els.forEach(el => {
+      const r = el.getBoundingClientRect();
+      const ex = r.left + r.width / 2;
+      const ey = r.top + r.height / 2;
+      const dx = mx - ex, dy = my - ey;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < RADIUS && dist < bestDist) { bestDist = dist; best = { el, ex, ey, dist }; }
+    });
+    if (!best) return { tx: mx, ty: my };
+    const pull = (RADIUS - best.dist) / RADIUS;
+    const offX = (best.ex - mx) * pull * STRENGTH;
+    const offY = (best.ey - my) * pull * STRENGTH;
+    return { tx: mx + offX, ty: my + offY };
+  }
+
   function tick() {
-    cx += (mx - cx) * 0.18;
-    cy += (my - cy) * 0.18;
+    const { tx, ty } = getMagneticTarget();
+    cx += (tx - cx) * 0.18;
+    cy += (ty - cy) * 0.18;
     c.style.left = (cx - 5) + 'px';
     c.style.top  = (cy - 5) + 'px';
     requestAnimationFrame(tick);
   }
   tick();
 
-  function setCursorState(state) {
-    c.className = state ? state : '';
-  }
+  function setCursorState(s) { c.className = s || ''; }
 
   document.addEventListener('mouseover', e => {
     const t = e.target;
-    if (t.matches('input[type="range"], .score-slider')) {
-      setCursorState('slider');
-    } else if (t.matches('input[type="text"], input[type="email"], input[type="password"], textarea, [contenteditable]')) {
-      setCursorState('text');
-    } else if (t.matches('a, button, .card, .search-item, .tab-btn, .back-btn, .profile-review-card, [onclick], label')) {
-      setCursorState('big');
-    } else {
-      setCursorState('');
-    }
+    if (t.matches('input[type="range"], .score-slider, .vibe-slider')) setCursorState('slider');
+    else if (t.matches('input[type="text"], input[type="email"], input[type="password"], textarea, [contenteditable]')) setCursorState('text');
+    else if (t.matches('a, button, .card, .search-item, .tab-btn, .back-btn, .profile-review-card, [onclick], label')) setCursorState('big');
+    else setCursorState('');
   });
 
-  // slider drag — square while holding
   document.addEventListener('mousedown', e => {
-    if (e.target.matches('input[type="range"], .score-slider')) setCursorState('slider-drag');
+    if (e.target.matches('input[type="range"], .score-slider, .vibe-slider')) setCursorState('slider-drag');
   });
   document.addEventListener('mouseup', e => {
     const t = document.elementFromPoint(e.clientX, e.clientY);
-    if (t && t.matches('input[type="range"], .score-slider')) setCursorState('slider');
+    if (t && t.matches('input[type="range"], .score-slider, .vibe-slider')) setCursorState('slider');
     else setCursorState('');
   });
+}
+
+// ─── CURSOR TRAIL ─────────────────────────────────────────────────────────────
+function initCursorTrail() {
+  const N = 6;
+  const trails = [];
+  for (let i = 0; i < N; i++) {
+    const el = document.createElement('div');
+    el.className = 'cursor-trail';
+    el.style.opacity = ((N - i) / N * 0.35).toFixed(2);
+    el.style.width = el.style.height = Math.max(3, 6 - i) + 'px';
+    document.body.appendChild(el);
+    trails.push({ el, x: -20, y: -20 });
+  }
+
+  let hx = -20, hy = -20;
+  document.addEventListener('mousemove', e => { hx = e.clientX; hy = e.clientY; });
+
+  const DELAYS = [0.08, 0.11, 0.14, 0.17, 0.20, 0.23];
+  function tick() {
+    let px = hx, py = hy;
+    trails.forEach((t, i) => {
+      t.x += (px - t.x) * DELAYS[i];
+      t.y += (py - t.y) * DELAYS[i];
+      t.el.style.left = (t.x - 3) + 'px';
+      t.el.style.top  = (t.y - 3) + 'px';
+      px = t.x; py = t.y;
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+// ─── SCRAMBLE TEXT HERO ───────────────────────────────────────────────────────
+function initScrambleHero() {
+  const title = document.querySelector('.hero-title');
+  if (!title) return;
+
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&';
+  const rnd = () => CHARS[Math.floor(Math.random() * CHARS.length)];
+
+  // Collect text nodes and build char spans
+  const lines = title.innerHTML.split('<br>');
+  title.innerHTML = lines.map(line => {
+    const txt = line.replace(/<[^>]+>/g, '').trim();
+    const tag = line.includes('<em>') ? 'em' : '';
+    const chars = txt.split('').map((ch, i) => {
+      if (ch === ' ') return ' ';
+      return `<span class="scramble-char" data-final="${ch}" style="opacity:0">${rnd()}</span>`;
+    }).join('');
+    return tag ? `<em>${chars}</em>` : chars;
+  }).join('<br>');
+
+  const spans = title.querySelectorAll('.scramble-char');
+  const total = spans.length;
+  const DUR = 900, START_DELAY = 300;
+
+  spans.forEach((span, i) => {
+    const delay = START_DELAY + (i / total) * DUR * 0.6;
+    const scrambleDur = 280 + Math.random() * 120;
+
+    setTimeout(() => {
+      span.style.opacity = '1';
+      const final = span.dataset.final;
+      let elapsed = 0;
+      const interval = setInterval(() => {
+        elapsed += 40;
+        if (elapsed >= scrambleDur) {
+          span.textContent = final;
+          clearInterval(interval);
+        } else {
+          span.textContent = rnd();
+        }
+      }, 40);
+    }, delay);
+  });
+}
+
+// ─── GOLD PARTICLE BURST ─────────────────────────────────────────────────────
+function goldBurst(x, y) {
+  const canvas = document.getElementById('gold-canvas');
+  if (!canvas) return;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const GOLD = ['#c8a96e', '#e0c97f', '#f0e0a0', '#a07840'];
+  const particles = Array.from({ length: 28 }, () => ({
+    x, y,
+    vx: (Math.random() - 0.5) * 5,
+    vy: (Math.random() - 1.2) * 5,
+    r:  Math.random() * 2.5 + 0.8,
+    color: GOLD[Math.floor(Math.random() * GOLD.length)],
+    life: 1,
+    decay: 0.025 + Math.random() * 0.025
+  }));
+
+  let frame;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      if (p.life <= 0) return;
+      alive = true;
+      p.x += p.vx; p.y += p.vy; p.vy += 0.12;
+      p.life -= p.decay;
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    if (alive) frame = requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  cancelAnimationFrame(frame);
+  draw();
+}
+
+// ─── CINEMATIC MEDIA REVEAL ───────────────────────────────────────────────────
+function cinematicReveal() {
+  const backdrop = document.querySelector('.media-backdrop');
+  const heroContent = document.querySelector('.media-hero-content');
+  if (!backdrop || !heroContent) return;
+
+  backdrop.classList.add('cinematic-start');
+  heroContent.classList.add('content-start');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      backdrop.classList.add('cinematic-done');
+      heroContent.classList.add('content-done');
+      // trigger counter animations
+      setTimeout(animateCounters, 200);
+    });
+  });
+}
+
+// ─── MOMENTUM SCROLL ─────────────────────────────────────────────────────────
+function initMomentumScroll() {
+  let activeWrap = null, vel = 0, raf = null;
+  const FRICTION = 0.88;
+
+  document.addEventListener('wheel', e => {
+    const wrap = e.target.closest('.cards-scroll-wrap');
+    if (!wrap) return;
+    e.preventDefault();
+    activeWrap = wrap;
+    vel += e.deltaY * 1.2;
+
+    if (!raf) {
+      function glide() {
+        if (!activeWrap || Math.abs(vel) < 0.5) { vel = 0; raf = null; return; }
+        activeWrap.scrollLeft += vel;
+        vel *= FRICTION;
+        raf = requestAnimationFrame(glide);
+      }
+      raf = requestAnimationFrame(glide);
+    }
+  }, { passive: false });
+
+  // Touch momentum for mobile
+  let touchStartX = 0, touchLastX = 0, touchWrap = null;
+  document.addEventListener('touchstart', e => {
+    touchWrap = e.target.closest('.cards-scroll-wrap');
+    if (!touchWrap) return;
+    touchStartX = touchLastX = e.touches[0].clientX;
+    vel = 0;
+    cancelAnimationFrame(raf); raf = null;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!touchWrap) return;
+    const dx = touchLastX - e.touches[0].clientX;
+    touchLastX = e.touches[0].clientX;
+    vel = vel * 0.5 + dx * 0.5;
+    touchWrap.scrollLeft += dx;
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!touchWrap) return;
+    activeWrap = touchWrap; touchWrap = null;
+    function glide() {
+      if (!activeWrap || Math.abs(vel) < 0.5) { vel = 0; raf = null; return; }
+      activeWrap.scrollLeft += vel;
+      vel *= FRICTION;
+      raf = requestAnimationFrame(glide);
+    }
+    raf = requestAnimationFrame(glide);
+  }, { passive: true });
 }
 
 // ─── PAGES ───────────────────────────────────────────────────────────────────
@@ -1979,6 +2278,12 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
 
   // init sliders
   if (!myReview) initSliders(criteriaList);
+
+  // cinematic backdrop reveal
+  requestAnimationFrame(() => setTimeout(cinematicReveal, 30));
+
+  // gold burst for high-score reviews
+  requestAnimationFrame(() => observeGoldReviews());
   // init progress bar
   const wrap = document.getElementById('live-score-wrap');
   if (wrap) {
@@ -2015,7 +2320,7 @@ function renderReviews(reviews, criteriaList) {
 
     const date = new Date(r.createdAt).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
     return `
-      <div class="review-card">
+      <div class="review-card${r.totalScore > 100 ? ' gold-review' : ''}">
         <div class="review-header">
           <span class="review-user" onclick="showPublicProfile('${escHtml(r.username)}')">@${escHtml(r.username)}</span>
           <div class="review-score-big ${scoreTierClass(r.totalScore)}">${r.totalScore}<span>/110</span></div>
