@@ -1340,8 +1340,55 @@ body {
   .tabs { padding: 0 20px; overflow-x: auto; }
 }
 
-/* ── CURSOR TRAIL ── */
-.cursor-trail {
+/* ── TRACKING ERROR HERO ── */
+@keyframes trackingShift {
+  0%,91%,100% { transform: translateX(0) skewX(0deg); filter: none; }
+  92%          { transform: translateX(-3px) skewX(-0.4deg); filter: brightness(1.08) hue-rotate(15deg); }
+  93%          { transform: translateX(4px)  skewX(0.3deg);  filter: brightness(0.95); }
+  94%          { transform: translateX(-1px) skewX(0deg);    filter: none; }
+  95%          { transform: translateX(2px);                  filter: brightness(1.04) hue-rotate(-10deg); }
+  96%,99%      { transform: translateX(0);                    filter: none; }
+}
+@keyframes titleTrackGlitch {
+  0%,91%,100% { text-shadow: none; transform: none; }
+  92% { text-shadow: -2px 0 rgba(180,40,20,0.7), 2px 0 rgba(20,60,200,0.7); transform: translateX(2px); }
+  93% { text-shadow:  3px 0 rgba(180,40,20,0.8), -3px 0 rgba(20,60,200,0.8); transform: translateX(-1px); }
+  94% { text-shadow: none; transform: none; }
+  95% { text-shadow: -1px 0 rgba(0,180,140,0.5), 1px 0 rgba(200,0,80,0.4); transform: translateX(1px); }
+}
+@keyframes glitchBarsHero {
+  0%,91%,96%,100% { opacity: 0; }
+  92% { opacity: 1; background:
+    linear-gradient(transparent 22%, rgba(180,40,20,0.15) 23%, rgba(180,40,20,0.15) 24.5%, transparent 25.5%),
+    linear-gradient(transparent 68%, rgba(20,60,200,0.12) 69%, rgba(20,60,200,0.12) 70.5%, transparent 71%);
+  }
+  93%,95% { opacity: 0; }
+  94% { opacity: 1; background: linear-gradient(transparent 47%, rgba(0,180,140,0.1) 48%, rgba(0,180,140,0.1) 49%, transparent 50%); }
+}
+
+.hero-title {
+  animation: titleTrackGlitch 9s infinite;
+  animation-delay: 2s;
+}
+.hero-glitch-bars {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 2;
+  animation: glitchBarsHero 9s infinite;
+  animation-delay: 2s;
+}
+.hero-bg {
+  animation: trackingShift 9s infinite;
+  animation-delay: 2s;
+}
+
+/* ── VHS REWIND CANVAS ── */
+#vhs-rewind-canvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 88888;
+  opacity: 0;
+}
   width: 6px; height: 6px;
   background: var(--white);
   border-radius: 50%;
@@ -1531,9 +1578,10 @@ body {
   width: 100%; height: 100%;
 }
 
-/* ── GLITCH SCORE REVEAL (B&W palette) ── */
+/* ── CHROMATIC SCORE NUMBERS ── */
 .score-number {
   position: relative;
+  display: inline-block;
 }
 .score-number::before,
 .score-number::after {
@@ -1541,33 +1589,68 @@ body {
   position: absolute; top: 0; left: 0;
   font-family: 'Bebas Neue', sans-serif;
   font-size: inherit; line-height: 1;
-  color: inherit;
   opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
 }
+/* Red channel — shifted left */
+.score-number::before {
+  color: rgba(200, 60, 40, 0.75);
+  transform: translate(-2px, -1px);
+  mix-blend-mode: screen;
+}
+/* Blue channel — shifted right */
+.score-number::after {
+  color: rgba(40, 100, 220, 0.65);
+  transform: translate(2px, 1px);
+  mix-blend-mode: screen;
+}
+/* On hover: chromatic split */
+.score-number:hover::before,
+.score-number:hover::after { opacity: 1; }
+
+/* Gold stays gold with amber chroma */
+.score-number.gold::before { color: rgba(200, 100, 20, 0.6); }
+.score-number.gold::after  { color: rgba(180, 140, 0, 0.5); }
+
+/* Glitch burst class (on score reveal) */
 .score-number.glitching::before {
-  color: #b0b0b0;
-  clip-path: polygon(0 18%, 100% 18%, 100% 46%, 0 46%);
-  animation: sn-glitch-a 0.38s steps(3) forwards;
   opacity: 1;
+  animation: chroma-r 0.4s steps(3) forwards;
 }
 .score-number.glitching::after {
-  color: #3a3a3a;
-  clip-path: polygon(0 54%, 100% 54%, 100% 82%, 0 82%);
-  animation: sn-glitch-b 0.38s steps(3) forwards;
   opacity: 1;
+  animation: chroma-b 0.4s steps(3) forwards;
 }
-@keyframes sn-glitch-a {
-  0%   { transform: translateX(-5px) skewX(-1deg); }
-  33%  { transform: translateX(4px)  skewX(1deg); }
-  66%  { transform: translateX(-2px); }
-  100% { transform: translateX(0); opacity: 0; }
+@keyframes chroma-r {
+  0%   { transform: translate(-5px, -2px); opacity: 0.8; }
+  33%  { transform: translate(4px, 1px);  opacity: 0.6; }
+  66%  { transform: translate(-2px, 0);   opacity: 0.4; }
+  100% { transform: translate(-2px, -1px); opacity: 0; }
 }
-@keyframes sn-glitch-b {
-  0%   { transform: translateX(5px)  skewX(1deg); }
-  33%  { transform: translateX(-4px) skewX(-1deg); }
-  66%  { transform: translateX(2px); }
-  100% { transform: translateX(0); opacity: 0; }
+@keyframes chroma-b {
+  0%   { transform: translate(5px, 2px);  opacity: 0.7; }
+  33%  { transform: translate(-4px, -1px); opacity: 0.5; }
+  66%  { transform: translate(2px, 0);    opacity: 0.3; }
+  100% { transform: translate(2px, 1px);  opacity: 0; }
 }
+
+/* ── REVIEW SCORE BIG — chromatic on hover ── */
+.review-score-big {
+  position: relative; display: inline-block;
+}
+.review-score-big::before,
+.review-score-big::after {
+  content: attr(data-score);
+  position: absolute; top: 0; left: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: inherit; line-height: 1;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.review-score-big::before { color: rgba(200,60,40,0.7); transform: translate(-2px,-1px); mix-blend-mode: screen; }
+.review-score-big::after  { color: rgba(40,100,220,0.6); transform: translate(2px,1px); mix-blend-mode: screen; }
+.review-card:hover .review-score-big::before,
+.review-card:hover .review-score-big::after { opacity: 1; }
 
 /* ── DNA PROFILE IN MEDIA PAGE ── */
 .dna-block {
@@ -1745,6 +1828,7 @@ body {
 <canvas id="gold-canvas"></canvas>
 <canvas id="film-scratch-canvas"></canvas>
 <canvas id="cursor-explosion-canvas"></canvas>
+<canvas id="vhs-rewind-canvas"></canvas>
 <div id="intro-overlay">
   <div id="intro-logo-wrap">RATED</div>
   <div id="intro-sub">// оцени всё</div>
@@ -1840,6 +1924,7 @@ body {
 
     <div class="hero-left">
       <div class="hero-bg"></div>
+      <div class="hero-glitch-bars"></div>
       <div class="hero-label">// платформа оценок</div>
       <h1 class="hero-title">
         ТВОИ<br/>
@@ -1990,19 +2075,105 @@ function showPage(name) {
   if (name !== 'media') stopFilmScratch();
 
   if (current) {
-    current.classList.add('page-transition-out');
-    setTimeout(() => {
+    // VHS rewind transition
+    vhsRewindTransition(() => {
       current.classList.remove('active', 'page-transition-out');
-      next.classList.add('active', 'page-transition-in');
+      next.classList.add('active');
       window.scrollTo(0, 0);
-      setTimeout(() => next.classList.remove('page-transition-in'), 220);
       if (name === 'profile') loadProfile();
-    }, 150);
+    });
   } else {
     next.classList.add('active');
     window.scrollTo(0, 0);
     if (name === 'profile') loadProfile();
   }
+}
+
+// ─── VHS REWIND TRANSITION ────────────────────────────────────────────────────
+function vhsRewindTransition(cb) {
+  const canvas = document.getElementById('vhs-rewind-canvas');
+  if (!canvas) { cb(); return; }
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  canvas.style.opacity = '1';
+
+  const START = performance.now();
+  const TOTAL = 320; // ms total
+  // Phase 1: 0–200ms rewind static
+  // Phase 2: 200–280ms white flash + cut
+  // Phase 3: 280–320ms fade out
+
+  function frame(now) {
+    const t = now - START;
+    ctx.clearRect(0, 0, W, H);
+
+    if (t < 200) {
+      // Rewind static: fast horizontal bands scrolling upward
+      const speed = t / 200; // 0→1 getting faster
+      const bandH = 4 + Math.random() * 8;
+      const offset = ((t * 3) % H);
+
+      // Dark base
+      ctx.fillStyle = 'rgba(0,0,0,0.85)';
+      ctx.fillRect(0, 0, W, H);
+
+      // Moving horizontal noise bands
+      for (let y = -H; y < H * 2; y += bandH * 2) {
+        const yPos = ((y + offset * (2 + speed * 4)) % (H + 40)) - 20;
+        const alpha = 0.06 + Math.random() * 0.09;
+        ctx.fillStyle = `rgba(242,242,240,${alpha})`;
+        ctx.fillRect(0, yPos, W, bandH * (0.5 + Math.random() * 0.8));
+      }
+
+      // Chromatic fringe on bands
+      if (Math.random() < 0.4) {
+        const fy = Math.random() * H;
+        ctx.fillStyle = `rgba(180,40,20,${0.1 + Math.random() * 0.1})`;
+        ctx.fillRect(0, fy, W, 2 + Math.random() * 4);
+        ctx.fillStyle = `rgba(20,60,200,${0.08 + Math.random() * 0.1})`;
+        ctx.fillRect(0, fy + 3, W, 2 + Math.random() * 3);
+      }
+
+      // VHS noise texture
+      for (let i = 0; i < 600; i++) {
+        const nx = Math.random() * W;
+        const ny = Math.random() * H;
+        ctx.fillStyle = `rgba(242,242,240,${0.02 + Math.random() * 0.05})`;
+        ctx.fillRect(nx, ny, 2, 1);
+      }
+
+    } else if (t < 260) {
+      // White flash: sharp cut
+      const flashT = (t - 200) / 60;
+      ctx.fillStyle = `rgba(242,242,240,${0.9 * (1 - flashT)})`;
+      ctx.fillRect(0, 0, W, H);
+
+    } else if (t < TOTAL) {
+      // Fade out residual noise
+      const fadeT = (t - 260) / 60;
+      ctx.fillStyle = `rgba(0,0,0,${0.3 * (1 - fadeT)})`;
+      ctx.fillRect(0, 0, W, H);
+      if (t > 270 && !canvas._cbCalled) {
+        canvas._cbCalled = true;
+        cb();
+      }
+
+    } else {
+      canvas.style.opacity = '0';
+      canvas._cbCalled = false;
+      ctx.clearRect(0, 0, W, H);
+      return;
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  // Fire callback at the cut point if not already
+  canvas._cbCalled = false;
+  setTimeout(() => { if (!canvas._cbCalled) { canvas._cbCalled = true; cb(); } }, 215);
+  requestAnimationFrame(frame);
 }
 
 // ─── 2. HERO PARALLAX ────────────────────────────────────────────────────────
@@ -2560,7 +2731,14 @@ function animateCounters() {
   document.querySelectorAll('.score-number[data-target]').forEach(el => {
     const target = parseFloat(el.dataset.target);
     const isGold = el.classList.contains('gold');
-    slotMachineScore(el, target, isGold);
+    // keep data-glitch-text in sync
+    const str = (Math.round(target * 10) / 10).toFixed(1);
+    el.dataset.glitchText = str.endsWith('.0') ? str.slice(0, -2) : str;
+    slotMachineScore(el, target, isGold, () => {
+      // chromatic burst after slot lands
+      el.classList.add('glitching');
+      setTimeout(() => el.classList.remove('glitching'), 420);
+    });
   });
 
   document.querySelectorAll('.score-count[data-target]').forEach(el => {
@@ -2577,7 +2755,7 @@ function animateCounters() {
   });
 }
 
-function slotMachineScore(el, target, isGold) {
+function slotMachineScore(el, target, isGold, onDone) {
   // Format: e.g. "95.3" → digits ["9","5",".","3"]
   const str = (Math.round(target * 10) / 10).toFixed(1);
   const formatted = str.endsWith('.0') ? str.slice(0, -2) : str;
@@ -2651,7 +2829,10 @@ function slotMachineScore(el, target, isGold) {
           // Glitch burst in B&W tones
           el.dataset.glitchText = el.textContent || String(target);
           el.classList.add('glitching');
-          setTimeout(() => el.classList.remove('glitching'), 420);
+          setTimeout(() => {
+            el.classList.remove('glitching');
+            if (onDone) onDone();
+          }, 420);
         }, spinDur + 80);
       }
     }, delay);
@@ -3275,7 +3456,7 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
           </div>
           ${avgScore ? `
             <div class="score-display">
-              <div class="score-number ${avgScore > 100 ? 'gold' : ''}" data-target="${avgScore}">0</div>
+              <div class="score-number ${avgScore > 100 ? 'gold' : ''}" data-target="${avgScore}" data-glitch-text="${avgScore}">0</div>
               <div>
                 <div class="score-max">/110</div>
                 <div class="score-count" data-target="${reviews.length}" data-suffix=" ${plural(reviews.length, 'оценка','оценки','оценок')}">0</div>
@@ -3355,7 +3536,7 @@ function renderReviews(reviews, criteriaList) {
       <div class="review-card${r.totalScore > 100 ? ' gold-review' : ''}">
         <div class="review-header">
           <span class="review-user" onclick="showPublicProfile('${escHtml(r.username)}')">@${escHtml(r.username)}</span>
-          <div class="review-score-big ${scoreTierClass(r.totalScore)}">${r.totalScore}<span>/110</span></div>
+          <div class="review-score-big ${scoreTierClass(r.totalScore)}" data-score="${r.totalScore}">${r.totalScore}<span>/110</span></div>
         </div>
         <div class="review-criteria-named">
           <div class="micro-histogram">${bars}</div>
