@@ -2182,30 +2182,28 @@ function playClick(type = 'card') {
       gain.connect(ctx.destination);
       src.start(now);
     } else if (type === 'scratch') {
-      // Film projector rattle — layered mechanical noise burst
-      const dur = 0.22;
+      // Film hiss — pure white noise shaped into a soft sss
+      const dur = 0.28;
       const sr  = ctx.sampleRate;
       const buf = ctx.createBuffer(1, sr * dur, sr);
       const data = buf.getChannelData(0);
       for (let i = 0; i < data.length; i++) {
         const t = i / sr;
-        const rumble = (Math.random() * 2 - 1) * Math.exp(-t * 18) * 0.28;
-        const rattle = (Math.random() * 2 - 1) * Math.exp(-t * 35)
-                       * (0.5 + 0.5 * Math.sin(2 * Math.PI * 48 * t)) * 0.18;
-        const hiss   = (Math.random() * 2 - 1) * Math.exp(-t * 9) * 0.07;
-        data[i] = rumble + rattle + hiss;
+        // fade in quickly, hold, fade out slowly
+        const env = Math.min(t / 0.015, 1) * Math.exp(-t * 7);
+        data[i] = (Math.random() * 2 - 1) * env;
       }
       const src = ctx.createBufferSource();
       src.buffer = buf;
-      const bp = ctx.createBiquadFilter();
-      bp.type = 'bandpass';
-      bp.frequency.value = 900;
-      bp.Q.value = 0.6;
+      // highpass to keep only the airy hiss frequencies
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 5000;
+      hp.Q.value = 0.5;
       const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.55, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-      src.connect(bp);
-      bp.connect(gain);
+      gain.gain.value = 0.35;
+      src.connect(hp);
+      hp.connect(gain);
       gain.connect(ctx.destination);
       src.start(now);
     }
