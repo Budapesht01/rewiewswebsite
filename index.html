@@ -460,7 +460,6 @@ body::before {
   position: absolute; left: 0; top: 0; bottom: 0;
   background: var(--white); transition: width 1s ease;
 }
-.review-comment { font-size: 13px; line-height: 1.7; color: var(--dim); }
 .review-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--line); margin-top: 12px; }
 
 /* ── RATING FORM ── */
@@ -869,6 +868,7 @@ body::before {
 .micro-histogram {
   display: flex; align-items: flex-end;
   gap: 3px; height: 40px;
+  margin-bottom: 18px; /* space for labels below */
 }
 .mh-bar-wrap {
   flex: 1; height: 100%;
@@ -880,13 +880,22 @@ body::before {
   width: 100%;
   background: rgba(240,239,233,0.18);
   transition: background 0.2s;
-  /* height set inline */
 }
 .mh-bar-wrap:hover .mh-bar { background: var(--white); }
-/* tooltip */
+/* label under bar */
+.mh-label {
+  position: absolute; top: calc(100% + 4px); left: 50%;
+  transform: translateX(-50%);
+  font-family: 'DM Mono', monospace; font-size: 6px;
+  color: var(--dim); letter-spacing: 0.03em;
+  white-space: nowrap; pointer-events: none;
+  transition: color 0.2s;
+}
+.mh-bar-wrap:hover .mh-label { color: var(--mid); }
+/* tooltip on hover */
 .mh-bar-wrap::after {
   content: attr(data-tip);
-  position: absolute; bottom: calc(100% + 6px); left: 50%;
+  position: absolute; bottom: calc(100% + 8px); left: 50%;
   transform: translateX(-50%);
   background: #1a1a1a; border: 1px solid var(--line);
   font-family: 'DM Mono', monospace; font-size: 8px;
@@ -897,21 +906,31 @@ body::before {
 }
 .mh-bar-wrap:hover::after { opacity: 1; }
 
-/* ── RADAR CHART ── */
+/* divider before comment */
+.review-comment {
+  font-size: 13px; line-height: 1.7; color: var(--dim);
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+}
+
+/* ── RADAR CHART — full-width under reviews ── */
 .radar-block {
   border: 1px solid var(--line);
-  padding: 24px; margin-top: 16px;
+  padding: 28px 28px 24px;
+  margin-top: 2px;
+  border-top: none; /* merges visually with review grid */
 }
 .radar-block-title {
   font-family: 'DM Mono', monospace; font-size: 9px;
   letter-spacing: 0.3em; text-transform: uppercase;
-  color: var(--dim); margin-bottom: 16px;
+  color: var(--dim); margin-bottom: 20px;
 }
 .radar-block-inner {
-  display: flex; gap: 20px; align-items: flex-start;
+  display: flex; gap: 40px; align-items: center;
 }
 .radar-svg-wrap { flex-shrink: 0; }
-.radar-legend-col { flex: 1; }
+.radar-legend-col { flex: 1; min-width: 0; }
 .radar-legend-item {
   display: flex; align-items: center; gap: 8px;
   font-family: 'DM Mono', monospace; font-size: 8px;
@@ -921,25 +940,25 @@ body::before {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
 .radar-diff-row {
-  display: grid; grid-template-columns: 1fr 22px 22px 26px;
-  align-items: center; gap: 4px;
-  padding: 5px 0; border-bottom: 1px solid var(--line);
-  font-family: 'DM Mono', monospace; font-size: 8px;
+  display: grid; grid-template-columns: 1fr 32px 32px 34px;
+  align-items: center; gap: 6px;
+  padding: 6px 0; border-bottom: 1px solid var(--line);
+  font-family: 'DM Mono', monospace; font-size: 9px;
 }
 .radar-diff-row:last-child { border-bottom: none; }
 .radar-diff-name { color: var(--dim); letter-spacing: 0.03em; }
 .radar-diff-avg { color: var(--dim); text-align: right; }
-.radar-diff-mine { color: var(--white); text-align: right; font-weight: 400; }
-.radar-diff-delta { text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 13px; }
+.radar-diff-mine { color: var(--white); text-align: right; }
+.radar-diff-delta { text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 14px; }
 .radar-diff-delta.pos { color: #6db97a; }
 .radar-diff-delta.neg { color: #c46b6b; }
 .radar-diff-delta.neu { color: var(--dim); }
 .radar-diff-header {
-  display: grid; grid-template-columns: 1fr 22px 22px 26px;
-  gap: 4px; padding-bottom: 6px; border-bottom: 1px solid #333;
-  margin-bottom: 4px;
+  display: grid; grid-template-columns: 1fr 32px 32px 34px;
+  gap: 6px; padding-bottom: 8px; border-bottom: 1px solid #2a2a2a;
+  margin-bottom: 2px;
   font-family: 'DM Mono', monospace; font-size: 7px;
-  letter-spacing: 0.15em; color: #444; text-transform: uppercase;
+  letter-spacing: 0.2em; color: #3a3a3a; text-transform: uppercase;
 }
 .radar-diff-header span { text-align: right; }
 .radar-diff-header span:first-child { text-align: left; }
@@ -1691,6 +1710,7 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
       <div class="reviews-list-wrap">
         <div class="reviews-title">// отзывы (${reviews.length})</div>
         <div id="reviews-list">${renderReviews(reviews, criteriaList)}</div>
+        <div id="radar-block-mount"></div>
       </div>
       <div class="rating-sidebar">
         ${renderRatingForm(type, criteriaList, myReview)}
@@ -1717,15 +1737,17 @@ function renderReviews(reviews, criteriaList) {
     // micro-histogram bars
     const bars = r.criteria.map(c => {
       const pct = Math.round(c.score / 10 * 100);
-      const label = c.name.split(/[\s,]/)[0].trim();
+      const shortLabel = c.name.split(/[\s,]/)[0].slice(0,4).toUpperCase();
+      const fullLabel = c.name.split(/[\s,]/)[0].trim();
       const bg = isGold && c.score >= 9
         ? 'rgba(200,169,110,0.75)'
         : c.score >= 9 ? 'rgba(240,239,233,0.75)'
         : c.score >= 7 ? 'rgba(240,239,233,0.4)'
         : c.score >= 5 ? 'rgba(240,239,233,0.2)'
         : 'rgba(240,239,233,0.08)';
-      return `<div class="mh-bar-wrap" data-tip="${escHtml(label)}: ${c.score}">
+      return `<div class="mh-bar-wrap" data-tip="${escHtml(fullLabel)}: ${c.score}">
         <div class="mh-bar" style="height:${pct}%;background:${bg}"></div>
+        <div class="mh-label">${shortLabel}</div>
       </div>`;
     }).join('');
 
@@ -1780,8 +1802,7 @@ function renderRatingForm(type, criteriaList, myReview) {
     <button class="submit-btn" id="submit-review-btn" onclick="submitReview('${myReview ? myReview._id : ''}')">
       ${myReview ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ'}
     </button>
-    ${myReview ? `<button class="btn-ghost" style="width:100%;margin-top:6px" onclick="deleteReview('${myReview._id}')">УДАЛИТЬ ОЦЕНКУ</button>` : ''}
-    <div id="radar-block-mount"></div>`;
+    ${myReview ? `<button class="btn-ghost" style="width:100%;margin-top:6px" onclick="deleteReview('${myReview._id}')">УДАЛИТЬ ОЦЕНКУ</button>` : ''}`;
 }
 
 // ─── RADAR CHART ─────────────────────────────────────────────────────────────
@@ -1797,7 +1818,7 @@ function buildRadar(reviews, myReview, criteriaList) {
   const mine = myReview.criteria.map(c => c.score);
 
   const N = criteriaList.length;
-  const CX = 110, CY = 110, R = 85;
+  const CX = 150, CY = 150, R = 118;
   const angle = i => (Math.PI * 2 * i / N) - Math.PI / 2;
   const pt = (val, idx) => {
     const r = (val / 10) * R;
@@ -1820,11 +1841,11 @@ function buildRadar(reviews, myReview, criteriaList) {
   });
   // axis labels
   criteriaList.forEach((c, i) => {
-    const [x,y] = pt(11.5, i);
+    const [x,y] = pt(13.5, i);
     const anchor = x < CX-4 ? 'end' : x > CX+4 ? 'start' : 'middle';
     const shortLabel = c.name.split(/[\s,]/)[0].slice(0,4).toUpperCase();
     svg += `<text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle"
-      font-family="DM Mono,monospace" font-size="7" fill="#555">${shortLabel}</text>`;
+      font-family="DM Mono,monospace" font-size="8" fill="#555" letter-spacing="0.04em">${shortLabel}</text>`;
   });
   // avg polygon
   svg += `<polygon points="${poly(avg)}" fill="rgba(240,239,233,0.06)" stroke="#444" stroke-width="1.5" stroke-linejoin="round"/>`;
@@ -1858,7 +1879,7 @@ function buildRadar(reviews, myReview, criteriaList) {
       <div class="radar-block-title">// ты vs все</div>
       <div class="radar-block-inner">
         <div class="radar-svg-wrap">
-          <svg width="220" height="220" viewBox="0 0 220 220" overflow="visible">${svg}</svg>
+          <svg width="300" height="300" viewBox="0 0 300 300" overflow="visible">${svg}</svg>
           <div style="display:flex;gap:14px;margin-top:10px;justify-content:center">
             <div class="radar-legend-item">
               <div class="radar-legend-dot" style="background:#333;border:1px solid #444"></div>
