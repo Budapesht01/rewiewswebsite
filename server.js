@@ -35,6 +35,7 @@ const reviewSchema = new mongoose.Schema({
   criteria:  [criterionSchema],
   totalScore: Number,
   comment:   String,
+  signatureData: { type: String, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -355,7 +356,7 @@ app.get('/api/criteria/:type', (req, res) => {
 
 app.post('/api/reviews', auth, async (req, res) => {
   try {
-    const { tmdbId, mediaType, criteria, comment } = req.body;
+    const { tmdbId, mediaType, criteria, comment, signatureData } = req.body;
 
     const existing = await Review.findOne({ userId: req.user.id, tmdbId, mediaType });
     if (existing) return res.status(400).json({ error: 'Вы уже оценили это произведение' });
@@ -364,7 +365,8 @@ app.post('/api/reviews', auth, async (req, res) => {
     const review = await Review.create({
       userId: req.user.id,
       username: req.user.username,
-      tmdbId, mediaType, criteria, comment, totalScore
+      tmdbId, mediaType, criteria, comment, totalScore,
+      signatureData: signatureData || null
     });
     res.json(review);
   } catch (e) {
@@ -377,10 +379,11 @@ app.put('/api/reviews/:id', auth, async (req, res) => {
     const review = await Review.findOne({ _id: req.params.id, userId: req.user.id });
     if (!review) return res.status(404).json({ error: 'Не найдено' });
 
-    const { criteria, comment } = req.body;
+    const { criteria, comment, signatureData } = req.body;
     review.criteria   = criteria;
     review.comment    = comment;
     review.totalScore = calcTotal(criteria);
+    if (signatureData) review.signatureData = signatureData;
     await review.save();
     res.json(review);
   } catch (e) {
