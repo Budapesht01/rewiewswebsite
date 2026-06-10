@@ -1851,37 +1851,6 @@ body {
         <div class="hero-circle-label">Множители весов</div>
       </div>
 
-      <!-- sample score bars -->
-      <div class="hero-score-preview">
-        <div class="hero-score-preview-label">// пример оценки</div>
-        <div class="hero-score-bars">
-          <div class="hero-score-bar-row">
-            <div class="hero-score-bar-name">Сценарий</div>
-            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:90%"></div></div>
-            <div class="hero-score-bar-val">9</div>
-          </div>
-          <div class="hero-score-bar-row">
-            <div class="hero-score-bar-name">Персонажи</div>
-            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:80%"></div></div>
-            <div class="hero-score-bar-val">8</div>
-          </div>
-          <div class="hero-score-bar-row">
-            <div class="hero-score-bar-name">Атмосфера</div>
-            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:95%"></div></div>
-            <div class="hero-score-bar-val">9.5</div>
-          </div>
-          <div class="hero-score-bar-row">
-            <div class="hero-score-bar-name">Режиссура</div>
-            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:75%"></div></div>
-            <div class="hero-score-bar-val">7.5</div>
-          </div>
-          <div class="hero-score-bar-row">
-            <div class="hero-score-bar-name">Саундтрек</div>
-            <div class="hero-score-bar-track"><div class="hero-score-bar-fill" style="width:85%"></div></div>
-            <div class="hero-score-bar-val">8.5</div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1894,16 +1863,6 @@ body {
     <div class="section-label" id="trending-label">// в тренде на этой неделе</div>
     <div class="cards-grid" id="trending-grid">
       <div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>
-    </div>
-  </div>
-
-  <!-- FILM REEL -->
-  <div class="genre-reel-wrap" id="genre-reel-wrap">
-    <div class="genre-reel-label">// плёночная лента</div>
-    <div class="genre-reel-outer" id="genre-reel-outer">
-      <div class="genre-reel-holes" id="genre-reel-top"></div>
-      <div class="genre-reel-track" id="genre-reel-track"></div>
-      <div class="genre-reel-holes genre-reel-holes-bot" id="genre-reel-bot"></div>
     </div>
   </div>
 
@@ -3012,25 +2971,27 @@ async function loadGenreSections(mediaType) {
     wrap.innerHTML = GENRE_DEFS.map(({ key, label, genreId, sortKey }) => {
       const items = data[key] || [];
       if (!items.length) return '';
-      const cards = items.map(item => cardHTML(item, mediaType)).join('');
       return `
         <div class="genre-section">
           <div class="genre-section-header">
             <div class="genre-section-label">${label}</div>
             <button class="genre-see-all" onclick="openCatalogue('${mediaType}', '${genreId}', '${sortKey}', '${label.replace(/\/\/ /,'')}')">Все →</button>
           </div>
-          <div class="cards-scroll-wrap">
-            <div class="cards-scroll-row" id="genre-row-${key}">${cards}</div>
+          <div class="genre-reel-outer">
+            <div class="genre-reel-holes" id="reel-top-${key}"></div>
+            <div class="genre-reel-track" id="genre-row-${key}"></div>
+            <div class="genre-reel-holes genre-reel-holes-bot" id="reel-bot-${key}"></div>
           </div>
         </div>`;
     }).join('');
-    // enrich each genre row with site scores async
+
+    // build each reel
     GENRE_DEFS.forEach(({ key }) => {
       const items = data[key] || [];
-      const row = document.getElementById(`genre-row-${key}`);
-      if (items.length && row) enrichGridWithScores(row, items, mediaType);
+      if (!items.length) return;
+      buildReelTrack(`genre-row-${key}`, `reel-top-${key}`, `reel-bot-${key}`, items, mediaType);
+      enrichReelWithScores(`genre-row-${key}`, items, mediaType);
     });
-    // trigger scroll reveal for all genre sections
     observeGenreSections();
   } catch(e) {
     wrap.innerHTML = '';
@@ -3347,9 +3308,6 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
   }
   // build radar if user has their own review
   buildRadar(reviews, myReview, criteriaList);
-  // Build DNA profile from reviews
-  buildDnaProfile(reviews, criteriaList);
-  // animate score counters
   requestAnimationFrame(() => animateCounters());
 }
 
@@ -3426,64 +3384,6 @@ function renderRatingForm(type, criteriaList, myReview) {
       ${myReview ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ'}
     </button>
     ${myReview ? `<button class="btn-ghost" style="width:100%;margin-top:6px" onclick="deleteReview('${myReview._id}')">УДАЛИТЬ ОЦЕНКУ</button>` : ''}`;
-}
-
-// ─── DNA PROFILE ────────────────────────────────────────────────────────────
-function buildDnaProfile(reviews, criteriaList) {
-  const mount = document.getElementById('radar-block-mount');
-  if (!mount || !reviews.length || !criteriaList.length) return;
-
-  // Compute avg score per criterion
-  const avgs = criteriaList.map((c, i) => {
-    const vals = reviews.map(r => (r.criteria[i] ? r.criteria[i].score : 0));
-    return { name: c.name, avg: vals.reduce((a,b) => a+b, 0) / vals.length };
-  });
-
-  const maxScore = 10, cells = 10;
-
-  const strandHTML = avgs.map((c, i) => {
-    const filled = Math.round((c.avg / maxScore) * cells);
-    const cellsHTML = Array.from({length: cells}, (_, j) => {
-      const isFilled = j < filled;
-      const bg = isFilled ? 'var(--white)' : 'var(--line)';
-      return `<div style="height:9px;border-radius:1px;background:${bg};transition:opacity 0.2s,background 0.2s" data-filled="${isFilled}"></div>`;
-    }).join('');
-    return `<div class="dna-bar-strand" data-idx="${i}" style="flex:1;display:flex;flex-direction:column-reverse;gap:2px;cursor:pointer">${cellsHTML}</div>`;
-  }).join('');
-
-  const metaHTML = avgs.map((c, i) => {
-    const short = c.name.split(/[\s,]/)[0].slice(0, 5);
-    return `<div class="dna-bar-col" data-idx="${i}" style="flex:1;text-align:center">
-      <span class="dna-lbl">${short}</span>
-      <span class="dna-val">${c.avg.toFixed(1)}</span>
-    </div>`;
-  }).join('');
-
-  const dnaEl = document.createElement('div');
-  dnaEl.className = 'dna-block';
-  dnaEl.innerHTML = `
-    <div class="dna-block-title">// профиль критериев</div>
-    <div class="dna-bars-outer">
-      <div class="dna-bars-wrap" id="dna-bars-wrap">${strandHTML}</div>
-      <div class="dna-bar-meta" id="dna-bar-meta">${metaHTML}</div>
-    </div>`;
-  mount.appendChild(dnaEl);
-
-  // Hover interactivity
-  const strands = dnaEl.querySelectorAll('.dna-bar-strand');
-  const metaCols = dnaEl.querySelectorAll('.dna-bar-col');
-  strands.forEach((strand, i) => {
-    strand.addEventListener('mouseenter', () => {
-      strands.forEach(s => s.querySelectorAll('[data-filled="true"]').forEach(c => c.style.opacity='0.2'));
-      strand.querySelectorAll('[data-filled="true"]').forEach(c => c.style.opacity='1');
-      metaCols.forEach(m => m.classList.remove('active'));
-      metaCols[i] && metaCols[i].classList.add('active');
-    });
-    strand.addEventListener('mouseleave', () => {
-      strands.forEach(s => s.querySelectorAll('[data-filled="true"]').forEach(c => c.style.opacity='1'));
-      metaCols.forEach(m => m.classList.remove('active'));
-    });
-  });
 }
 
 // ─── RADAR CHART ─────────────────────────────────────────────────────────────
@@ -3914,6 +3814,70 @@ function initSplitCompare() {
   wrap.addEventListener('touchstart',  e => { dragging = true; setPos(e.touches[0].clientX); }, {passive:true});
   window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, {passive:true});
   window.addEventListener('touchend',  () => { dragging = false; });
+}
+
+// ─── GENRE REEL HELPERS ──────────────────────────────────────────────────────
+function buildReelTrack(trackId, topId, botId, items, mediaType) {
+  const track = document.getElementById(trackId);
+  const top   = document.getElementById(topId);
+  const bot   = document.getElementById(botId);
+  if (!track) return;
+
+  [top, bot].forEach(el => {
+    if (!el) return;
+    el.innerHTML = '';
+    for (let i = 0; i < 60; i++) {
+      const h = document.createElement('div');
+      h.className = 'genre-reel-hole';
+      el.appendChild(h);
+    }
+  });
+
+  track.innerHTML = '';
+  items.forEach(item => {
+    const frame = document.createElement('div');
+    frame.className = 'genre-reel-frame';
+    frame.onclick = () => openMedia(item.id, mediaType);
+    if (item.poster_path) {
+      const img = document.createElement('img');
+      img.src = 'https://image.tmdb.org/t/p/w342' + item.poster_path;
+      img.loading = 'lazy';
+      frame.appendChild(img);
+    }
+    track.appendChild(frame);
+  });
+
+  // drag scroll
+  let isDrag = false, startX, scrollStart;
+  track.addEventListener('mousedown', e => {
+    isDrag = true; startX = e.clientX; scrollStart = track.scrollLeft;
+    track.style.scrollBehavior = 'auto';
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDrag) return;
+    track.scrollLeft = scrollStart - (e.clientX - startX);
+  });
+  window.addEventListener('mouseup', () => { isDrag = false; });
+}
+
+async function enrichReelWithScores(trackId, items, mediaType) {
+  try {
+    const ids = items.map(i => i.id).join(',');
+    const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
+    const track = document.getElementById(trackId);
+    if (!track) return;
+    // add score badges to existing frames
+    Array.from(track.children).forEach((frame, i) => {
+      const item = items[i];
+      if (!item || scores[item.id] == null) return;
+      // remove existing score if any
+      frame.querySelectorAll('.genre-reel-frame-score').forEach(el => el.remove());
+      const sc = document.createElement('div');
+      sc.className = 'genre-reel-frame-score' + (scores[item.id] > 100 ? ' gold' : '');
+      sc.textContent = scores[item.id];
+      frame.appendChild(sc);
+    });
+  } catch(e) {}
 }
 
 // ─── PROFILE FILM REEL ───────────────────────────────────────────────────────
