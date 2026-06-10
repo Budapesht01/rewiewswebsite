@@ -65,13 +65,12 @@ body {
 }
 
 /* ── NOISE OVERLAY ── */
-body::before {
-  content: '';
+#noise-canvas {
   position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none; z-index: 9998;
-  opacity: 1;
-  animation: noiseShift 0.25s steps(1) infinite;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.02;
 }
 
 /* ── SCROLLBAR ── */
@@ -1241,14 +1240,6 @@ body::before {
   .tabs { padding: 0 20px; overflow-x: auto; }
 }
 
-@keyframes noiseShift {
-  0%   { transform: translate(0,0); }
-  25%  { transform: translate(-2px, 1px); }
-  50%  { transform: translate(1px, -2px); }
-  75%  { transform: translate(2px, 1px); }
-  100% { transform: translate(0,0); }
-}
-
 /* ── CURSOR TRAIL ── */
 .cursor-trail {
   width: 6px; height: 6px;
@@ -1316,6 +1307,7 @@ body::before {
 <body>
 
 <div id="cursor"></div>
+<canvas id="noise-canvas"></canvas>
 <canvas id="gold-canvas"></canvas>
 <div id="toast"></div>
 
@@ -1550,6 +1542,7 @@ let state = {
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  initNoise();
   initCursor();
   initCursorTrail();
   initSearch();
@@ -1716,6 +1709,41 @@ async function loadHeroStats() {
   // stats counters removed — no-op
 }
 function animateCount(id, target) {}
+
+// ─── NOISE GRAIN ─────────────────────────────────────────────────────────────
+function initNoise() {
+  const canvas = document.getElementById('noise-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    // Use small canvas, scale up with CSS for performance
+    canvas.width  = Math.ceil(window.innerWidth  / 2);
+    canvas.height = Math.ceil(window.innerHeight / 2);
+    canvas.style.width  = window.innerWidth  + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function drawNoise() {
+    const w = canvas.width, h = canvas.height;
+    const imageData = ctx.createImageData(w, h);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const v = Math.random() * 255 | 0;
+      data[i]     = v; // R
+      data[i + 1] = v; // G
+      data[i + 2] = v; // B
+      data[i + 3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  // Draw at ~4fps to match film grain feel
+  drawNoise();
+  setInterval(drawNoise, 250);
+}
 
 // ─── CURSOR (MAGNETIC) ───────────────────────────────────────────────────────
 function initCursor() {
