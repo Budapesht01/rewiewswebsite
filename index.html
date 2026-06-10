@@ -154,6 +154,71 @@ body::before {
 .page { display: none; padding-top: 60px; min-height: 100vh; }
 .page.active { display: block; }
 
+/* ── PAGE TRANSITION ── */
+.page-transition-out {
+  animation: pageOut 0.15s ease forwards;
+}
+.page-transition-in {
+  animation: pageIn 0.2s ease forwards;
+}
+@keyframes pageOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── STAGGERED CARD REVEAL ── */
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card-stagger {
+  opacity: 0;
+  animation: cardReveal 0.4s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+}
+
+/* ── SCROLL REVEAL for genre sections ── */
+.genre-section {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.genre-section.revealed {
+  opacity: 1; transform: translateY(0);
+}
+
+/* ── CARD BORDER DRAW on hover ── */
+.card::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  border: 1px solid transparent;
+  transition: border-color 0.3s;
+  /* clip-path draws border from top-left clockwise */
+  clip-path: polygon(0 0, 0 0, 0 0, 0 0);
+  transition: clip-path 0.35s cubic-bezier(0.4,0,0.2,1), border-color 0.1s;
+}
+.card:hover::after {
+  border-color: rgba(240,239,233,0.35);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* ── HERO PARALLAX ── */
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(80px, 12vw, 180px);
+  line-height: 0.9; letter-spacing: 0.02em;
+  color: var(--white);
+  will-change: transform;
+}
+
+/* ── ANIMATED SCORE COUNTER ── */
+.score-number, .score-count {
+  transition: opacity 0.3s;
+}
+
 /* ── HOME ── */
 #home { }
 
@@ -249,12 +314,6 @@ body::before {
   font-family: 'DM Mono', monospace; font-size: 10px;
   letter-spacing: 0.35em; text-transform: uppercase;
   color: var(--dim); margin-bottom: 20px;
-}
-.hero-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(80px, 12vw, 180px);
-  line-height: 0.9; letter-spacing: 0.02em;
-  color: var(--white);
 }
 .hero-title em { color: var(--dim); font-style: normal; }
 .hero-sub {
@@ -1418,6 +1477,8 @@ let state = {
 document.addEventListener('DOMContentLoaded', () => {
   initCursor();
   initSearch();
+  initParallax();
+  initScrollReveal();
   const saved = localStorage.getItem('rated_token');
   const savedUser = localStorage.getItem('rated_user');
   if (saved && savedUser) {
@@ -1429,6 +1490,120 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHeroStats();
   initWheelScroll();
 });
+
+// ─── 1. PAGE TRANSITIONS ─────────────────────────────────────────────────────
+function showPage(name) {
+  const pageId = name === 'media' ? 'media-page'
+               : name === 'profile' ? 'profile-page'
+               : name === 'catalogue' ? 'catalogue-page'
+               : 'home';
+  const current = document.querySelector('.page.active');
+  const next = document.getElementById(pageId);
+  if (current === next) return;
+
+  if (current) {
+    current.classList.add('page-transition-out');
+    setTimeout(() => {
+      current.classList.remove('active', 'page-transition-out');
+      next.classList.add('active', 'page-transition-in');
+      window.scrollTo(0, 0);
+      setTimeout(() => next.classList.remove('page-transition-in'), 220);
+      if (name === 'profile') loadProfile();
+    }, 150);
+  } else {
+    next.classList.add('active');
+    window.scrollTo(0, 0);
+    if (name === 'profile') loadProfile();
+  }
+}
+
+// ─── 2. HERO PARALLAX ────────────────────────────────────────────────────────
+function initParallax() {
+  const title = document.querySelector('.hero-title');
+  const heroSub = document.querySelector('.hero-sub');
+  const heroNum = document.querySelector('.hero-num');
+  if (!title) return;
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      if (y < window.innerHeight) {
+        title.style.transform = `translateY(${y * 0.18}px)`;
+        if (heroSub) heroSub.style.transform = `translateY(${y * 0.1}px)`;
+        if (heroNum) heroNum.style.transform = `translateY(${y * 0.06}px)`;
+      }
+      ticking = false;
+    });
+    ticking = true;
+  }, { passive: true });
+}
+
+// ─── 3. STAGGERED CARD REVEAL ────────────────────────────────────────────────
+function applyCardStagger(container, baseDelay = 0) {
+  const cards = container.querySelectorAll('.card, .card-featured');
+  cards.forEach((card, i) => {
+    card.classList.add('card-stagger');
+    card.style.animationDelay = `${baseDelay + i * 55}ms`;
+  });
+}
+
+// ─── 4. SCROLL REVEAL for genre sections ─────────────────────────────────────
+let _revealObserver = null;
+function initScrollReveal() {
+  _revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const section = entry.target;
+      section.classList.add('revealed');
+      // stagger cards inside
+      const row = section.querySelector('.cards-scroll-row');
+      if (row) applyCardStagger(row, 0);
+      _revealObserver.unobserve(section);
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+}
+
+function observeGenreSections() {
+  if (!_revealObserver) return;
+  document.querySelectorAll('.genre-section').forEach(s => {
+    _revealObserver.observe(s);
+  });
+}
+
+// ─── 5. ANIMATED SCORE COUNTERS on media page ────────────────────────────────
+function animateCounters() {
+  // score-number (e.g. 95.2)
+  document.querySelectorAll('.score-number[data-target]').forEach(el => {
+    const target = parseFloat(el.dataset.target);
+    const dur = 600;
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min(1, (now - start) / dur);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const val = target * ease;
+      const str = (Math.round(val * 10) / 10).toFixed(1);
+      el.textContent = str.endsWith('.0') ? str.slice(0,-2) : str;
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = str.endsWith('.0') ? str.slice(0,-2) : str;
+    }
+    requestAnimationFrame(tick);
+  });
+  // score-count (e.g. 12 оценок)
+  document.querySelectorAll('.score-count[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    const dur = 500;
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min(1, (now - start) / dur);
+      const ease = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(target * ease) + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
 
 // ─── WHEEL SCROLL FOR HORIZONTAL ROWS ────────────────────────────────────────
 function initWheelScroll() {
@@ -1489,17 +1664,6 @@ function initCursor() {
 }
 
 // ─── PAGES ───────────────────────────────────────────────────────────────────
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const pageId = name === 'media' ? 'media-page'
-               : name === 'profile' ? 'profile-page'
-               : name === 'catalogue' ? 'catalogue-page'
-               : 'home';
-  document.getElementById(pageId).classList.add('active');
-  window.scrollTo(0, 0);
-  if (name === 'profile') loadProfile();
-}
-
 // ─── TABS ────────────────────────────────────────────────────────────────────
 function switchTab(type, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1556,6 +1720,8 @@ async function loadGenreSections(mediaType) {
       const row = document.getElementById(`genre-row-${key}`);
       if (items.length && row) enrichGridWithScores(row, items, mediaType);
     });
+    // trigger scroll reveal for all genre sections
+    observeGenreSections();
   } catch(e) {
     wrap.innerHTML = '';
   }
@@ -1640,6 +1806,7 @@ async function renderTrending(type) {
   }
   // render first as featured, rest as normal
   grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, null, idx === 0)).join('');
+  applyCardStagger(grid);
   loadGenreSections(mediaType);
   // enrich with site scores — featured only for trending grid
   enrichGridWithScores(grid, items, mediaType, true);
@@ -1775,10 +1942,10 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
           </div>
           ${avgScore ? `
             <div class="score-display">
-              <div class="score-number ${avgScore > 100 ? 'gold' : ''}">${avgScore}</div>
+              <div class="score-number ${avgScore > 100 ? 'gold' : ''}" data-target="${avgScore}">0</div>
               <div>
                 <div class="score-max">/110</div>
-                <div class="score-count">${reviews.length} ${plural(reviews.length, 'оценка','оценки','оценок')}</div>
+                <div class="score-count" data-target="${reviews.length}" data-suffix=" ${plural(reviews.length, 'оценка','оценки','оценок')}">0</div>
               </div>
             </div>` : '<div style="color:var(--dim);font-size:13px;margin-bottom:16px">Будьте первым, кто оценит</div>'}
           ${media.overview ? `<p class="media-overview">${escHtml(media.overview)}</p>` : ''}
@@ -1809,6 +1976,8 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
   }
   // build radar if user has their own review
   buildRadar(reviews, myReview, criteriaList);
+  // animate score counters
+  requestAnimationFrame(() => animateCounters());
 }
 
 function renderReviews(reviews, criteriaList) {
