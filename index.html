@@ -1114,8 +1114,11 @@ body {
 }
 .genre-curtain-panels {
   position: absolute; inset: 0; z-index: 10;
-  pointer-events: none;
+  pointer-events: all;
   display: flex;
+}
+.genre-curtain.opened .genre-curtain-panels {
+  pointer-events: none;
 }
 .genre-curtain-left,
 .genre-curtain-right {
@@ -1220,9 +1223,9 @@ body {
   position: absolute;
   bottom: 8px; right: 12px;
   font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  letter-spacing: 0.14em;
-  color: rgba(242,242,240,0.28);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: rgba(242,242,240,0.45);
   z-index: 4;
   user-select: none;
   pointer-events: none;
@@ -2997,10 +3000,14 @@ function observeGenreCurtains() {
   const curtains = document.querySelectorAll('.genre-curtain');
   if (!curtains.length) return;
   curtains.forEach(curtain => {
-    curtain.addEventListener('click', () => {
-      if (curtain.classList.contains('opened')) return;
-      curtain.classList.add('opened');
-    });
+    const panels = curtain.querySelector('.genre-curtain-panels');
+    if (panels) {
+      panels.addEventListener('click', e => {
+        e.stopPropagation();
+        if (curtain.classList.contains('opened')) return;
+        curtain.classList.add('opened');
+      });
+    }
   });
   _startVhsTimecodes();
 }
@@ -4214,13 +4221,13 @@ async function loadGenreSections(mediaType) {
       const name = label.replace(/^\/\/ /, '');
       return `
         <div class="genre-section genre-curtain" data-curtain-key="${key}">
-          <div class="genre-curtain-panels">
+          <div class="genre-curtain-panels" onclick="event.stopPropagation()">
             <div class="genre-curtain-left">
               <div class="vhs-glitch-bar"></div>
               <div class="vhs-glitch-bar2"></div>
               <div class="vhs-rec"><div class="vhs-rec-dot"></div>REC</div>
               <div class="vhs-timecode">00:00:00:00</div>
-              <div class="genre-curtain-name">${name}</div>
+              <div class="genre-curtain-name">ЖАНР</div>
             </div>
             <div class="genre-curtain-right">
               <div class="vhs-glitch-bar"></div>
