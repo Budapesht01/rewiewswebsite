@@ -14,111 +14,40 @@
     --green: #4caf50;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    width: 300px;
-    background: var(--black);
-    color: var(--white);
-    font-family: 'DM Mono', 'Courier New', monospace;
-    font-size: 12px;
-  }
-  .header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px 12px;
-    border-bottom: 1px solid var(--line);
-  }
+  body { width: 300px; background: var(--black); color: var(--white); font-family: 'DM Mono', 'Courier New', monospace; font-size: 12px; }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 12px; border-bottom: 1px solid var(--line); }
   .logo { font-size: 16px; letter-spacing: 0.15em; font-weight: bold; }
   .logo span { color: var(--dim); font-size: 9px; display: block; letter-spacing: 0.3em; }
-  .status-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--mid); transition: background 0.3s;
-  }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mid); transition: background 0.3s; }
   .status-dot.connected { background: var(--green); box-shadow: 0 0 6px rgba(76,175,80,0.5); }
-
   .section { padding: 14px 16px; border-bottom: 1px solid var(--line); }
   .section:last-child { border-bottom: none; }
-  .section-label {
-    font-size: 8px; letter-spacing: 0.35em; color: var(--dim);
-    text-transform: uppercase; margin-bottom: 10px;
-  }
-
-  input {
-    width: 100%; background: var(--grey); border: 1px solid var(--line);
-    color: var(--white); padding: 8px 10px;
-    font-family: 'DM Mono', monospace; font-size: 11px;
-    outline: none; transition: border-color 0.2s;
-  }
+  .section-label { font-size: 8px; letter-spacing: 0.35em; color: var(--dim); text-transform: uppercase; margin-bottom: 10px; }
+  #token-status { font-size: 8px; letter-spacing: 0.1em; color: var(--dim); margin-bottom: 10px; min-height: 12px; }
+  input { width: 100%; background: var(--grey); border: 1px solid var(--line); color: var(--white); padding: 8px 10px; font-family: 'DM Mono', monospace; font-size: 11px; outline: none; transition: border-color 0.2s; }
   input:focus { border-color: var(--dim); }
   input::placeholder { color: var(--mid); }
-
   .row { display: flex; gap: 6px; margin-top: 8px; }
-
-  button {
-    background: none; border: 1px solid var(--line);
-    color: var(--dim); padding: 7px 12px;
-    font-family: 'DM Mono', monospace; font-size: 10px;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    cursor: pointer; transition: border-color 0.2s, color 0.2s;
-    white-space: nowrap;
-  }
+  button { background: none; border: 1px solid var(--line); color: var(--dim); padding: 7px 12px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: border-color 0.2s, color 0.2s; white-space: nowrap; }
   button:hover { border-color: var(--white); color: var(--white); }
-  button.primary {
-    background: var(--white); color: var(--black);
-    border-color: var(--white); flex: 1;
-  }
+  button.primary { background: var(--white); color: var(--black); border-color: var(--white); flex: 1; }
   button.primary:hover { opacity: 0.85; }
   button.danger { border-color: var(--red); color: var(--red); }
   button.danger:hover { background: var(--red); color: var(--white); }
-
-  /* Room active state */
-  .room-panel {
-    display: none;
-    flex-direction: column; gap: 10px;
-  }
-  .room-code-display {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 12px;
-    border: 1px solid var(--line); background: var(--grey);
-  }
-  .room-code-val {
-    font-size: 20px; letter-spacing: 0.3em; color: var(--white);
-  }
-  .copy-btn {
-    font-size: 8px; padding: 4px 8px;
-    border: 1px solid var(--line); color: var(--dim);
-    cursor: pointer; background: none;
-    transition: all 0.2s;
-  }
+  #panel-room { display: none; flex-direction: column; }
+  .room-code-display { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid var(--line); background: var(--grey); }
+  .room-code-val { font-size: 20px; letter-spacing: 0.3em; color: var(--white); }
+  .copy-btn { font-size: 8px; padding: 4px 8px; border: 1px solid var(--line); color: var(--dim); cursor: pointer; background: none; transition: all 0.2s; }
   .copy-btn:hover { color: var(--white); border-color: var(--white); }
   .copy-btn.copied { border-color: var(--green); color: var(--green); }
-
-  .members-list {
-    display: flex; flex-wrap: wrap; gap: 4px;
-  }
-  .member-chip {
-    font-size: 8px; padding: 3px 8px;
-    border: 1px solid var(--line); color: var(--dim);
-    letter-spacing: 0.1em;
-  }
+  .members-list { display: flex; flex-wrap: wrap; gap: 4px; }
+  .member-chip { font-size: 8px; padding: 3px 8px; border: 1px solid var(--line); color: var(--dim); letter-spacing: 0.1em; }
   .member-chip.host { border-color: var(--white); color: var(--white); }
-
-  /* Player detection */
-  .player-status {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 10px; border: 1px solid var(--line);
-    background: var(--grey);
-  }
+  .player-status { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); background: var(--grey); }
   .player-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mid); }
   .player-dot.found { background: var(--green); }
   .player-text { font-size: 9px; color: var(--dim); }
-
-  /* Chat */
-  .chat-box {
-    max-height: 100px; overflow-y: auto;
-    border: 1px solid var(--line); padding: 6px 8px;
-    display: flex; flex-direction: column; gap: 3px;
-    background: var(--grey);
-    scrollbar-width: thin; scrollbar-color: var(--mid) transparent;
-  }
+  .chat-box { max-height: 100px; overflow-y: auto; border: 1px solid var(--line); padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; background: var(--grey); scrollbar-width: thin; scrollbar-color: var(--mid) transparent; }
   .chat-msg { font-size: 9px; line-height: 1.4; }
   .chat-msg .chat-who { color: var(--white); margin-right: 4px; }
   .chat-msg .chat-text { color: var(--dim); }
@@ -126,46 +55,38 @@
   .chat-input-row { display: flex; gap: 4px; margin-top: 6px; }
   .chat-input-row input { flex: 1; padding: 5px 8px; font-size: 10px; }
   .chat-input-row button { padding: 5px 10px; font-size: 9px; }
-
   .error { font-size: 9px; color: var(--red); margin-top: 6px; min-height: 14px; }
 </style>
 </head>
 <body>
-
 <div class="header">
   <div class="logo">RATED <span>watch party</span></div>
   <div class="status-dot" id="status-dot"></div>
 </div>
-
-<!-- Not in room -->
 <div id="panel-setup">
   <div class="section">
+    <div id="token-status">// проверка аккаунта...</div>
     <div class="section-label">// войти в комнату</div>
     <input id="inp-code" placeholder="ABCD12 — код комнаты" maxlength="6" style="text-transform:uppercase"/>
     <input id="inp-name" placeholder="Ваш ник" maxlength="30" style="margin-top:6px"/>
-    <div class="row">
-      <button class="primary" id="btn-join">Войти</button>
-    </div>
+    <div class="row"><button class="primary" id="btn-join">Войти</button></div>
     <div class="error" id="join-error"></div>
   </div>
   <div class="section">
     <div class="section-label">// или создать комнату</div>
     <input id="inp-host-name" placeholder="Ваш ник" maxlength="30"/>
-    <div class="row" style="margin-top:8px;">
-      <button class="primary" id="btn-create">Создать</button>
-    </div>
+    <div class="row" style="margin-top:8px;"><button class="primary" id="btn-create">Создать</button></div>
+    <div class="error" id="create-error"></div>
   </div>
 </div>
-
-<!-- In room -->
-<div id="panel-room" style="display:none">
+<div id="panel-room">
   <div class="section">
     <div class="section-label">// комната активна</div>
     <div class="room-code-display">
       <div class="room-code-val" id="room-code-val">——</div>
       <button class="copy-btn" id="btn-copy">Копировать</button>
     </div>
-    <div style="margin-top:8px;" id="members-wrap">
+    <div style="margin-top:8px;">
       <div class="section-label" style="margin-bottom:6px">// участники</div>
       <div class="members-list" id="members-list"></div>
     </div>
@@ -189,7 +110,6 @@
     <button class="danger" id="btn-leave" style="width:100%">Покинуть комнату</button>
   </div>
 </div>
-
 <script src="popup.js"></script>
 </body>
 </html>
