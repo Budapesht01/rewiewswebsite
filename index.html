@@ -1231,8 +1231,8 @@ body {
 /* ── MICRO HISTOGRAM ── */
 .micro-histogram {
   display: flex; align-items: flex-end;
-  gap: 3px; height: 40px;
-  margin-bottom: 18px; /* space for labels below */
+  gap: 3px; height: 48px;
+  margin-bottom: 26px; /* more space for bigger labels */
 }
 .mh-bar-wrap {
   flex: 1; height: 100%;
@@ -1248,14 +1248,14 @@ body {
 .mh-bar-wrap:hover .mh-bar { background: var(--white); }
 /* label under bar */
 .mh-label {
-  position: absolute; top: calc(100% + 4px); left: 50%;
+  position: absolute; top: calc(100% + 5px); left: 50%;
   transform: translateX(-50%);
-  font-family: 'DM Mono', monospace; font-size: 6px;
-  color: var(--dim); letter-spacing: 0.03em;
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  color: rgba(242,242,240,0.45); letter-spacing: 0.04em;
   white-space: nowrap; pointer-events: none;
   transition: color 0.2s;
 }
-.mh-bar-wrap:hover .mh-label { color: var(--mid); }
+.mh-bar-wrap:hover .mh-label { color: var(--white); }
 /* tooltip on hover */
 .mh-bar-wrap::after {
   content: attr(data-tip);
@@ -1932,44 +1932,6 @@ body {
   color: rgba(242,242,240,0.5); letter-spacing: 0.1em;
 }
 
-/* 05 — END OF TAPE */
-#eot-overlay {
-  position: fixed; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 12px; z-index: 99990;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.05s;
-  background: var(--black);
-}
-#eot-flash {
-  position: fixed; inset: 0;
-  background: var(--white);
-  opacity: 0; pointer-events: none;
-  z-index: 99989; transition: opacity 0.05s;
-}
-#eot-overlay.triggered { opacity: 1; pointer-events: all; }
-#eot-flash.triggered { opacity: 1; }
-.eot-label {
-  font-family: 'DM Mono', monospace; font-size: 11px;
-  letter-spacing: 0.4em; color: var(--dim);
-  opacity: 0; transition: opacity 0.6s 0.3s;
-}
-.eot-main {
-  font-family: 'Bebas Neue', sans-serif; font-size: 48px;
-  color: var(--white); letter-spacing: 0.08em;
-  opacity: 0; transition: opacity 0.6s 0.5s;
-}
-.eot-dismiss {
-  font-family: 'DM Mono', monospace; font-size: 8px;
-  color: var(--line); letter-spacing: 0.3em;
-  opacity: 0; transition: opacity 0.6s 0.9s;
-  cursor: pointer;
-}
-#eot-overlay.triggered .eot-label,
-#eot-overlay.triggered .eot-main,
-#eot-overlay.triggered .eot-dismiss { opacity: 1; }
-#eot-sentinel { height: 1px; }
 
 /* 08 — FILM SPLICE */
 .splice {
@@ -2381,13 +2343,6 @@ body {
   <span id="vhs-tc-display">REC 00:00:00</span>
 </div>
 
-<!-- END OF TAPE OVERLAY -->
-<div id="eot-flash"></div>
-<div id="eot-overlay" onclick="dismissEOT()">
-  <div class="eot-label">// конец записи</div>
-  <div class="eot-main">КОНЕЦ ПЛЁНКИ</div>
-  <div class="eot-dismiss">// нажмите чтобы вернуться</div>
-</div>
 
 <div id="toast"></div>
 
@@ -2722,9 +2677,6 @@ function showPage(name) {
   const current = document.querySelector('.page.active');
   const next = document.getElementById(pageId);
   if (current === next) return;
-
-  // Reset EOT on page change
-  eotFired = false;
 
   // stop film scratch when leaving media page
   if (name !== 'media') stopFilmScratch();
@@ -3200,8 +3152,8 @@ function initPosterFilmEffect() {
 
   // Grain animation
   function drawGrain(c) {
-    c.width  = c.offsetWidth  || 180;
-    c.height = c.offsetHeight || 270;
+    c.width  = (c.offsetWidth  || 180) || 1;
+    c.height = (c.offsetHeight || 270) || 1;
     const ctx = c.getContext('2d');
     const img = ctx.createImageData(c.width, c.height);
     const d = img.data;
@@ -3278,8 +3230,8 @@ function initHeroFilmEffect() {
   (function grainTick(now) {
     if (!document.getElementById('hero-grain-canvas')) return;
     if (now - grainLast > 160) {
-      grainCanvas.width  = grainCanvas.offsetWidth  || window.innerWidth;
-      grainCanvas.height = grainCanvas.offsetHeight || 500;
+      grainCanvas.width  = (grainCanvas.offsetWidth  || window.innerWidth  || 800) || 1;
+      grainCanvas.height = (grainCanvas.offsetHeight || 500) || 1;
       const ctx = grainCanvas.getContext('2d');
       const img = ctx.createImageData(grainCanvas.width, grainCanvas.height);
       const d = img.data;
@@ -3331,7 +3283,11 @@ function initHeroFilmEffect() {
 // ─── AUDIO FEEDBACK ───────────────────────────────────────────────────────────
 let _audioCtx = null;
 function getAudioCtx() {
-  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!_audioCtx) {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  // Always try to resume — browser may suspend it
+  if (_audioCtx.state !== 'running') _audioCtx.resume();
   return _audioCtx;
 }
 
@@ -3386,15 +3342,21 @@ function playClick(type = 'card') {
 }
 
 function initAudioFeedback() {
-  // Resume AudioContext on first user gesture (browser policy)
-  document.addEventListener('click', () => {
-    if (_audioCtx && _audioCtx.state === 'suspended') {
+  // Resume AudioContext on ANY user gesture — guaranteed
+  const resumeAudio = () => {
+    if (!_audioCtx) return;
+    if (_audioCtx.state === 'suspended' || _audioCtx.state === 'interrupted') {
       _audioCtx.resume();
     }
-  }, { capture: true });
+  };
+  document.addEventListener('click', resumeAudio, { capture: true });
+  document.addEventListener('touchstart', resumeAudio, { capture: true });
+  document.addEventListener('keydown', resumeAudio, { capture: true });
 
-  // Attach click sound to cards and interactive elements
+  // Attach click sound to cards and interactive elements + cassettes
   document.addEventListener('click', e => {
+    const cassette = e.target.closest('.cassette');
+    if (cassette) { playClick('card'); return; }
     const t = e.target.closest('.card, .card-featured, .profile-review-card, .search-item');
     if (t) { playClick('card'); return; }
     const btn = e.target.closest('button, .tab-btn, .back-btn, .genre-see-all, .page-btn');
@@ -3747,8 +3709,8 @@ function initNoise() {
 
   function resize() {
     // Use small canvas, scale up with CSS for performance
-    canvas.width  = Math.ceil(window.innerWidth  / 2);
-    canvas.height = Math.ceil(window.innerHeight / 2);
+    canvas.width  = Math.ceil((window.innerWidth  || document.documentElement.clientWidth  || 800) / 2) || 1;
+    canvas.height = Math.ceil((window.innerHeight || document.documentElement.clientHeight || 600) / 2) || 1;
     canvas.style.width  = window.innerWidth  + 'px';
     canvas.style.height = window.innerHeight + 'px';
   }
@@ -3756,7 +3718,7 @@ function initNoise() {
   window.addEventListener('resize', resize);
 
   function drawNoise() {
-    const w = canvas.width, h = canvas.height;
+    const w = canvas.width  || 1, h = canvas.height || 1;
     const imageData = ctx.createImageData(w, h);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
@@ -4740,7 +4702,7 @@ function scoreClass(v) {
 function extractSigFeatures(canvas) {
   const W = canvas.width, H = canvas.height;
   if (!W || !H) return null;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const data = ctx.getImageData(0, 0, W, H).data;
   const GRID = 8;
   const bw = Math.floor(W / GRID), bh = Math.floor(H / GRID);
@@ -5198,42 +5160,7 @@ function profileAnimateOdometer(value) {
   });
 }
 
-// 05 — END OF TAPE
-let eotFired = false;
-function triggerEOT() {
-  if (eotFired) return;
-  eotFired = true;
-  const flash = document.getElementById('eot-flash');
-  const overlay = document.getElementById('eot-overlay');
-  if (!flash || !overlay) return;
-  // White flash
-  flash.style.transition = 'opacity 0.05s';
-  flash.classList.add('triggered');
-  setTimeout(() => {
-    flash.style.transition = 'opacity 0.3s';
-    flash.classList.remove('triggered');
-  }, 80);
-  setTimeout(() => { overlay.classList.add('triggered'); }, 120);
-}
-function dismissEOT() {
-  document.getElementById('eot-overlay').classList.remove('triggered');
-  // allow re-trigger if user scrolls down again on new page
-  eotFired = false;
-}
-// IntersectionObserver on sentinel
-window.addEventListener('DOMContentLoaded', () => {
-  // EOT fires when user scrolls within 50px of page bottom
-  let eotObserverActive = true;
-  window.addEventListener('scroll', () => {
-    if (!eotObserverActive) return;
-    const scrollBottom = window.scrollY + window.innerHeight;
-    const pageHeight = document.documentElement.scrollHeight;
-    if (scrollBottom >= pageHeight - 50 && window.scrollY > 200) {
-      eotObserverActive = false;
-      triggerEOT();
-    }
-  }, { passive: true });
-});
+
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
 function openModal(mode) {
@@ -5665,8 +5592,7 @@ document.addEventListener('keydown', e => {
 });
 </script>
 
-<!-- End of tape sentinel -->
-<div id="eot-sentinel"></div>
+
 
 </body>
 </html>
