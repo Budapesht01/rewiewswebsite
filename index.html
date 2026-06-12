@@ -1103,6 +1103,43 @@ body {
 /* ── GENRE SECTIONS ── */
 .genre-sections { }
 
+/* ── GENRE CURTAIN ── */
+.genre-curtain {
+  position: relative; overflow: hidden;
+  border-top: 1px solid var(--line);
+}
+.genre-curtain-panels {
+  position: absolute; inset: 0; z-index: 10;
+  pointer-events: none;
+  display: flex;
+}
+.genre-curtain-left,
+.genre-curtain-right {
+  width: 50%; height: 100%;
+  background: var(--grey);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.genre-curtain-left { transform-origin: left; border-right: 1px solid var(--line); }
+.genre-curtain-right { transform-origin: right; border-left: 1px solid var(--line); }
+.genre-curtain-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(32px, 5vw, 64px);
+  letter-spacing: 0.12em;
+  color: rgba(242,242,240,0.18);
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+}
+.genre-curtain-left .genre-curtain-name { padding-right: 4px; }
+.genre-curtain-right .genre-curtain-name { padding-left: 4px; }
+.genre-curtain.opened .genre-curtain-left  { transform: translateX(-100%); }
+.genre-curtain.opened .genre-curtain-right { transform: translateX(100%); }
+
+
+
 .genre-section-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 32px 40px 16px;
@@ -1797,65 +1834,70 @@ body {
   flex-wrap: wrap; padding-bottom: 10px;
 }
 .cassette {
-  width: 86px; flex-shrink: 0;
+  width: 100px; flex-shrink: 0;
   cursor: pointer; transition: transform 0.2s;
   position: relative;
 }
 .cassette:hover { transform: translateY(-10px); }
 .cassette-body {
-  width: 86px; height: 140px;
-  background: var(--black);
-  border: 1px solid #2a2a2a;
-  border-radius: 2px;
+  width: 100px; height: 120px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 3px;
   position: relative; overflow: hidden;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
 }
+/* Metal top strip */
+.cassette-top {
+  position: absolute; top: 0; left: 0; right: 0; height: 14px;
+  background: linear-gradient(to bottom, #2a2a2a, #1a1a1a);
+  border-bottom: 1px solid #333;
+  display: flex; align-items: center; padding: 0 8px; gap: 4px;
+}
+.cassette-top-dot { width: 4px; height: 4px; border-radius: 50%; background: #444; }
 .cassette-window {
-  width: 56px; height: 30px;
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-  border-radius: 14px 14px 0 0;
-  position: absolute; top: 12px;
-  overflow: hidden; display: flex;
-  align-items: center; justify-content: center; gap: 12px;
+  width: 64px; height: 22px;
+  background: #070707;
+  border: 1px solid #222; border-radius: 2px;
+  position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; justify-content: center; gap: 14px;
 }
 .cassette-reel {
-  width: 14px; height: 14px; border-radius: 50%;
-  border: 1px solid #333; position: relative;
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 1.5px solid #2a2a2a; position: relative;
 }
 .cassette-reel::after {
   content: ''; position: absolute; top: 50%; left: 50%;
-  width: 4px; height: 4px; background: #222;
+  width: 4px; height: 4px; background: #0a0a0a;
   border-radius: 50%; transform: translate(-50%,-50%);
 }
 .cassette-label {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 74px;
-  background: linear-gradient(135deg,#1c1c1c 0%,#111 100%);
-  border-top: 1px solid #2a2a2a;
-  padding: 7px 6px 5px;
+  position: absolute; bottom: 0; left: 0; right: 0; height: 62px;
+  background: #151515; border-top: 2px solid #222;
+  padding: 8px 8px 5px;
   display: flex; flex-direction: column; gap: 3px;
 }
+.cassette-stripe {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+  background: linear-gradient(to bottom, #555 0%, #888 50%, #555 100%);
+  opacity: 0.6;
+}
 .cassette-label-title {
-  font-family: 'DM Mono', monospace; font-size: 8px;
-  letter-spacing: 0.04em; color: rgba(242,242,240,0.85);
-  line-height: 1.35; overflow: hidden;
+  font-family: 'DM Mono', monospace; font-size: 7px;
+  letter-spacing: 0.06em; color: rgba(242,242,240,0.7);
+  line-height: 1.3; overflow: hidden;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  padding-left: 10px;
 }
 .cassette-label-score {
   font-family: 'Bebas Neue', sans-serif; font-size: 18px;
   color: var(--white); line-height: 1; margin-top: auto;
+  padding-left: 10px;
 }
 .cassette-label-score.gold { color: #c8a96e; }
 .cassette-label-year {
-  font-family: 'DM Mono', monospace; font-size: 7px;
-  color: var(--dim); letter-spacing: 0.1em;
-}
-.cassette-spine {
-  position: absolute; left: -1px; top: 0; bottom: 0; width: 5px;
-  background: linear-gradient(to bottom,#2a2a2a,#151515);
-  border-right: 1px solid #2a2a2a;
+  font-family: 'DM Mono', monospace; font-size: 6px;
+  color: var(--dim); letter-spacing: 0.15em;
+  padding-left: 10px;
 }
 
 /* 03 — ODOMETER */
@@ -2697,6 +2739,35 @@ function showPage(name) {
 }
 
 // ─── VHS REWIND TRANSITION ────────────────────────────────────────────────────
+function playRewindHiss() {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const dur = 0.32;
+    const sr  = ctx.sampleRate;
+    const buf = ctx.createBuffer(1, sr * dur, sr);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = i / sr;
+      // fast attack, long tail — magnetic tape rewind hiss
+      const env = Math.min(t / 0.01, 1) * Math.exp(-t * 5.5);
+      data[i] = (Math.random() * 2 - 1) * env * 0.9;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    // bandpass: tape hiss lives ~2kHz–12kHz
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass'; hp.frequency.value = 2200; hp.Q.value = 0.4;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 11000; lp.Q.value = 0.3;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.55, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    src.connect(hp); hp.connect(lp); lp.connect(gain); gain.connect(ctx.destination);
+    src.start(now);
+  } catch(e) {}
+}
+
 function vhsRewindTransition(cb) {
   const canvas = document.getElementById('vhs-rewind-canvas');
   if (!canvas) { cb(); return; }
@@ -2705,6 +2776,7 @@ function vhsRewindTransition(cb) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   canvas.style.opacity = '1';
+  playRewindHiss();
 
   const START = performance.now();
   const TOTAL = 320; // ms total
@@ -2839,6 +2911,23 @@ function observeGenreSections() {
   setTimeout(() => {
     sections.forEach(s => s.classList.add('revealed'));
   }, 1500);
+}
+
+function observeGenreCurtains() {
+  const curtains = document.querySelectorAll('.genre-curtain');
+  if (!curtains.length) return;
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      if (el._curtainOpened) return;
+      el._curtainOpened = true;
+      obs.unobserve(el);
+      // slight delay so user sees the curtain before it opens
+      setTimeout(() => el.classList.add('opened'), 120);
+    });
+  }, { threshold: 0.25 });
+  curtains.forEach(c => obs.observe(c));
 }
 
 // ─── WHEEL SCROLL (legacy passthrough — momentum handled by initMomentumScroll) ──
@@ -4032,8 +4121,13 @@ async function loadGenreSections(mediaType) {
     wrap.innerHTML = GENRE_DEFS.map(({ key, label, genreId, sortKey }) => {
       const items = data[key] || [];
       if (!items.length) return '';
+      const name = label.replace(/^\/\/ /, '');
       return `
-        <div class="genre-section">
+        <div class="genre-section genre-curtain" data-curtain-key="${key}">
+          <div class="genre-curtain-panels">
+            <div class="genre-curtain-left"><div class="genre-curtain-name">${name}</div></div>
+            <div class="genre-curtain-right"><div class="genre-curtain-name">${name}</div></div>
+          </div>
           <div class="genre-section-header">
             <div class="genre-section-label">${label}</div>
             <button class="genre-see-all" onclick="openCatalogue('${mediaType}', '${genreId}', '${sortKey}', '${label.replace(/\/\/ /,'')}')">Все →</button>
@@ -4054,6 +4148,7 @@ async function loadGenreSections(mediaType) {
       enrichReelWithScores(`genre-row-${key}`, items, mediaType);
     });
     observeGenreSections();
+    observeGenreCurtains();
   } catch(e) {
     wrap.innerHTML = '';
   }
@@ -5080,12 +5175,17 @@ function renderProfilePage(user, reviews) {
         cas.onclick = () => openMedia(r.tmdbId, r.mediaType);
         cas.innerHTML = `
           <div class="cassette-body">
-            <div class="cassette-spine"></div>
+            <div class="cassette-top">
+              <div class="cassette-top-dot"></div>
+              <div class="cassette-top-dot"></div>
+              <div class="cassette-top-dot"></div>
+            </div>
             <div class="cassette-window">
               <div class="cassette-reel"></div>
               <div class="cassette-reel"></div>
             </div>
             <div class="cassette-label">
+              <div class="cassette-stripe"></div>
               <div class="cassette-label-title">${escHtml(title)}</div>
               <div class="cassette-label-score${isGold?' gold':''}">${r.totalScore}</div>
               <div class="cassette-label-year">${year}</div>
