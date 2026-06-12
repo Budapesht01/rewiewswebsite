@@ -2739,35 +2739,6 @@ function showPage(name) {
 }
 
 // ─── VHS REWIND TRANSITION ────────────────────────────────────────────────────
-function playRewindHiss() {
-  try {
-    const ctx = getAudioCtx();
-    const now = ctx.currentTime;
-    const dur = 0.32;
-    const sr  = ctx.sampleRate;
-    const buf = ctx.createBuffer(1, sr * dur, sr);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) {
-      const t = i / sr;
-      // fast attack, long tail — magnetic tape rewind hiss
-      const env = Math.min(t / 0.01, 1) * Math.exp(-t * 5.5);
-      data[i] = (Math.random() * 2 - 1) * env * 0.9;
-    }
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    // bandpass: tape hiss lives ~2kHz–12kHz
-    const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass'; hp.frequency.value = 2200; hp.Q.value = 0.4;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 11000; lp.Q.value = 0.3;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.55, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-    src.connect(hp); hp.connect(lp); lp.connect(gain); gain.connect(ctx.destination);
-    src.start(now);
-  } catch(e) {}
-}
-
 function vhsRewindTransition(cb) {
   const canvas = document.getElementById('vhs-rewind-canvas');
   if (!canvas) { cb(); return; }
@@ -2776,7 +2747,7 @@ function vhsRewindTransition(cb) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   canvas.style.opacity = '1';
-  playRewindHiss();
+  playClick('scratch');
 
   const START = performance.now();
   const TOTAL = 320; // ms total
