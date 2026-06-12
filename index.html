@@ -4449,7 +4449,7 @@ function compareSigCanvases(refDataUrl, newCanvas) {
   });
 }
 
-const SIG_THRESHOLD = 0.52; // 52% similarity required (~30% tolerance from perfect)
+const SIG_THRESHOLD = 0.75; // 75% similarity required
 const reviewSig = { ctx: null, drawing: false, hasData: false, canvas: null, _inited: false };
 // Store ref sig once loaded
 let _refSigDataUrl = null;
