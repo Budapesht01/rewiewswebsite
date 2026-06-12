@@ -1487,8 +1487,8 @@ body {
 /* ── REVIEWS 2-COLUMN GRID ── */
 #reviews-list {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px;
+  grid-template-columns: 1fr;
+  gap: 0;
 }
 
 /* ── MOBILE 425px ── */
@@ -1797,13 +1797,13 @@ body {
   flex-wrap: wrap; padding-bottom: 10px;
 }
 .cassette {
-  width: 54px; flex-shrink: 0;
+  width: 86px; flex-shrink: 0;
   cursor: pointer; transition: transform 0.2s;
   position: relative;
 }
-.cassette:hover { transform: translateY(-8px); }
+.cassette:hover { transform: translateY(-10px); }
 .cassette-body {
-  width: 54px; height: 90px;
+  width: 86px; height: 140px;
   background: var(--black);
   border: 1px solid #2a2a2a;
   border-radius: 2px;
@@ -1812,48 +1812,48 @@ body {
   align-items: center; justify-content: center;
 }
 .cassette-window {
-  width: 36px; height: 20px;
+  width: 56px; height: 30px;
   background: #0a0a0a;
   border: 1px solid #1a1a1a;
-  border-radius: 10px 10px 0 0;
-  position: absolute; top: 8px;
+  border-radius: 14px 14px 0 0;
+  position: absolute; top: 12px;
   overflow: hidden; display: flex;
-  align-items: center; justify-content: center; gap: 8px;
+  align-items: center; justify-content: center; gap: 12px;
 }
 .cassette-reel {
-  width: 10px; height: 10px; border-radius: 50%;
+  width: 14px; height: 14px; border-radius: 50%;
   border: 1px solid #333; position: relative;
 }
 .cassette-reel::after {
   content: ''; position: absolute; top: 50%; left: 50%;
-  width: 3px; height: 3px; background: #222;
+  width: 4px; height: 4px; background: #222;
   border-radius: 50%; transform: translate(-50%,-50%);
 }
 .cassette-label {
   position: absolute; bottom: 0; left: 0; right: 0;
-  height: 52px;
-  background: linear-gradient(135deg,#1a1a1a 0%,#111 100%);
-  border-top: 1px solid #222;
-  padding: 5px 4px 4px;
-  display: flex; flex-direction: column; gap: 2px;
+  height: 74px;
+  background: linear-gradient(135deg,#1c1c1c 0%,#111 100%);
+  border-top: 1px solid #2a2a2a;
+  padding: 7px 6px 5px;
+  display: flex; flex-direction: column; gap: 3px;
 }
 .cassette-label-title {
-  font-family: 'DM Mono', monospace; font-size: 5.5px;
-  letter-spacing: 0.05em; color: rgba(242,242,240,0.8);
-  line-height: 1.3; overflow: hidden;
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  letter-spacing: 0.04em; color: rgba(242,242,240,0.85);
+  line-height: 1.35; overflow: hidden;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
 .cassette-label-score {
-  font-family: 'Bebas Neue', sans-serif; font-size: 12px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
   color: var(--white); line-height: 1; margin-top: auto;
 }
 .cassette-label-score.gold { color: #c8a96e; }
 .cassette-label-year {
-  font-family: 'DM Mono', monospace; font-size: 5px;
+  font-family: 'DM Mono', monospace; font-size: 7px;
   color: var(--dim); letter-spacing: 0.1em;
 }
 .cassette-spine {
-  position: absolute; left: -1px; top: 0; bottom: 0; width: 4px;
+  position: absolute; left: -1px; top: 0; bottom: 0; width: 5px;
   background: linear-gradient(to bottom,#2a2a2a,#151515);
   border-right: 1px solid #2a2a2a;
 }
@@ -2723,6 +2723,9 @@ function showPage(name) {
   const next = document.getElementById(pageId);
   if (current === next) return;
 
+  // Reset EOT on page change
+  eotFired = false;
+
   // stop film scratch when leaving media page
   if (name !== 'media') stopFilmScratch();
 
@@ -2830,17 +2833,17 @@ function vhsRewindTransition(cb) {
 
 // ─── 2. HERO PARALLAX ────────────────────────────────────────────────────────
 function initParallax() {
-  const title = document.querySelector('.hero-title');
+  const heroLeft = document.querySelector('.hero-left');
   const heroSub = document.querySelector('.hero-sub');
   const heroNum = document.querySelector('.hero-num');
-  if (!title) return;
+  if (!heroLeft) return;
   let ticking = false;
   window.addEventListener('scroll', () => {
     if (ticking) return;
     requestAnimationFrame(() => {
       const y = window.scrollY;
       if (y < window.innerHeight) {
-        title.style.transform = `translateY(${y * 0.18}px)`;
+        heroLeft.style.transform = `translateY(${y * 0.18}px)`;
         if (heroSub) heroSub.style.transform = `translateY(${y * 0.1}px)`;
         if (heroNum) heroNum.style.transform = `translateY(${y * 0.06}px)`;
       }
@@ -2964,8 +2967,10 @@ function initIntro() {
   }
   overlay.addEventListener('click', finish, { once: true });
 
-  const W = Math.max(window.innerWidth || 800, 1);
-  const H = Math.max(window.innerHeight || 600, 1);
+  // Wait for browser layout before touching canvas
+  requestAnimationFrame(() => {
+  const W = Math.max(window.innerWidth || document.documentElement.clientWidth || 800, 1);
+  const H = Math.max(window.innerHeight || document.documentElement.clientHeight || 600, 1);
   noiseC.width = W; noiseC.height = H;
   const ctx = noiseC.getContext('2d');
   let frame = 0;
@@ -3038,6 +3043,7 @@ function initIntro() {
       sessionStorage.setItem('rated_intro_seen', '1');
     }
   }, 1580);
+  }); // end requestAnimationFrame
 }
 
 // ─── FILM SCRATCH (pre-1999 films only) ──────────────────────────────────────
@@ -3380,6 +3386,13 @@ function playClick(type = 'card') {
 }
 
 function initAudioFeedback() {
+  // Resume AudioContext on first user gesture (browser policy)
+  document.addEventListener('click', () => {
+    if (_audioCtx && _audioCtx.state === 'suspended') {
+      _audioCtx.resume();
+    }
+  }, { capture: true });
+
   // Attach click sound to cards and interactive elements
   document.addEventListener('click', e => {
     const t = e.target.closest('.card, .card-featured, .profile-review-card, .search-item');
@@ -4411,7 +4424,7 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
 
 function renderReviews(reviews, criteriaList) {
   if (!reviews.length) return `<div class="empty-state"><div class="empty-state-icon">◈</div><p>Пока нет отзывов</p></div>`;
-  return reviews.map(r => {
+  return reviews.map((r, idx) => {
     const isGold = r.totalScore > 100;
     // micro-histogram bars
     const bars = r.criteria.map(c => {
@@ -4439,6 +4452,27 @@ function renderReviews(reviews, criteriaList) {
     const ss2 = String(dateObj.getSeconds()).padStart(2,'0');
     const ff = String(Math.floor(Math.random()*24)).padStart(2,'0');
     const spliceTC = `RATED // ${hh}:${mm}:${ss2}:${ff}`;
+    const spliceHTML = `
+      <div class="splice">
+        <div class="splice-perf-strip">
+          <div class="splice-left">
+            <div class="splice-holes-left">
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+            </div>
+            <span class="splice-tc">${spliceTC}</span>
+          </div>
+          <div class="splice-clear"></div>
+          <div class="splice-right" style="justify-content:flex-end">
+            <div class="splice-holes-right">
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+            </div>
+          </div>
+        </div>
+      </div>`;
     return `
       <div class="review-card${r.totalScore > 100 ? ' gold-review' : ''}">
         <div class="review-header">
@@ -4461,28 +4495,8 @@ function renderReviews(reviews, criteriaList) {
             ${r.signatureData ? `<img class="review-sig-display" src="${r.signatureData}" alt="подпись"/>` : ''}
           </div>
         </div>
-      </div>
-      <div class="splice">
-        <div class="splice-perf-strip">
-          <div class="splice-left">
-            <div class="splice-holes-left">
-              <div class="splice-hole"></div><div class="splice-hole"></div>
-              <div class="splice-hole"></div><div class="splice-hole"></div>
-              <div class="splice-hole"></div><div class="splice-hole"></div>
-            </div>
-            <span class="splice-tc">${spliceTC}</span>
-          </div>
-          <div class="splice-clear"></div>
-          <div class="splice-right" style="justify-content:flex-end">
-            <div class="splice-holes-right">
-              <div class="splice-hole"></div><div class="splice-hole"></div>
-              <div class="splice-hole"></div><div class="splice-hole"></div>
-              <div class="splice-hole"></div><div class="splice-hole"></div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
+      </div>${idx < reviews.length - 1 ? spliceHTML : ''}`;
+  }).join('');
 }
 
 function renderRatingForm(type, criteriaList, myReview) {
@@ -5084,9 +5098,7 @@ function renderProfilePage(user, reviews) {
          <div class="shelf-wrap" id="profile-shelf">
            <div class="shelf-row" id="profile-shelf-row"></div>
            <div class="shelf-plank"></div>
-         </div>
-         <div style="margin-top:2px"></div>
-         <div class="profile-reviews-grid fade-in">${cards}</div>`
+         </div>`
       : '<div class="empty-state"><div class="empty-state-icon">◈</div><p>Нет оценок</p></div>'}`;
 
   // Animate odometer
@@ -5190,11 +5202,10 @@ function profileAnimateOdometer(value) {
 let eotFired = false;
 function triggerEOT() {
   if (eotFired) return;
-  if (sessionStorage.getItem('rated_eot_seen')) return;
   eotFired = true;
-  sessionStorage.setItem('rated_eot_seen', '1');
   const flash = document.getElementById('eot-flash');
   const overlay = document.getElementById('eot-overlay');
+  if (!flash || !overlay) return;
   // White flash
   flash.style.transition = 'opacity 0.05s';
   flash.classList.add('triggered');
@@ -5206,17 +5217,22 @@ function triggerEOT() {
 }
 function dismissEOT() {
   document.getElementById('eot-overlay').classList.remove('triggered');
+  // allow re-trigger if user scrolls down again on new page
   eotFired = false;
 }
 // IntersectionObserver on sentinel
 window.addEventListener('DOMContentLoaded', () => {
-  const sentinel = document.getElementById('eot-sentinel');
-  if (sentinel) {
-    const obs = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) triggerEOT();
-    }, { threshold: 1.0 });
-    obs.observe(sentinel);
-  }
+  // EOT fires when user scrolls within 50px of page bottom
+  let eotObserverActive = true;
+  window.addEventListener('scroll', () => {
+    if (!eotObserverActive) return;
+    const scrollBottom = window.scrollY + window.innerHeight;
+    const pageHeight = document.documentElement.scrollHeight;
+    if (scrollBottom >= pageHeight - 50 && window.scrollY > 200) {
+      eotObserverActive = false;
+      triggerEOT();
+    }
+  }, { passive: true });
 });
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
