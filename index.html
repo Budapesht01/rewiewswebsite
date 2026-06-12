@@ -922,55 +922,30 @@ body {
 }
 .review-card:hover .review-sig-display { opacity: 0.65; }
 
-/* fingerprint button */
-.fp-btn {
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: border-color 0.2s, transform 0.2s;
+.review-sig-display {
+  width: 100px; height: 36px;
+  opacity: 0.35;
+  transition: opacity 0.3s;
   flex-shrink: 0;
-  margin-left: 8px;
-  padding: 0;
 }
-.fp-btn:hover { border-color: var(--dim); transform: scale(1.15); }
-.fp-btn.scanned { border-color: rgba(242,242,240,0.4); }
-.fp-btn svg { width: 10px; height: 10px; }
-.fp-overlay {
-  position: fixed; inset: 0; z-index: 6000;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.95);
-  animation: fadeIn 0.2s ease;
-  cursor: pointer;
-}
-.fp-overlay .fp-inner {
-  text-align: center;
-}
-.fp-svg-wrap {
-  width: 200px; height: 200px;
-  position: relative; margin: 0 auto 24px;
-}
+.review-card:hover .review-sig-display { opacity: 0.65; }
+
+/* fingerprint button */
+
+
+
+
+
+
+
 .fp-svg-wrap svg {
   width: 100%; height: 100%;
   opacity: 0;
   animation: fpReveal 1.8s ease forwards;
 }
-.fp-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px; letter-spacing: 0.4em;
-  color: var(--dim); text-transform: uppercase;
-}
-.fp-user {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px; letter-spacing: 0.08em;
-  color: var(--white); margin-top: 4px;
-}
-.fp-dismiss {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px; letter-spacing: 0.25em;
-  color: var(--line); margin-top: 20px;
-}
+
+
+
 @keyframes fpReveal {
   0%   { opacity: 0; filter: blur(8px); }
   30%  { opacity: 0.3; }
@@ -2094,6 +2069,26 @@ body {
   font-family: 'Bebas Neue', sans-serif; font-size: 80px;
   opacity: 0.04; pointer-events: none; white-space: nowrap;
 }
+
+
+/* ── Signature verification feedback ── */
+.sig-match-bar {
+  height: 2px; background: var(--line);
+  margin-top: 6px; position: relative; overflow: hidden;
+}
+.sig-match-fill {
+  height: 100%; width: 0%;
+  transition: width 0.4s ease, background 0.4s;
+  background: var(--mid);
+}
+.sig-match-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.2em; color: var(--dim);
+  margin-top: 5px; min-height: 14px;
+  transition: color 0.3s;
+}
+.sig-match-label.ok   { color: rgba(242,242,240,0.7); }
+.sig-match-label.fail { color: rgba(180,80,80,0.9); }
 
 </style>
 </head>
@@ -4096,12 +4091,7 @@ function renderReviews(reviews, criteriaList) {
           <div class="review-date">${date}</div>
           <div style="display:flex;align-items:center;gap:6px">
             ${r.signatureData ? `<img class="review-sig-display" src="${r.signatureData}" alt="подпись"/>` : ''}
-            <button class="fp-btn${r.signatureData ? ' scanned' : ''}" onclick="showFingerprint('${escHtml(r.username)}','${r._id}')" title="Отпечаток">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" opacity="0.3"/>
-                <path d="M12 6c-3.3 0-6 2.7-6 6M12 8c-2.2 0-4 1.8-4 4M12 10c-1.1 0-2 .9-2 2M12 12v.01"/>
-              </svg>
-            </button>
+            
           </div>
         </div>
       </div>`;
@@ -4147,6 +4137,8 @@ function renderRatingForm(type, criteriaList, myReview) {
         <div class="review-sig-hint">// та же подпись что при регистрации</div>
         <button class="review-sig-clear-btn" onclick="clearReviewSig()">очистить</button>
       </div>
+      <div class="sig-match-bar"><div class="sig-match-fill" id="sig-match-fill"></div></div>
+      <div class="sig-match-label" id="sig-match-label">// нарисуйте подпись</div>
     </div>
     <button class="submit-btn" id="submit-review-btn" onclick="submitReview('${myReview ? myReview._id : ''}')">
       ${myReview ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ'}
@@ -4339,16 +4331,185 @@ function scoreClass(v) {
 }
 
 /* ── REVIEW SIGNATURE ENGINE ── */
+
+
+// ── Signature similarity engine ──────────────────────────────────────────────
+// Extracts a normalized vector of ink-pixel distribution from a canvas
+// Returns array of 64 bucket values (8x8 grid), each 0-1
+function extractSigFeatures(canvas) {
+  const W = canvas.width, H = canvas.height;
+  if (!W || !H) return null;
+  const ctx = canvas.getContext('2d');
+  const data = ctx.getImageData(0, 0, W, H).data;
+  const GRID = 8;
+  const bw = Math.floor(W / GRID), bh = Math.floor(H / GRID);
+  const buckets = new Array(GRID * GRID).fill(0);
+  let total = 0;
+  for (let row = 0; row < GRID; row++) {
+    for (let col = 0; col < GRID; col++) {
+      let ink = 0, cells = 0;
+      for (let y = row * bh; y < (row + 1) * bh && y < H; y++) {
+        for (let x = col * bw; x < (col + 1) * bw && x < W; x++) {
+          const i = (y * W + x) * 4;
+          const alpha = data[i + 3];
+          const bright = (data[i] + data[i+1] + data[i+2]) / 3;
+          const v = (alpha / 255) * (bright / 255);
+          if (v > 0.05) { ink++; total++; }
+          cells++;
+        }
+      }
+      buckets[row * GRID + col] = cells > 0 ? ink / cells : 0;
+    }
+  }
+  // also get stroke density in horizontal slices (16 strips)
+  const strips = new Array(16).fill(0);
+  for (let row = 0; row < 16; row++) {
+    const y0 = Math.floor(row * H / 16), y1 = Math.floor((row+1) * H / 16);
+    let ink = 0, cells = 0;
+    for (let y = y0; y < y1 && y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const i = (y * W + x) * 4;
+        if (data[i+3] > 30 && (data[i] + data[i+1] + data[i+2]) / 3 > 40) ink++;
+        cells++;
+      }
+    }
+    strips[row] = cells > 0 ? ink / cells : 0;
+  }
+  return { buckets, strips, totalInk: total / (W * H) };
+}
+
+// Load reference signature from localStorage OR from server
+async function loadRefSignature() {
+  if (!state.user) return null;
+  // Try localStorage first (set at registration time)
+  const local = localStorage.getItem('rated_sig_' + state.user.username);
+  if (local) return local;
+  // Fallback: fetch from server
+  try {
+    const resp = await api('/api/auth/signature');
+    if (resp && resp.signatureData) {
+      localStorage.setItem('rated_sig_' + state.user.username, resp.signatureData);
+      return resp.signatureData;
+    }
+  } catch(e) { /* ignore */ }
+  return null;
+}
+
+// Compare two canvas elements, returns similarity 0-1
+function compareSigCanvases(refDataUrl, newCanvas) {
+  return new Promise(resolve => {
+    if (!refDataUrl) { resolve(0); return; }
+    const refCanvas = document.createElement('canvas');
+    const NORM = 120; // normalize both to 120x60
+    refCanvas.width = NORM * 2; refCanvas.height = NORM;
+    const refCtx = refCanvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      refCtx.drawImage(img, 0, 0, NORM * 2, NORM);
+      const refF = extractSigFeatures(refCanvas);
+
+      // Normalize new canvas too
+      const newNorm = document.createElement('canvas');
+      newNorm.width = NORM * 2; newNorm.height = NORM;
+      const newCtx = newNorm.getContext('2d');
+      newCtx.drawImage(newCanvas, 0, 0, NORM * 2, NORM);
+      const newF = extractSigFeatures(newNorm);
+
+      if (!refF || !newF) { resolve(0); return; }
+
+      // Cosine similarity on buckets
+      let dot = 0, magA = 0, magB = 0;
+      for (let i = 0; i < refF.buckets.length; i++) {
+        dot  += refF.buckets[i] * newF.buckets[i];
+        magA += refF.buckets[i] * refF.buckets[i];
+        magB += newF.buckets[i] * newF.buckets[i];
+      }
+      const cosBuckets = (magA > 0 && magB > 0) ? dot / (Math.sqrt(magA) * Math.sqrt(magB)) : 0;
+
+      // Cosine similarity on strips
+      let dot2 = 0, mag2A = 0, mag2B = 0;
+      for (let i = 0; i < refF.strips.length; i++) {
+        dot2  += refF.strips[i] * newF.strips[i];
+        mag2A += refF.strips[i] * refF.strips[i];
+        mag2B += newF.strips[i] * newF.strips[i];
+      }
+      const cosStrips = (mag2A > 0 && mag2B > 0) ? dot2 / (Math.sqrt(mag2A) * Math.sqrt(mag2B)) : 0;
+
+      // Ink density similarity (penalize if vastly different amount of ink)
+      const inkRatio = refF.totalInk > 0
+        ? Math.min(refF.totalInk, newF.totalInk) / Math.max(refF.totalInk, newF.totalInk)
+        : 0;
+
+      // Weighted final score
+      const score = cosBuckets * 0.5 + cosStrips * 0.35 + inkRatio * 0.15;
+      resolve(Math.min(1, score));
+    };
+    img.onerror = () => resolve(0);
+    img.src = refDataUrl;
+  });
+}
+
+const SIG_THRESHOLD = 0.52; // 52% similarity required (~30% tolerance from perfect)
 const reviewSig = { ctx: null, drawing: false, hasData: false, canvas: null, _inited: false };
+// Store ref sig once loaded
+let _refSigDataUrl = null;
+let _sigVerified = false;  // true when current drawing passes threshold
+
+function updateSigMatchUI(score) {
+  const fill  = document.getElementById('sig-match-fill');
+  const label = document.getElementById('sig-match-label');
+  if (!fill || !label) return;
+  const pct = Math.round(score * 100);
+  fill.style.width = pct + '%';
+  if (score >= SIG_THRESHOLD) {
+    fill.style.background = 'rgba(242,242,240,0.7)';
+    label.textContent = '// подпись подтверждена — ' + pct + '%';
+    label.className = 'sig-match-label ok';
+    _sigVerified = true;
+  } else if (score > 0.2) {
+    fill.style.background = 'var(--mid)';
+    label.textContent = '// похожесть ' + pct + '% — нужно ' + Math.round(SIG_THRESHOLD * 100) + '%';
+    label.className = 'sig-match-label fail';
+    _sigVerified = false;
+  } else {
+    fill.style.background = 'var(--mid)';
+    label.textContent = pct > 0 ? '// непохоже — попробуйте ещё раз' : '// нарисуйте подпись';
+    label.className = 'sig-match-label' + (score > 0 ? ' fail' : '');
+    _sigVerified = false;
+  }
+}
+
+let _sigCompareTimer = null;
+function scheduleCompare() {
+  clearTimeout(_sigCompareTimer);
+  _sigCompareTimer = setTimeout(async () => {
+    if (!reviewSig.hasData || !reviewSig.canvas) return;
+    const refUrl = _refSigDataUrl || await loadRefSignature();
+    if (!refUrl) {
+      // No reference — allow (user registered before this feature)
+      _sigVerified = true;
+      const label = document.getElementById('sig-match-label');
+      if (label) { label.textContent = '// подпись принята'; label.className = 'sig-match-label ok'; }
+      return;
+    }
+    _refSigDataUrl = refUrl;
+    const score = await compareSigCanvases(refUrl, reviewSig.canvas);
+    updateSigMatchUI(score);
+  }, 600);
+}
 
 function initReviewSig() {
   const canvas = document.getElementById('reviewSigCanvas');
   if (!canvas) return;
-  reviewSig._inited = false; // reinit each time form renders
+  reviewSig._inited = false;
   reviewSig.canvas = canvas;
   reviewSig.hasData = false;
+  _sigVerified = false;
   const ctx = canvas.getContext('2d');
   reviewSig.ctx = ctx;
+
+  // Pre-load reference signature
+  loadRefSignature().then(url => { _refSigDataUrl = url; });
 
   function resize() {
     canvas.width = canvas.offsetWidth;
@@ -4357,15 +4518,6 @@ function initReviewSig() {
     ctx.lineWidth = 1.6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    // try to restore saved sig from localStorage
-    if (!reviewSig.hasData && state.user) {
-      const saved = localStorage.getItem('rated_sig_' + state.user.username);
-      if (saved) {
-        const img = new Image();
-        img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); reviewSig.hasData = true; };
-        img.src = saved;
-      }
-    }
   }
 
   function getPos(e) {
@@ -4376,14 +4528,27 @@ function initReviewSig() {
   }
 
   let lx = 0, ly = 0;
-  function start(e) { e.preventDefault(); reviewSig.drawing = true; canvas.classList.add('active'); [lx, ly] = getPos(e); ctx.beginPath(); ctx.moveTo(lx, ly); }
-  function move(e) {
-    if (!reviewSig.drawing) return; e.preventDefault();
-    const [x, y] = getPos(e);
-    ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y);
-    lx = x; ly = y; reviewSig.hasData = true;
+  function start(e) {
+    e.preventDefault();
+    reviewSig.drawing = true;
+    canvas.classList.add('active');
+    [lx, ly] = getPos(e);
+    ctx.beginPath(); ctx.moveTo(lx, ly);
   }
-  function end() { reviewSig.drawing = false; canvas.classList.remove('active'); }
+  function move(e) {
+    if (!reviewSig.drawing) return;
+    e.preventDefault();
+    const [x, y] = getPos(e);
+    ctx.lineTo(x, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y);
+    lx = x; ly = y;
+    reviewSig.hasData = true;
+  }
+  function end() {
+    reviewSig.drawing = false;
+    canvas.classList.remove('active');
+    if (reviewSig.hasData) scheduleCompare();
+  }
 
   canvas.addEventListener('mousedown', start);
   canvas.addEventListener('mousemove', move);
@@ -4401,70 +4566,10 @@ function clearReviewSig() {
   if (!reviewSig.ctx) return;
   reviewSig.ctx.clearRect(0, 0, reviewSig.canvas.width, reviewSig.canvas.height);
   reviewSig.hasData = false;
+  _sigVerified = false;
+  updateSigMatchUI(0);
 }
 
-/* ── FINGERPRINT OVERLAY ── */
-function showFingerprint(username, reviewId) {
-  // generate deterministic-ish fingerprint SVG from username+reviewId seed
-  const seed = (username + reviewId).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const rng = (() => { let s = seed; return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; }; })();
-
-  // build concentric arch paths simulating a fingerprint
-  const cx = 100, cy = 110;
-  let paths = '';
-  for (let i = 0; i < 14; i++) {
-    const r = 12 + i * 7;
-    const warp = () => (rng() - 0.5) * 6;
-    // arc from left to right with slight distortion
-    const startA = Math.PI + 0.1 + rng() * 0.15;
-    const endA = -0.1 - rng() * 0.15;
-    // create a wavy path
-    let d = `M ${cx + Math.cos(startA) * r + warp()} ${cy + Math.sin(startA) * r + warp()}`;
-    const steps = 20;
-    for (let j = 1; j <= steps; j++) {
-      const a = startA + (endA - startA) * (j / steps);
-      const noise = (rng() - 0.5) * 4;
-      const rx = r + noise * (i % 3 === 0 ? 1.5 : 0.7);
-      d += ` L ${cx + Math.cos(a) * rx + warp() * 0.3} ${cy + Math.sin(a) * rx + warp() * 0.3}`;
-    }
-    // random gap in some arches for realism
-    if (rng() > 0.65) {
-      const breakPt = 5 + Math.floor(rng() * 10);
-      d = d.split(' L ').slice(0, breakPt).join(' L ');
-    }
-    paths += `<path d="${d}" fill="none" stroke="rgba(242,242,240,0.7)" stroke-width="${0.9 + rng()*0.4}" stroke-linecap="round"/>`;
-  }
-  // add a whorl/loop center detail
-  for (let i = 0; i < 4; i++) {
-    const r2 = 4 + i * 3.5;
-    paths += `<circle cx="${cx + (rng()-0.5)*4}" cy="${cy - 5 + (rng()-0.5)*4}" r="${r2}" fill="none" stroke="rgba(242,242,240,0.5)" stroke-width="0.8"/>`;
-  }
-
-  const overlay = document.createElement('div');
-  overlay.className = 'fp-overlay';
-  overlay.innerHTML = `
-    <div class="fp-inner">
-      <div class="fp-svg-wrap">
-        <svg viewBox="0 20 200 180" xmlns="http://www.w3.org/2000/svg"
-             style="filter: url(#grain)">
-          <defs>
-            <filter id="grain">
-              <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
-              <feColorMatrix type="saturate" values="0"/>
-              <feBlend in="SourceGraphic" mode="overlay" result="blend"/>
-              <feComposite in="blend" in2="SourceGraphic" operator="in"/>
-            </filter>
-          </defs>
-          ${paths}
-        </svg>
-      </div>
-      <div class="fp-label">отпечаток верифицирован</div>
-      <div class="fp-user">@${escHtml(username)}</div>
-      <div class="fp-dismiss">// нажмите чтобы закрыть</div>
-    </div>`;
-  overlay.onclick = () => document.body.removeChild(overlay);
-  document.body.appendChild(overlay);
-}
 
 async function submitReview(existingId) {
   if (!state.user) { openModal('login'); return; }
@@ -4472,6 +4577,17 @@ async function submitReview(existingId) {
     showToast('// поставьте подпись для публикации', true);
     document.getElementById('reviewSigCanvas')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
+  }
+  // Verify signature matches registration signature
+  if (_refSigDataUrl && !_sigVerified) {
+    // Run one final comparison in case user drew without waiting for debounce
+    const score = await compareSigCanvases(_refSigDataUrl, reviewSig.canvas);
+    updateSigMatchUI(score);
+    if (score < SIG_THRESHOLD) {
+      showToast('// подпись не совпадает с регистрационной', true);
+      document.getElementById('reviewSigCanvas')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
   }
   const btn = document.getElementById('submit-review-btn');
   btn.disabled = true; btn.textContent = '…';
@@ -4736,6 +4852,12 @@ async function submitLogin() {
     updateAuthUI();
     closeModal();
     showToast('Добро пожаловать, ' + data.user.username + '!');
+    // Cache signature from server if not in localStorage
+    if (!localStorage.getItem('rated_sig_' + data.user.username)) {
+      api('/api/auth/signature').then(r => {
+        if (r && r.signatureData) localStorage.setItem('rated_sig_' + data.user.username, r.signatureData);
+      }).catch(() => {});
+    }
   } catch(e) {
     errEl.textContent = e.message || '// ошибка';
   } finally {
