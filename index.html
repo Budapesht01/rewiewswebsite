@@ -1752,6 +1752,275 @@ body {
 .poster-grain-canvas   { z-index: 4; opacity: 0.15; mix-blend-mode: screen; }
 .poster-scratch-canvas { z-index: 5; mix-blend-mode: screen; }
 
+/* ══════════════════════════════════════════
+   VHS FEATURES — STL13
+══════════════════════════════════════════ */
+
+/* 01 — TIMECODE */
+#vhs-timecode {
+  position: fixed; top: 68px; right: 16px; z-index: 300;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.15em; color: rgba(242,242,240,0.4);
+  display: flex; align-items: center; gap: 6px;
+  pointer-events: none; user-select: none;
+  transition: opacity 0.3s;
+}
+#vhs-timecode.hidden { opacity: 0; }
+.vhs-tc-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--red);
+  animation: recBlink 1.2s step-end infinite;
+}
+@keyframes recBlink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+/* 02 — CASSETTE SHELF */
+.shelf-section-title {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.35em; color: var(--dim);
+  margin-bottom: 16px; text-transform: uppercase;
+}
+.shelf-wrap {
+  position: relative;
+  background: var(--grey);
+  border: 1px solid var(--line);
+  padding: 20px 16px 32px;
+  overflow: hidden;
+}
+.shelf-plank {
+  position: absolute; bottom: 22px; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(to bottom,#2a2218,#1a1610);
+  border-top: 1px solid #3a3020;
+}
+.shelf-row {
+  display: flex; gap: 5px; align-items: flex-end;
+  flex-wrap: wrap; padding-bottom: 10px;
+}
+.cassette {
+  width: 54px; flex-shrink: 0;
+  cursor: pointer; transition: transform 0.2s;
+  position: relative;
+}
+.cassette:hover { transform: translateY(-8px); }
+.cassette-body {
+  width: 54px; height: 90px;
+  background: var(--black);
+  border: 1px solid #2a2a2a;
+  border-radius: 2px;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.cassette-window {
+  width: 36px; height: 20px;
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 10px 10px 0 0;
+  position: absolute; top: 8px;
+  overflow: hidden; display: flex;
+  align-items: center; justify-content: center; gap: 8px;
+}
+.cassette-reel {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 1px solid #333; position: relative;
+}
+.cassette-reel::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 3px; height: 3px; background: #222;
+  border-radius: 50%; transform: translate(-50%,-50%);
+}
+.cassette-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 52px;
+  background: linear-gradient(135deg,#1a1a1a 0%,#111 100%);
+  border-top: 1px solid #222;
+  padding: 5px 4px 4px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.cassette-label-title {
+  font-family: 'DM Mono', monospace; font-size: 5.5px;
+  letter-spacing: 0.05em; color: rgba(242,242,240,0.8);
+  line-height: 1.3; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.cassette-label-score {
+  font-family: 'Bebas Neue', sans-serif; font-size: 12px;
+  color: var(--white); line-height: 1; margin-top: auto;
+}
+.cassette-label-score.gold { color: #c8a96e; }
+.cassette-label-year {
+  font-family: 'DM Mono', monospace; font-size: 5px;
+  color: var(--dim); letter-spacing: 0.1em;
+}
+.cassette-spine {
+  position: absolute; left: -1px; top: 0; bottom: 0; width: 4px;
+  background: linear-gradient(to bottom,#2a2a2a,#151515);
+  border-right: 1px solid #2a2a2a;
+}
+
+/* 03 — ODOMETER */
+.profile-odometer-wrap {
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.odometer {
+  display: flex; gap: 2px;
+  border: 1px solid #1a1a1a;
+  padding: 2px;
+  background: var(--black);
+}
+.odo-digit-wrap {
+  width: 24px; height: 32px; overflow: hidden;
+  background: #0d0d0d;
+  border: 1px solid #1e1e1e;
+  border-radius: 2px;
+  position: relative;
+}
+.odo-drum {
+  display: flex; flex-direction: column;
+  transition: transform 0.5s cubic-bezier(0.25,0.1,0.2,1.4);
+}
+.odo-digit {
+  width: 24px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+  color: rgba(242,242,240,0.9); line-height: 1;
+}
+.odo-digit-wrap::before,.odo-digit-wrap::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 7px; z-index: 2; pointer-events: none;
+}
+.odo-digit-wrap::before { top: 0; background: linear-gradient(to bottom,rgba(0,0,0,.8),transparent); }
+.odo-digit-wrap::after  { bottom: 0; background: linear-gradient(to top,rgba(0,0,0,.8),transparent); }
+.odo-unit {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  color: var(--dim); letter-spacing: 0.2em;
+  align-self: flex-end; margin-bottom: 4px;
+}
+
+/* 04 — VHS DATE LABEL */
+.vhs-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid #1e1e1e;
+  background: linear-gradient(135deg,#111 0%,#0d0d0d 100%);
+  padding: 4px 10px 4px 8px;
+  position: relative; overflow: hidden;
+}
+.vhs-label::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(to bottom,#2a2a2a,#111,#2a2a2a);
+}
+.vhs-label::after {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,rgba(255,255,255,.015) 0px,rgba(255,255,255,.015) 1px,
+    transparent 1px,transparent 3px
+  ); pointer-events: none;
+}
+.vhs-rec {
+  display: flex; align-items: center; gap: 4px; padding-left: 5px;
+}
+.vhs-rec-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--red); opacity: 0.8;
+  animation: recBlink 1.2s step-end infinite;
+}
+.vhs-rec-text {
+  font-family: 'DM Mono', monospace; font-size: 7px;
+  color: rgba(242,242,240,0.3); letter-spacing: 0.2em;
+}
+.vhs-date-text {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: rgba(242,242,240,0.5); letter-spacing: 0.1em;
+}
+
+/* 05 — END OF TAPE */
+#eot-overlay {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; z-index: 99990;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.05s;
+  background: var(--black);
+}
+#eot-flash {
+  position: fixed; inset: 0;
+  background: var(--white);
+  opacity: 0; pointer-events: none;
+  z-index: 99989; transition: opacity 0.05s;
+}
+#eot-overlay.triggered { opacity: 1; pointer-events: all; }
+#eot-flash.triggered { opacity: 1; }
+.eot-label {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.4em; color: var(--dim);
+  opacity: 0; transition: opacity 0.6s 0.3s;
+}
+.eot-main {
+  font-family: 'Bebas Neue', sans-serif; font-size: 48px;
+  color: var(--white); letter-spacing: 0.08em;
+  opacity: 0; transition: opacity 0.6s 0.5s;
+}
+.eot-dismiss {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  color: var(--line); letter-spacing: 0.3em;
+  opacity: 0; transition: opacity 0.6s 0.9s;
+  cursor: pointer;
+}
+#eot-overlay.triggered .eot-label,
+#eot-overlay.triggered .eot-main,
+#eot-overlay.triggered .eot-dismiss { opacity: 1; }
+#eot-sentinel { height: 1px; }
+
+/* 08 — FILM SPLICE */
+.splice {
+  position: relative; height: 28px; margin: 0;
+  display: flex; align-items: center; overflow: hidden;
+  border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+}
+.splice-perf-strip {
+  position: absolute; top: 0; bottom: 0; left: 0; right: 0;
+  display: flex;
+}
+.splice-left, .splice-right {
+  flex: 1; background: var(--black);
+  display: flex; align-items: center;
+}
+.splice-clear {
+  width: 60px; flex-shrink: 0;
+  background: rgba(242,242,240,.04);
+  height: 100%; position: relative; overflow: hidden;
+}
+.splice-clear::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,rgba(255,255,255,.03) 0px,rgba(255,255,255,.03) 1px,
+    transparent 1px,transparent 2px
+  );
+}
+.splice-holes-left, .splice-holes-right {
+  display: flex; gap: 0; align-items: center; height: 100%;
+  padding: 0 4px;
+}
+.splice-hole {
+  width: 8px; height: 12px; border-radius: 1px;
+  border: 1px solid #1e1e1e; margin-right: 5px; flex-shrink: 0;
+}
+.splice-tc {
+  font-family: 'DM Mono', monospace; font-size: 6px;
+  color: rgba(242,242,240,.15); letter-spacing: 0.1em;
+  margin-left: 6px; white-space: nowrap;
+}
+@keyframes spliceShimmer {
+  0%  { transform: translateX(-100%); }
+  100%{ transform: translateX(100%); }
+}
+.splice::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg,transparent 0%,rgba(255,255,255,.04) 50%,transparent 100%);
+  animation: spliceShimmer 3s ease infinite;
+  pointer-events: none;
+}
+
 /* ── HERO BURN EFFECT (pre-1999) ── */
 .hero-burn-canvas {
   position: absolute; inset: 0;
@@ -2105,6 +2374,21 @@ body {
   <div id="intro-logo-wrap">RATED</div>
   <div id="intro-sub">// оцени всё</div>
 </div>
+
+<!-- VHS TIMECODE -->
+<div id="vhs-timecode">
+  <div class="vhs-tc-dot"></div>
+  <span id="vhs-tc-display">REC 00:00:00</span>
+</div>
+
+<!-- END OF TAPE OVERLAY -->
+<div id="eot-flash"></div>
+<div id="eot-overlay" onclick="dismissEOT()">
+  <div class="eot-label">// конец записи</div>
+  <div class="eot-main">КОНЕЦ ПЛЁНКИ</div>
+  <div class="eot-dismiss">// нажмите чтобы вернуться</div>
+</div>
+
 <div id="toast"></div>
 
 <!-- TOPBAR -->
@@ -2643,47 +2927,117 @@ function initIntro() {
     return;
   }
 
+  // VHS Cassette Intro — noise → tracking → RATED
+  overlay.style.background = '#000';
+  overlay.style.cursor = 'pointer';
+
   const logoWrap = document.getElementById('intro-logo-wrap');
   const sub = document.getElementById('intro-sub');
-  const text = 'RATED';
-  const W = logoWrap.offsetWidth || 300;
-  const H = logoWrap.offsetHeight || 140;
+  logoWrap.style.opacity = '0';
+  sub.style.opacity = '0';
 
-  // Phase 1: dots randomly appear across logo bounding box (0–700ms)
-  const DOT_COUNT = 180;
-  const dots = [];
-  for (let i = 0; i < DOT_COUNT; i++) {
-    const d = document.createElement('div');
-    d.className = 'intro-dot';
-    d.style.left = (Math.random() * W) + 'px';
-    d.style.top  = (Math.random() * H) + 'px';
-    logoWrap.appendChild(d);
-    dots.push(d);
+  // Build noise canvas inside overlay
+  const noiseC = document.createElement('canvas');
+  noiseC.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+  overlay.insertBefore(noiseC, overlay.firstChild);
+
+  // Build two tracking bars
+  const bar1 = document.createElement('div');
+  const bar2 = document.createElement('div');
+  [bar1, bar2].forEach(b => {
+    b.style.cssText = 'position:absolute;left:0;right:0;height:3px;background:rgba(242,242,240,.18);pointer-events:none;z-index:3;transform:translateY(-300px);transition:transform 0.25s ease;';
+    overlay.appendChild(b);
+  });
+  bar1.style.top = '30%'; bar2.style.top = '65%';
+
+  let skipped = false;
+  function finish() {
+    if (skipped) return;
+    skipped = true;
+    clearInterval(animId);
+    overlay.style.transition = 'opacity 0.2s ease';
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      overlay.classList.add('hidden');
+      sessionStorage.setItem('rated_intro_seen', '1');
+    }, 220);
+  }
+  overlay.addEventListener('click', finish, { once: true });
+
+  const W = Math.max(window.innerWidth || 800, 1);
+  const H = Math.max(window.innerHeight || 600, 1);
+  noiseC.width = W; noiseC.height = H;
+  const ctx = noiseC.getContext('2d');
+  let frame = 0;
+
+  function drawNoise(intensity) {
+    const img = ctx.createImageData(W, H);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const v = Math.random() < intensity ? Math.floor(Math.random() * 80) : 0;
+      d[i] = d[i+1] = d[i+2] = v;
+      d[i+3] = v > 0 ? 180 : 0;
+    }
+    ctx.putImageData(img, 0, 0);
+    const bands = 3 + Math.floor(Math.random() * 3);
+    for (let b = 0; b < bands; b++) {
+      const y = Math.floor(Math.random() * H);
+      ctx.save();
+      ctx.globalAlpha = 0.12 + Math.random() * 0.18;
+      ctx.fillStyle = 'rgba(242,242,240,1)';
+      ctx.fillRect(0, y, W, 3 + Math.floor(Math.random() * 7));
+      ctx.restore();
+    }
   }
 
-  // Stagger dots appearing
-  dots.forEach((d, i) => {
-    setTimeout(() => { d.style.opacity = '1'; }, i * (700 / DOT_COUNT));
-  });
+  // Phase 1: noise (0–400ms)
+  let animId = setInterval(() => {
+    const intensity = Math.max(0.05, 0.35 - frame * 0.015);
+    drawNoise(intensity);
+    frame++;
+  }, 33);
 
-  // Phase 2: at 700ms — text materialises, dots fade
+  // Tracking bars sweep in
   setTimeout(() => {
-    logoWrap.style.color = 'var(--white)';
-    logoWrap.style.transition = 'color 0.25s ease';
+    bar1.style.transform = 'translateY(0)';
+    bar2.style.transform = 'translateY(0)';
+    bar2.style.transitionDelay = '0.08s';
+  }, 100);
+
+  // Phase 2: stabilise (400ms)
+  setTimeout(() => {
+    clearInterval(animId);
+    bar1.style.transition = 'transform 0.3s ease';
+    bar2.style.transition = 'transform 0.3s ease';
+    bar1.style.transform = 'translateY(500px)';
+    bar2.style.transform = 'translateY(500px)';
+    noiseC.style.transition = 'opacity 0.3s';
+    noiseC.style.opacity = '0';
+  }, 400);
+
+  // Phase 3: show RATED (700ms)
+  setTimeout(() => {
+    ctx.clearRect(0, 0, W, H);
+    logoWrap.style.transition = 'opacity 0.3s ease';
+    logoWrap.style.opacity = '1';
+    sub.style.transition = 'opacity 0.3s ease 0.1s';
     sub.style.opacity = '1';
-    dots.forEach(d => { d.style.opacity = '0'; });
   }, 700);
 
-  // Phase 3: at 1400ms — flash white and vanish
+  // Phase 4: fade out (1400ms)
   setTimeout(() => {
-    overlay.style.transition = 'opacity 0.15s ease';
-    overlay.style.opacity = '0';
+    if (!skipped) {
+      overlay.style.transition = 'opacity 0.18s ease';
+      overlay.style.opacity = '0';
+    }
   }, 1400);
 
   setTimeout(() => {
-    overlay.classList.add('hidden');
-    sessionStorage.setItem('rated_intro_seen', '1');
-  }, 1560);
+    if (!skipped) {
+      overlay.classList.add('hidden');
+      sessionStorage.setItem('rated_intro_seen', '1');
+    }
+  }, 1580);
 }
 
 // ─── FILM SCRATCH (pre-1999 films only) ──────────────────────────────────────
@@ -4076,7 +4430,15 @@ function renderReviews(reviews, criteriaList) {
       </div>`;
     }).join('');
 
+    const dateObj = new Date(r.createdAt);
     const date = new Date(r.createdAt).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
+    const dateUpper = date.toUpperCase();
+    // Film splice timecode from date
+    const hh = String(dateObj.getHours()).padStart(2,'0');
+    const mm = String(dateObj.getMinutes()).padStart(2,'0');
+    const ss2 = String(dateObj.getSeconds()).padStart(2,'0');
+    const ff = String(Math.floor(Math.random()*24)).padStart(2,'0');
+    const spliceTC = `RATED // ${hh}:${mm}:${ss2}:${ff}`;
     return `
       <div class="review-card${r.totalScore > 100 ? ' gold-review' : ''}">
         <div class="review-header">
@@ -4088,10 +4450,35 @@ function renderReviews(reviews, criteriaList) {
         </div>
         ${r.comment ? `<p class="review-comment">${escHtml(r.comment)}</p>` : ''}
         <div class="review-footer">
-          <div class="review-date">${date}</div>
+          <div class="vhs-label">
+            <div class="vhs-rec">
+              <div class="vhs-rec-dot"></div>
+              <span class="vhs-rec-text">REC</span>
+            </div>
+            <span class="vhs-date-text">${dateUpper}</span>
+          </div>
           <div style="display:flex;align-items:center;gap:6px">
             ${r.signatureData ? `<img class="review-sig-display" src="${r.signatureData}" alt="подпись"/>` : ''}
-            
+          </div>
+        </div>
+      </div>
+      <div class="splice">
+        <div class="splice-perf-strip">
+          <div class="splice-left">
+            <div class="splice-holes-left">
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+            </div>
+            <span class="splice-tc">${spliceTC}</span>
+          </div>
+          <div class="splice-clear"></div>
+          <div class="splice-right" style="justify-content:flex-end">
+            <div class="splice-holes-right">
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+              <div class="splice-hole"></div><div class="splice-hole"></div>
+            </div>
           </div>
         </div>
       </div>`;
@@ -4677,7 +5064,12 @@ function renderProfilePage(user, reviews) {
         <div class="profile-name">${escHtml(user.username)}</div>
         <div class="profile-stats">
           <div class="profile-stat">
-            <div class="profile-stat-num">${reviews.length}</div>
+            <div class="profile-stat-num" id="profile-odo-wrap">
+              <div class="profile-odometer-wrap">
+                <div class="odometer" id="profile-odo"></div>
+                <span class="odo-unit">FT</span>
+              </div>
+            </div>
             <div class="profile-stat-label">Оценок</div>
           </div>
           <div class="profile-stat">
@@ -4688,9 +5080,144 @@ function renderProfilePage(user, reviews) {
       </div>
     </div>
     ${reviews.length
-      ? `<div class="profile-reviews-grid fade-in">${cards}</div>`
+      ? `<div class="shelf-section-title">// фильмотека — ${reviews.length} ${reviews.length === 1 ? 'запись' : reviews.length < 5 ? 'записи' : 'записей'}</div>
+         <div class="shelf-wrap" id="profile-shelf">
+           <div class="shelf-row" id="profile-shelf-row"></div>
+           <div class="shelf-plank"></div>
+         </div>
+         <div style="margin-top:2px"></div>
+         <div class="profile-reviews-grid fade-in">${cards}</div>`
       : '<div class="empty-state"><div class="empty-state-icon">◈</div><p>Нет оценок</p></div>'}`;
+
+  // Animate odometer
+  setTimeout(() => profileAnimateOdometer(reviews.length), 300);
+
+  // Build cassette shelf
+  if (reviews.length) {
+    const row = document.getElementById('profile-shelf-row');
+    if (row) {
+      reviews.forEach(r => {
+        const isGold = r.totalScore > 100;
+        const title = (r.title || '???').toUpperCase();
+        const year = r.releaseDate ? r.releaseDate.slice(0,4) : '';
+        const cas = document.createElement('div');
+        cas.className = 'cassette';
+        cas.title = `${title} · ${r.totalScore}`;
+        cas.onclick = () => openMedia(r.tmdbId, r.mediaType);
+        cas.innerHTML = `
+          <div class="cassette-body">
+            <div class="cassette-spine"></div>
+            <div class="cassette-window">
+              <div class="cassette-reel"></div>
+              <div class="cassette-reel"></div>
+            </div>
+            <div class="cassette-label">
+              <div class="cassette-label-title">${escHtml(title)}</div>
+              <div class="cassette-label-score${isGold?' gold':''}">${r.totalScore}</div>
+              <div class="cassette-label-year">${year}</div>
+            </div>
+          </div>`;
+        row.appendChild(cas);
+      });
+    }
+  }
 }
+
+// ─── VHS FEATURES JS ──────────────────────────────────────────────────────────
+
+// 01 — TIMECODE
+(function() {
+  const sessionStart = Date.now();
+  function formatTC(ms) {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const ss = s % 60;
+    return 'REC ' +
+      String(h).padStart(2,'0') + ':' +
+      String(m).padStart(2,'0') + ':' +
+      String(ss).padStart(2,'0');
+  }
+  function updateTC() {
+    const el = document.getElementById('vhs-tc-display');
+    if (el) el.textContent = formatTC(Date.now() - sessionStart);
+  }
+  setInterval(updateTC, 1000);
+  updateTC();
+  // Hide timecode when modal is open
+  const modalObserver = new MutationObserver(() => {
+    const tc = document.getElementById('vhs-timecode');
+    if (!tc) return;
+    const modalOpen = document.getElementById('modal-overlay')?.classList.contains('open');
+    tc.classList.toggle('hidden', !!modalOpen);
+  });
+  const mo = document.getElementById('modal-overlay');
+  if (mo) modalObserver.observe(mo, { attributes: true, attributeFilter: ['class'] });
+})();
+
+// 03 — ODOMETER
+function profileAnimateOdometer(value) {
+  const el = document.getElementById('profile-odo');
+  if (!el) return;
+  el.innerHTML = '';
+  const digits = 3;
+  const str = String(Math.min(value, 999)).padStart(digits, '0');
+  const drums = [];
+  for (let i = 0; i < digits; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'odo-digit-wrap';
+    const drum = document.createElement('div');
+    drum.className = 'odo-drum';
+    for (let d = 0; d <= 9; d++) {
+      const span = document.createElement('div');
+      span.className = 'odo-digit';
+      span.textContent = d;
+      drum.appendChild(span);
+    }
+    wrap.appendChild(drum);
+    el.appendChild(wrap);
+    drums.push(drum);
+  }
+  drums.forEach((drum, i) => {
+    const d = parseInt(str[i]);
+    setTimeout(() => {
+      drum.style.transform = `translateY(-${d * 32}px)`;
+    }, 80 + i * 120);
+  });
+}
+
+// 05 — END OF TAPE
+let eotFired = false;
+function triggerEOT() {
+  if (eotFired) return;
+  if (sessionStorage.getItem('rated_eot_seen')) return;
+  eotFired = true;
+  sessionStorage.setItem('rated_eot_seen', '1');
+  const flash = document.getElementById('eot-flash');
+  const overlay = document.getElementById('eot-overlay');
+  // White flash
+  flash.style.transition = 'opacity 0.05s';
+  flash.classList.add('triggered');
+  setTimeout(() => {
+    flash.style.transition = 'opacity 0.3s';
+    flash.classList.remove('triggered');
+  }, 80);
+  setTimeout(() => { overlay.classList.add('triggered'); }, 120);
+}
+function dismissEOT() {
+  document.getElementById('eot-overlay').classList.remove('triggered');
+  eotFired = false;
+}
+// IntersectionObserver on sentinel
+window.addEventListener('DOMContentLoaded', () => {
+  const sentinel = document.getElementById('eot-sentinel');
+  if (sentinel) {
+    const obs = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) triggerEOT();
+    }, { threshold: 1.0 });
+    obs.observe(sentinel);
+  }
+});
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
 function openModal(mode) {
@@ -5121,5 +5648,9 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
 </script>
+
+<!-- End of tape sentinel -->
+<div id="eot-sentinel"></div>
+
 </body>
 </html>
