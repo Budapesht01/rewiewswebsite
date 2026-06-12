@@ -2475,6 +2475,86 @@ body {
 .sig-match-label.ok   { color: rgba(242,242,240,0.7); }
 .sig-match-label.fail { color: rgba(180,80,80,0.9); }
 
+/* ── WATCH PARTY ── */
+.wp-section {
+  margin-top: 28px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.wp-section-title {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.35em; color: var(--dim);
+  text-transform: uppercase; margin-bottom: 14px;
+}
+.wp-actions { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.wp-btn {
+  background: none; border: 1px solid var(--line);
+  color: var(--dim); padding: 7px 16px;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: border-color 0.2s, color 0.2s;
+}
+.wp-btn:hover { border-color: var(--white); color: var(--white); }
+.wp-btn.primary { background: var(--white); color: var(--black); border-color: var(--white); }
+.wp-btn.primary:hover { opacity: 0.85; }
+.wp-join-wrap { display: flex; gap: 6px; }
+.wp-join-wrap input {
+  background: var(--grey); border: 1px solid var(--line);
+  color: var(--white); padding: 7px 12px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  text-transform: uppercase; outline: none; width: 130px;
+  transition: border-color 0.2s;
+}
+.wp-join-wrap input:focus { border-color: var(--dim); }
+.wp-rooms-list { display: flex; flex-direction: column; gap: 4px; }
+.wp-room-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border: 1px solid var(--line);
+  background: var(--grey);
+}
+.wp-room-code {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+  letter-spacing: 0.15em; color: var(--white);
+}
+.wp-room-meta { font-size: 9px; color: var(--dim); margin-top: 2px; }
+.wp-room-actions { display: flex; gap: 6px; align-items: center; }
+.wp-room-members {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: var(--dim); letter-spacing: 0.1em;
+}
+.wp-copy-link {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  color: var(--dim); padding: 4px 8px;
+  border: 1px solid var(--line); background: none; cursor: pointer;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  transition: all 0.2s;
+}
+.wp-copy-link:hover { color: var(--white); border-color: var(--white); }
+.wp-copy-link.copied { color: #4caf50; border-color: #4caf50; }
+.wp-delete {
+  background: none; border: none; color: var(--line);
+  cursor: pointer; font-size: 14px; padding: 2px 4px;
+  transition: color 0.2s;
+}
+.wp-delete:hover { color: var(--red); }
+.wp-empty { font-size: 10px; color: var(--mid); padding: 8px 0; }
+.wp-error { font-size: 9px; color: var(--red); margin-top: 6px; min-height: 14px; }
+
+/* ── JOIN BANNER (when ?join=CODE in URL) ── */
+#wp-join-banner {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--grey); border: 1px solid var(--white);
+  padding: 14px 24px; z-index: 5000;
+  display: none; flex-direction: column; align-items: center; gap: 10px;
+  min-width: 280px;
+}
+#wp-join-banner.show { display: flex; }
+.wp-banner-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.15em;
+}
+.wp-banner-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); }
+.wp-banner-btns { display: flex; gap: 8px; width: 100%; }
+
 </style>
 </head>
 <body>
@@ -2499,6 +2579,17 @@ body {
 
 
 <div id="toast"></div>
+
+<!-- WATCH PARTY JOIN BANNER -->
+<div id="wp-join-banner">
+  <div class="wp-banner-title">// watch party</div>
+  <div class="wp-banner-sub" id="wp-banner-sub">Тебя приглашают в комнату <span id="wp-banner-code"></span></div>
+  <input id="wp-banner-name" class="wp-join-wrap" style="width:100%;border:1px solid var(--line);background:var(--grey);color:var(--white);padding:7px 12px;font-family:DM Mono,monospace;font-size:11px;outline:none;" placeholder="Твой ник"/>
+  <div class="wp-banner-btns">
+    <button class="wp-btn primary" id="wp-banner-join" style="flex:1">Войти</button>
+    <button class="wp-btn" id="wp-banner-dismiss">Отмена</button>
+  </div>
+</div>
 
 <!-- TOPBAR -->
 <nav id="topbar">
@@ -5300,7 +5391,154 @@ function renderProfilePage(user, reviews) {
       });
     }
   }
+
+  // ── Add Watch Party section ──
+  const wpSection = document.createElement('div');
+  wpSection.id = 'wp-section';
+  wpSection.innerHTML = `
+    <div class="wp-section">
+      <div class="wp-section-title">// watch party</div>
+      <div class="wp-actions">
+        <button class="wp-btn primary" id="wp-create-btn">+ Создать комнату</button>
+        <div class="wp-join-wrap">
+          <input id="wp-code-inp" placeholder="ABCD12" maxlength="6"/>
+          <button class="wp-btn" id="wp-join-btn">Войти</button>
+        </div>
+      </div>
+      <div class="wp-error" id="wp-error"></div>
+      <div class="wp-rooms-list" id="wp-rooms-list">
+        <div class="wp-empty">—</div>
+      </div>
+    </div>`;
+  content.appendChild(wpSection);
+
+  // Init watch party section
+  setTimeout(wpInitProfile, 100);
 }
+
+// ─── WATCH PARTY ──────────────────────────────────────────────────────────────
+
+async function wpLoadRooms() {
+  const listEl = document.getElementById('wp-rooms-list');
+  if (!listEl) return;
+  if (!state.token) { listEl.innerHTML = '<div class="wp-empty">Войди в аккаунт чтобы создавать комнаты</div>'; return; }
+  try {
+    const list = await api('/api/rooms');
+    if (!list.length) { listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>'; return; }
+    listEl.innerHTML = list.map(room => `
+      <div class="wp-room-row" id="wp-row-${room.code}">
+        <div>
+          <div class="wp-room-code">${escHtml(room.code)}</div>
+          <div class="wp-room-meta">${room.members} онлайн${room.title ? ' · ' + escHtml(room.title) : ''}</div>
+        </div>
+        <div class="wp-room-actions">
+          <span class="wp-room-members">${room.members > 0 ? '● ' + room.members : ''}</span>
+          <button class="wp-copy-link" onclick="wpCopyInvite('${room.code}', this)">Ссылка</button>
+          <button class="wp-delete" onclick="wpDeleteRoom('${room.code}')" title="Удалить">✕</button>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    listEl.innerHTML = '<div class="wp-empty">Ошибка загрузки</div>';
+  }
+}
+
+async function wpCreate() {
+  const errEl = document.getElementById('wp-error');
+  if (errEl) errEl.textContent = '';
+  if (!state.token) { if (errEl) errEl.textContent = 'Нужен аккаунт'; return; }
+  const btn = document.getElementById('wp-create-btn');
+  btn.textContent = '...'; btn.disabled = true;
+  try {
+    const data = await api('/api/rooms', 'POST', {});
+    if (data.code) {
+      await wpLoadRooms();
+      wpCopyInvite(data.code, null, true);
+    } else {
+      if (errEl) errEl.textContent = data.error || 'Ошибка';
+    }
+  } catch {
+    if (errEl) errEl.textContent = 'Ошибка сети';
+  } finally {
+    btn.textContent = '+ Создать комнату'; btn.disabled = false;
+  }
+}
+
+async function wpJoin(code) {
+  code = (code || '').trim().toUpperCase();
+  const errEl = document.getElementById('wp-error');
+  if (errEl) errEl.textContent = '';
+  if (!code || code.length !== 6) { if (errEl) errEl.textContent = 'Неверный код'; return; }
+  try {
+    const r = await fetch(`/api/rooms/${code}`);
+    if (!r.ok) { if (errEl) errEl.textContent = 'Комната не найдена'; return; }
+    wpShowToast(`Комната ${code} — открой расширение RATED и введи код`, 4000);
+    wpCopyInvite(code, null, false);
+  } catch { if (errEl) errEl.textContent = 'Ошибка сети'; }
+}
+
+function wpCopyInvite(code, btnEl, showToastFlag = false) {
+  const url = `${location.origin}?join=${code}`;
+  navigator.clipboard.writeText(url).then(() => {
+    if (btnEl) {
+      btnEl.textContent = 'Скопировано'; btnEl.classList.add('copied');
+      setTimeout(() => { btnEl.textContent = 'Ссылка'; btnEl.classList.remove('copied'); }, 2000);
+    }
+    if (showToastFlag) wpShowToast(`Ссылка скопирована — отправь другу. Код: ${code}`, 4000);
+  });
+}
+
+async function wpDeleteRoom(code) {
+  if (!state.token) return;
+  try {
+    await api(`/api/rooms/${code}`, 'DELETE');
+    const row = document.getElementById(`wp-row-${code}`);
+    if (row) row.remove();
+    const listEl = document.getElementById('wp-rooms-list');
+    if (listEl && !listEl.querySelector('.wp-room-row'))
+      listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>';
+  } catch {}
+}
+
+function wpShowToast(msg, dur = 3000) {
+  showToast(msg);
+}
+
+function wpInitProfile() {
+  const createBtn = document.getElementById('wp-create-btn');
+  const joinBtn   = document.getElementById('wp-join-btn');
+  const codeInp   = document.getElementById('wp-code-inp');
+  if (createBtn) createBtn.onclick = wpCreate;
+  if (joinBtn)   joinBtn.onclick   = () => wpJoin(codeInp?.value);
+  if (codeInp) {
+    codeInp.style.textTransform = 'uppercase';
+    codeInp.onkeydown = e => { if (e.key === 'Enter') wpJoin(codeInp.value); };
+  }
+  wpLoadRooms();
+}
+
+// ── Join banner (?join=CODE in URL) ──────────────────────────────────────────
+(function wpCheckJoinParam() {
+  const params = new URLSearchParams(location.search);
+  const code   = params.get('join');
+  if (!code) return;
+  history.replaceState({}, '', location.pathname);
+  const banner = document.getElementById('wp-join-banner');
+  if (!banner) return;
+  document.getElementById('wp-banner-code').textContent = code.toUpperCase();
+  banner.classList.add('show');
+  document.getElementById('wp-banner-dismiss').onclick = () => banner.classList.remove('show');
+  document.getElementById('wp-banner-join').onclick = async () => {
+    const name = document.getElementById('wp-banner-name').value.trim();
+    if (!name) { document.getElementById('wp-banner-name').focus(); return; }
+    try {
+      const r = await fetch(`/api/rooms/${code}`);
+      if (!r.ok) { wpShowToast('Комната не найдена'); banner.classList.remove('show'); return; }
+    } catch { wpShowToast('Ошибка сети'); return; }
+    banner.classList.remove('show');
+    wpShowToast(`Открой расширение RATED, введи код ${code.toUpperCase()} и ник ${name}`, 5000);
+    localStorage.setItem('wp_last_name', name);
+  };
+})();
 
 // ─── VHS FEATURES JS ──────────────────────────────────────────────────────────
 
