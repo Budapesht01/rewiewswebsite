@@ -2558,52 +2558,50 @@ body {
       <div class="modal-contract">
         <div class="modal-doc-stamp">
           RATED // Platform<br>
-          Договор пользователя<br>
-          Форма № RGS-001
+          Договор книги мертвых<br>
+          Составлен в час без имени
         </div>
-        <div class="modal-doc-header">Соглашение об использовании</div>
-        <div class="modal-doc-title">ДОГОВОР<br>ПОЛЬЗОВАТЕЛЯ</div>
+        <div class="modal-doc-header">ПЕРВИЧНАЯ РЕГИСТРАЦИЯ ДУШИ</div>
+        <div class="modal-doc-title">ДОГОВОР<br>С ТЬМОЙ</div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 1 · Стороны</span>
-          Настоящий договор заключается между платформой
-          <strong>RATED</strong> (далее — «Платформа») и пользователем,
-          именуемым далее «Участник», чьи данные указаны ниже.
+          <span class="modal-art-num">§ 1 · Участники сделки</span>
+          Настоящий договор заключается между
+          <strong>RATED</strong> (далее — «Тёмная сущность») и существом,
+          добровольно отдавшим свою душу, именуемым «Посвещенным».
         </div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 2 · Идентификация участника</span>
-          Участник настоящим предоставляет следующие учётные данные
-          для регистрации в Платформе:<br><br>
-          Псевдоним: <input class="doc-inline" id="reg-username" placeholder="имя пользователя" maxlength="32" autocomplete="off"/>
+          <span class="modal-art-num">§ 2 · Сведения о душе</span>
+          Существо предоставляет следующие данные
+          для подписания договора с тёмной сущностью:<br><br>
+          Имя в мире живых: <input class="doc-inline" id="reg-username" placeholder="известное тебе имя" maxlength="32" autocomplete="off"/>
           &nbsp;&nbsp;&nbsp;
-          Почта: <input class="doc-inline" id="reg-email" type="email" placeholder="you@example.com" style="min-width:175px"/>
+          Канал связи: <input class="doc-inline" id="reg-email" type="email" placeholder="куда слать знаки" style="min-width:175px"/>
           <br>
-          Секретный ключ: <input class="doc-inline pw" id="reg-password" placeholder="••••••••" maxlength="64" autocomplete="new-password"/>
+          Слово-оберег: <input class="doc-inline pw" id="reg-password" placeholder="••••••••" maxlength="64" autocomplete="new-password"/>
         </div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 3 · Обязательства</span>
-          Участник обязуется оценивать произведения <strong>честно</strong>,
-          оставлять отзывы <strong>по существу</strong>. Любое действие,
-          требующее верификации (публикация отзыва, оценка),
-          должно быть подтверждено личной подписью.
+          <span class="modal-art-num">§ 3 · Цена сделки</span>
+          Подписавшийся отдаёт <strong>право на молчание</strong>,
+          каждый просмотренный фильм требует вердикта. Уклонение не предусмотрено. Ложь — наказуема.
         </div>
 
         <div class="modal-doc-art">
           <span class="modal-art-num">§ 4 · Подпись как идентификатор</span>
           Собственноручная подпись Участника является неотъемлемой частью
-          учётных данных и используется в качестве дополнительного фактора
-          верификации при публикации материалов на Платформе.
+          подписания договора и используется в качестве дополнительного фактора
+          подтверждения при публикации материалов на Платформе.
         </div>
 
         <div class="modal-sig-section">
           <div class="modal-sig-row">
             <div>
-              <div class="modal-sig-label">Подпись участника</div>
+              <div class="modal-sig-label">Подпись посвященного</div>
               <canvas class="modal-sig-canvas" id="regSigCanvas"></canvas>
               <div class="review-sig-row-controls">
-                <div class="modal-sig-hint">// расписитесь для подтверждения договора</div>
+                <div class="modal-sig-hint">// распишитесь для заключения договора</div>
                 <button class="modal-sig-clear" onclick="clearModalSig()">очистить</button>
               </div>
             </div>
@@ -2611,16 +2609,16 @@ body {
               <div class="modal-sig-label">Печать</div>
               <div class="modal-seal" id="regSeal">
                 <div class="modal-seal-logo">RATED</div>
-                <div class="modal-seal-text">платформа<br>// оцени всё</div>
+                <div class="modal-seal-text">Тьма<br>// оцени всё</div>
               </div>
             </div>
           </div>
           <div class="modal-error" id="modal-error-reg"></div>
           <button class="submit-btn" id="modal-submit-reg" onclick="submitRegister()">
-            ПОДПИСАТЬ ДОГОВОР И СОЗДАТЬ АККАУНТ
+            ПОДПИСАТЬ КРОВЬЮ
           </button>
           <div class="modal-footer">
-            Уже есть аккаунт? <a onclick="openModal('login')">Войти</a>
+            Уже продал душу? <a onclick="openModal('login')">подтвердить личность</a>
           </div>
         </div>
       </div>
