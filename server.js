@@ -5,8 +5,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fetch = require('node-fetch');
 const path = require('path');
+const http = require('http');
+const { WebSocketServer, WebSocket } = require('ws');
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
 app.use(express.json());
 // Serve static files — works both locally (public/) and on Render
 const publicDir = require('fs').existsSync(path.join(__dirname, 'public'))
@@ -50,6 +54,129 @@ const userSchema = new mongoose.Schema({
 
 const User   = mongoose.model('User', userSchema);
 const Review = mongoose.model('Review', reviewSchema);
+
+// ─── ROOM SCHEMA ──────────────────────────────────────────────────────────────
+const roomSchema = new mongoose.Schema({
+  code:      { type: String, unique: true },        // 6-char invite code
+  hostId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  hostName:  String,
+  title:     { type: String, default: '' },         // optional label
+  createdAt: { type: Date, default: Date.now, expires: 86400 } // TTL 24h
+});
+const Room = mongoose.model('Room', roomSchema);
+
+// ─── ROOM HELPERS ─────────────────────────────────────────────────────────────
+function genCode() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+// In-memory state per room:
+// rooms[code] = { clients: Map<ws, { username, isHost }>, state: { paused, time, updatedAt } }
+const rooms = {};
+
+function getRoom(code) {
+  if (!rooms[code]) rooms[code] = { clients: new Map(), state: { paused: true, time: 0, updatedAt: Date.now() } };
+  return rooms[code];
+}
+
+function broadcast(code, payload, excludeWs = null) {
+  const room = rooms[code];
+  if (!room) return;
+  const msg = JSON.stringify(payload);
+  room.clients.forEach((info, ws) => {
+    if (ws !== excludeWs && ws.readyState === WebSocket.OPEN) {
+      ws.send(msg);
+    }
+  });
+}
+
+function broadcastMembers(code) {
+  const room = rooms[code];
+  if (!room) return;
+  const members = [...room.clients.values()].map(c => c.username);
+  room.clients.forEach((info, ws) => {
+    if (ws.readyState === WebSocket.OPEN)
+      ws.send(JSON.stringify({ type: 'members', members }));
+  });
+}
+
+// ─── WEBSOCKET ────────────────────────────────────────────────────────────────
+wss.on('connection', (ws) => {
+  let currentCode = null;
+  let currentUser = null;
+
+  ws.on('message', (raw) => {
+    let msg;
+    try { msg = JSON.parse(raw); } catch { return; }
+
+    // ── JOIN ──────────────────────────────────────────────────────────────────
+    if (msg.type === 'join') {
+      const { code, username } = msg;
+      if (!code || !username) return;
+      currentCode = code.toUpperCase();
+      currentUser = username;
+
+      const room = getRoom(currentCode);
+      const isHost = room.clients.size === 0;
+      room.clients.set(ws, { username, isHost });
+
+      ws.send(JSON.stringify({ type: 'sync', state: room.state, isHost }));
+      broadcastMembers(currentCode);
+      return;
+    }
+
+    if (!currentCode) return;
+    const room = rooms[currentCode];
+    if (!room) return;
+    const me = room.clients.get(ws);
+    if (!me) return;
+
+    // ── PLAY / PAUSE ──────────────────────────────────────────────────────────
+    if (msg.type === 'play' || msg.type === 'pause') {
+      room.state.paused    = msg.type === 'pause';
+      room.state.time      = msg.time ?? room.state.time;
+      room.state.updatedAt = Date.now();
+      broadcast(currentCode, { type: msg.type, time: room.state.time, from: currentUser }, ws);
+      return;
+    }
+
+    // ── SEEK ──────────────────────────────────────────────────────────────────
+    if (msg.type === 'seek') {
+      room.state.time      = msg.time;
+      room.state.updatedAt = Date.now();
+      broadcast(currentCode, { type: 'seek', time: msg.time, from: currentUser }, ws);
+      return;
+    }
+
+    // ── PING (drift correction) ───────────────────────────────────────────────
+    if (msg.type === 'ping') {
+      if (me.isHost) {
+        room.state.time      = msg.time;
+        room.state.updatedAt = Date.now();
+      }
+      ws.send(JSON.stringify({ type: 'pong', serverTime: Date.now(), state: room.state }));
+      return;
+    }
+
+    // ── CHAT ──────────────────────────────────────────────────────────────────
+    if (msg.type === 'chat') {
+      const text = String(msg.text || '').slice(0, 300);
+      if (!text) return;
+      broadcast(currentCode, { type: 'chat', from: currentUser, text }, null);
+      return;
+    }
+  });
+
+  ws.on('close', () => {
+    if (!currentCode || !rooms[currentCode]) return;
+    rooms[currentCode].clients.delete(ws);
+    if (rooms[currentCode].clients.size === 0) {
+      delete rooms[currentCode];
+    } else {
+      broadcastMembers(currentCode);
+    }
+  });
+});
 
 // ─── SCORING CRITERIA ─────────────────────────────────────────────────────────
 
@@ -484,5 +611,47 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
 });
 
+// ─── ROOM REST API ────────────────────────────────────────────────────────────
+
+// List rooms for the host
+app.get('/api/rooms', auth, async (req, res) => {
+  try {
+    const list = await Room.find({ hostId: req.user.id }).sort({ createdAt: -1 });
+    const enriched = list.map(r => ({
+      code: r.code,
+      title: r.title,
+      members: rooms[r.code] ? rooms[r.code].clients.size : 0
+    }));
+    res.json(enriched);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Create room
+app.post('/api/rooms', auth, async (req, res) => {
+  try {
+    let code, tries = 0;
+    do { code = genCode(); tries++; } while (await Room.exists({ code }) && tries < 10);
+    const room = await Room.create({ code, hostId: req.user.id, hostName: req.user.username, title: req.body.title || '' });
+    res.json({ code: room.code });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Get room info (public — used for join verification)
+app.get('/api/rooms/:code', async (req, res) => {
+  try {
+    const room = await Room.findOne({ code: req.params.code.toUpperCase() });
+    if (!room) return res.status(404).json({ error: 'Комната не найдена' });
+    res.json({ code: room.code, title: room.title, members: rooms[room.code]?.clients.size || 0 });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Delete room
+app.delete('/api/rooms/:code', auth, async (req, res) => {
+  try {
+    await Room.findOneAndDelete({ code: req.params.code.toUpperCase(), hostId: req.user.id });
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
