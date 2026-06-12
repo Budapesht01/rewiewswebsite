@@ -2557,7 +2557,7 @@ body {
     <div id="modal-register" style="display:none">
       <div class="modal-contract">
         <div class="modal-doc-stamp">
-          RATED // Platform<br>
+          RATED // Dark entity<br>
           Договор книги мертвых<br>
           Составлен в час без имени
         </div>
@@ -2629,38 +2629,36 @@ body {
     <div id="modal-login" style="display:none">
       <div class="modal-contract">
         <div class="modal-doc-stamp">
-          RATED // Platform<br>
-          Верификация<br>
-          Форма № AUTH-001
+          RATED // Dark entity<br>
+          Договор книги мертвых<br>
+          Составлен в час без имени
         </div>
-        <div class="modal-doc-header">Идентификация участника</div>
-        <div class="modal-doc-title">ВХОД<br>В СИСТЕМУ</div>
+        <div class="modal-doc-header">ПОВТОРНОЕ ЯВЛЕНИЕ</div>
+        <div class="modal-doc-title">ВЕРНИСЬ<br>ВО ТЬМУ</div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 1 · Авторизация</span>
-          Платформа <strong>RATED</strong> запрашивает подтверждение
-          личности Участника. Укажите зарегистрированные учётные данные.
-        </div>
-
-        <div class="modal-doc-art">
-          <span class="modal-art-num">§ 2 · Учётные данные</span>
-          Почта: <input class="doc-inline" id="login-email" type="email" placeholder="you@example.com" style="min-width:200px"/><br>
-          Секретный ключ: <input class="doc-inline pw" id="login-password" placeholder="••••••••" maxlength="64" autocomplete="current-password"/>
+          <span class="modal-art-num">§ 1 · Распознавание</span>
+          <strong>RATED</strong> помнит всех. Но ты должен доказать, что сделка по-прежнему в силе.
         </div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 3 · Доступ</span>
-          После успешной проверки Участнику предоставляется доступ
-          ко всем функциям Платформы, включая публикацию оценок
-          и просмотр аналитики.
+          <span class="modal-art-num">§ 2 · Предъяви метку</span>
+          Знак: <input class="doc-inline" id="login-email" type="email" placeholder="почта из договора" style="min-width:200px"/><br>
+          Оберег: <input class="doc-inline pw" id="login-password" placeholder="••••••••" maxlength="64" autocomplete="current-password"/>
+        </div>
+
+        <div class="modal-doc-art">
+          <span class="modal-art-num">§ 3 · Что тебя ждёт</span>
+          Тьма откроется. Все твои вердикты — нетронуты. Сделка
+          <strong>не имеет срока давности.</strong>
         </div>
 
         <div class="modal-error" id="modal-error-login"></div>
         <button class="submit-btn" id="modal-submit-login" onclick="submitLogin()" style="margin-top:24px">
-          ПОДТВЕРДИТЬ ЛИЧНОСТЬ И ВОЙТИ
+          ЯВИТЬСЯ К ТЕМНОЙ СТОРОНЕ
         </button>
         <div class="modal-footer" style="margin-top:16px">
-          Нет аккаунта? <a onclick="openModal('register')">Зарегистрироваться</a>
+         Ещё не связан договором? <a onclick="openModal('register')">Заключить сделку</a>
         </div>
       </div>
     </div>
