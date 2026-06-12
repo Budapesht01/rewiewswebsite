@@ -40,11 +40,12 @@ const reviewSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  username:  { type: String, unique: true, trim: true },
-  email:     { type: String, unique: true, lowercase: true },
-  password:  String,
-  avatar:    { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now }
+  username:      { type: String, unique: true, trim: true },
+  email:         { type: String, unique: true, lowercase: true },
+  password:      String,
+  avatar:        { type: Number, default: 0 },
+  signatureData: { type: String, default: null },
+  createdAt:     { type: Date, default: Date.now }
 });
 
 const User   = mongoose.model('User', userSchema);
@@ -115,7 +116,7 @@ function auth(req, res, next) {
 
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, signatureData } = req.body;
     if (!username || !email || !password)
       return res.status(400).json({ error: 'Все поля обязательны' });
     if (password.length < 6)
@@ -135,7 +136,7 @@ if (exists) {
   });
 }
     const hash = await bcrypt.hash(password, 12);
-    const user = await User.create({ username, email, password: hash });
+    const user = await User.create({ username, email, password: hash, signatureData: signatureData || null });
     const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, user: { id: user._id, username: user.username, avatar: user.avatar } });
   } catch (e) {
@@ -160,6 +161,18 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/api/auth/me', auth, async (req, res) => {
   const user = await User.findById(req.user.id).select('-password');
   res.json(user);
+});
+
+// Return only the signature hash (first 200 chars of base64) so client can compare
+// Full signature returned for canvas comparison
+app.get('/api/auth/signature', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('signatureData');
+    if (!user || !user.signatureData) return res.json({ signatureData: null });
+    res.json({ signatureData: user.signatureData });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── TMDB PROXY ───────────────────────────────────────────────────────────────
