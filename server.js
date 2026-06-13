@@ -605,12 +605,6 @@ app.get('/api/profile/:username', async (req, res) => {
   }
 });
 
-// ─── SPA FALLBACK ─────────────────────────────────────────────────────────────
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
-});
-
 // ─── ROOM REST API ────────────────────────────────────────────────────────────
 
 // List rooms for the host
@@ -651,6 +645,12 @@ app.delete('/api/rooms/:code', auth, async (req, res) => {
     await Room.findOneAndDelete({ code: req.params.code.toUpperCase(), hostId: req.user.id });
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── SPA FALLBACK ─────────────────────────────────────────────────────────────
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
