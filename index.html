@@ -6783,6 +6783,9 @@ const CinemaReveal = (function(){
   // Boot tuner after page ready
   window.addEventListener('load', () => setTimeout(() => VHSTuner.boot(), 500));
 })();
+
+// Enter key in auth modal
+document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) submitAuth();
   if (e.key === 'Escape') closeModal();
 });
