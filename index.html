@@ -1419,102 +1419,8 @@ body {
 }
 .mh-bar-wrap:hover::after { opacity: 1; }
 
-/* ── FRAME-BY-FRAME FILMSTRIP (replaces micro-histogram) ── */
-.fbf-wrap { overflow: hidden; margin-bottom: 14px; }
-.fbf-filmstrip {
-  display: flex; border-bottom: 1px solid var(--line);
-  overflow-x: auto; scrollbar-width: none;
-  background: #050505;
-}
-.fbf-filmstrip::-webkit-scrollbar { display: none; }
-.fbf-frame {
-  flex-shrink: 0; width: 70px; border-right: 1px solid var(--line);
-  cursor: pointer; transition: background .2s; position: relative;
-}
-.fbf-frame:hover, .fbf-frame.active { background: rgba(242,242,240,.04); }
-.fbf-frame.active::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-  background: var(--white);
-}
-.fbf-frame-perf {
-  height: 10px; display: flex; justify-content: space-between;
-  padding: 2px 3px; background: #020202;
-}
-.fbf-hole { width: 7px; height: 6px; border: 1px solid #1a1a1a; border-radius: 1px; }
-.fbf-frame-img { height: 50px; display: flex; align-items: center; justify-content: center; padding: 4px; }
-.fbf-bar { width: 100%; background: var(--line); position: relative; }
-.fbf-bar-fill { height: 100%; background: rgba(242,242,240,.35); transition: height .3s; }
-.fbf-frame-label {
-  padding: 3px 4px; font-family: 'DM Mono', monospace; font-size: 5.5px;
-  color: var(--dim); text-align: center; letter-spacing: .04em;
-  white-space: nowrap; overflow: hidden;
-}
-.fbf-frame-score {
-  font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: var(--dim);
-  text-align: center; padding: 2px;
-}
-.fbf-detail {
-  padding: 14px 16px; min-height: 72px; display: flex; align-items: center; gap: 20px;
-  background: var(--black);
-}
-.fbf-detail-name { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .2em; color: var(--dim); }
-.fbf-detail-score { font-family: 'Bebas Neue', sans-serif; font-size: 48px; line-height: 1; color: var(--white); }
-.fbf-detail-bar { flex: 1; height: 1px; background: var(--line); position: relative; }
-.fbf-detail-fill { position: absolute; left: 0; top: 0; height: 1px; background: var(--white); transition: width .4s ease; }
-.fbf-detail-mult { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); white-space: nowrap; }
-
-/* ── REEL SCROLL INDICATOR ── */
-.reel-indicator {
-  position: fixed; right: 10px; top: 50%; transform: translateY(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  z-index: 400; pointer-events: none;
-}
-.ri-hole {
-  width: 8px; height: 8px; border: 1px solid var(--line); border-radius: 1px;
-  transition: background .2s, border-color .2s;
-}
-.ri-hole.active { background: var(--white); border-color: var(--white); }
-.ri-hole.past { background: var(--mid); border-color: var(--mid); }
-
-/* ── BROADCAST INTERRUPT ── */
-#bcast-overlay {
-  position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity .06s;
-}
-.bcast-bars-wrap {
-  position: absolute; inset: 0; display: flex; opacity: 0; transition: opacity .05s;
-}
-.bcast-color-bar { flex: 1; height: 100%; }
-#bcast-static-cv {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  opacity: 0; pointer-events: none;
-}
-.bcast-interrupt-text {
-  position: relative; z-index: 4;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity .3s;
-}
-.bcast-alert {
-  font-family: 'DM Mono', monospace; font-size: 9px;
-  letter-spacing: .4em; color: rgba(242,242,240,.5); margin-bottom: 8px;
-}
-.bcast-score-num { font-family: 'Bebas Neue', sans-serif; font-size: 96px; line-height: 1; color: var(--white); }
-.bcast-score-sub { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); letter-spacing: .25em; margin-top: 4px; }
-.bcast-ticker-row {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  border-top: 1px solid rgba(255,255,255,.1); background: #080808;
-  height: 28px; overflow: hidden; display: flex; align-items: center;
-}
-.bcast-ticker {
-  white-space: nowrap; animation: bcastTick 18s linear infinite;
-  font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); letter-spacing: .12em;
-}
-@keyframes bcastTick { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
-
-/* ── REC label alignment fix ── */
-.vhs-label { display: inline-flex; align-items: center; gap: 8px; }
-.vhs-rec { display: flex; align-items: center; gap: 4px; }
+/* divider before comment */
+.review-comment {
   font-size: 13px; line-height: 1.7; color: var(--dim);
   padding-top: 14px;
   border-top: 1px solid var(--line);
@@ -2569,86 +2475,6 @@ body {
 .sig-match-label.ok   { color: rgba(242,242,240,0.7); }
 .sig-match-label.fail { color: rgba(180,80,80,0.9); }
 
-/* ── WATCH PARTY ── */
-.wp-section {
-  margin-top: 28px;
-  border-top: 1px solid var(--line);
-  padding-top: 20px;
-}
-.wp-section-title {
-  font-family: 'DM Mono', monospace; font-size: 9px;
-  letter-spacing: 0.35em; color: var(--dim);
-  text-transform: uppercase; margin-bottom: 14px;
-}
-.wp-actions { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-.wp-btn {
-  background: none; border: 1px solid var(--line);
-  color: var(--dim); padding: 7px 16px;
-  font-family: 'DM Mono', monospace; font-size: 10px;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  cursor: pointer; transition: border-color 0.2s, color 0.2s;
-}
-.wp-btn:hover { border-color: var(--white); color: var(--white); }
-.wp-btn.primary { background: var(--white); color: var(--black); border-color: var(--white); }
-.wp-btn.primary:hover { opacity: 0.85; }
-.wp-join-wrap { display: flex; gap: 6px; }
-.wp-join-wrap input {
-  background: var(--grey); border: 1px solid var(--line);
-  color: var(--white); padding: 7px 12px;
-  font-family: 'DM Mono', monospace; font-size: 11px;
-  text-transform: uppercase; outline: none; width: 130px;
-  transition: border-color 0.2s;
-}
-.wp-join-wrap input:focus { border-color: var(--dim); }
-.wp-rooms-list { display: flex; flex-direction: column; gap: 4px; }
-.wp-room-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 12px; border: 1px solid var(--line);
-  background: var(--grey);
-}
-.wp-room-code {
-  font-family: 'Bebas Neue', sans-serif; font-size: 22px;
-  letter-spacing: 0.15em; color: var(--white);
-}
-.wp-room-meta { font-size: 9px; color: var(--dim); margin-top: 2px; }
-.wp-room-actions { display: flex; gap: 6px; align-items: center; }
-.wp-room-members {
-  font-family: 'DM Mono', monospace; font-size: 9px;
-  color: var(--dim); letter-spacing: 0.1em;
-}
-.wp-copy-link {
-  font-family: 'DM Mono', monospace; font-size: 8px;
-  color: var(--dim); padding: 4px 8px;
-  border: 1px solid var(--line); background: none; cursor: pointer;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  transition: all 0.2s;
-}
-.wp-copy-link:hover { color: var(--white); border-color: var(--white); }
-.wp-copy-link.copied { color: #4caf50; border-color: #4caf50; }
-.wp-delete {
-  background: none; border: none; color: var(--line);
-  cursor: pointer; font-size: 14px; padding: 2px 4px;
-  transition: color 0.2s;
-}
-.wp-delete:hover { color: var(--red); }
-.wp-empty { font-size: 10px; color: var(--mid); padding: 8px 0; }
-.wp-error { font-size: 9px; color: var(--red); margin-top: 6px; min-height: 14px; }
-
-/* ── JOIN BANNER (when ?join=CODE in URL) ── */
-#wp-join-banner {
-  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-  background: var(--grey); border: 1px solid var(--white);
-  padding: 14px 24px; z-index: 5000;
-  display: none; flex-direction: column; align-items: center; gap: 10px;
-  min-width: 280px;
-}
-#wp-join-banner.show { display: flex; }
-.wp-banner-title {
-  font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.15em;
-}
-.wp-banner-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); }
-.wp-banner-btns { display: flex; gap: 8px; width: 100%; }
-
 </style>
 </head>
 <body>
@@ -2673,30 +2499,6 @@ body {
 
 
 <div id="toast"></div>
-<div class="reel-indicator" id="reel-indicator"></div>
-<div id="bcast-overlay">
-  <div class="bcast-bars-wrap" id="bcast-bars-wrap"></div>
-  <canvas id="bcast-static-cv"></canvas>
-  <div class="bcast-interrupt-text" id="bcast-interrupt">
-    <div class="bcast-alert">// ОЦЕНКА ЗАФИКСИРОВАНА</div>
-    <div class="bcast-score-num" id="bcast-score-num">—</div>
-    <div class="bcast-score-sub" id="bcast-score-sub"></div>
-  </div>
-  <div class="bcast-ticker-row">
-    <div class="bcast-ticker" id="bcast-ticker">RATED.TV &nbsp;·&nbsp; НОВЫЕ РЕЦЕНЗИИ ЭТОЙ НЕДЕЛИ &nbsp;·&nbsp; RATED.TV &nbsp;·&nbsp;</div>
-  </div>
-</div>
-
-<!-- WATCH PARTY JOIN BANNER -->
-<div id="wp-join-banner">
-  <div class="wp-banner-title">// watch party</div>
-  <div class="wp-banner-sub" id="wp-banner-sub">Тебя приглашают в комнату <span id="wp-banner-code"></span></div>
-  <input id="wp-banner-name" class="wp-join-wrap" style="width:100%;border:1px solid var(--line);background:var(--grey);color:var(--white);padding:7px 12px;font-family:DM Mono,monospace;font-size:11px;outline:none;" placeholder="Твой ник"/>
-  <div class="wp-banner-btns">
-    <button class="wp-btn primary" id="wp-banner-join" style="flex:1">Войти</button>
-    <button class="wp-btn" id="wp-banner-dismiss">Отмена</button>
-  </div>
-</div>
 
 <!-- TOPBAR -->
 <nav id="topbar">
@@ -4780,41 +4582,28 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
   // build radar if user has their own review
   buildRadar(reviews, myReview, criteriaList);
   requestAnimationFrame(() => animateCounters());
-  setTimeout(initFbfStrips, 50);
 }
 
 function renderReviews(reviews, criteriaList) {
   if (!reviews.length) return `<div class="empty-state"><div class="empty-state-icon">◈</div><p>Пока нет отзывов</p></div>`;
   return reviews.map((r, idx) => {
     const isGold = r.totalScore > 100;
-    // FBF filmstrip — frame-by-frame criteria
-    const stripId = `fbf-${idx}`;
-    const detailId = `fbfd-${idx}`;
-    const frames = r.criteria.map((c, fi) => {
-      const barH = Math.round((c.score / 10) * 34);
+    // micro-histogram bars
+    const bars = r.criteria.map(c => {
+      const pct = Math.round(c.score / 10 * 100);
+      const shortLabel = c.name.split(/[\s,]/)[0].slice(0,4).toUpperCase();
+      const fullLabel = c.name.split(/[\s,]/)[0].trim();
       const bg = isGold && c.score >= 9
         ? 'rgba(200,169,110,0.75)'
-        : c.score >= 9 ? 'rgba(242,242,240,.65)'
-        : c.score >= 7 ? 'rgba(242,242,240,.35)'
-        : 'rgba(242,242,240,.15)';
-      const shortName = c.name.split(/[\s,]/)[0].slice(0,6).toUpperCase();
-      return `<div class="fbf-frame" onclick="fbfClick('${detailId}','${escHtml(c.name)}',${c.score},${c.multiplier},this)">
-        <div class="fbf-frame-perf"><div class="fbf-hole"></div><div class="fbf-hole"></div></div>
-        <div class="fbf-frame-img"><div class="fbf-bar" style="height:34px"><div class="fbf-bar-fill" style="height:${barH}px;background:${bg}"></div></div></div>
-        <div class="fbf-frame-label">${shortName}</div>
-        <div class="fbf-frame-score">${c.score}</div>
-        <div class="fbf-frame-perf"><div class="fbf-hole"></div><div class="fbf-hole"></div></div>
+        : c.score >= 9 ? 'rgba(240,239,233,0.75)'
+        : c.score >= 7 ? 'rgba(240,239,233,0.4)'
+        : c.score >= 5 ? 'rgba(240,239,233,0.2)'
+        : 'rgba(240,239,233,0.08)';
+      return `<div class="mh-bar-wrap" data-tip="${escHtml(fullLabel)}: ${c.score}">
+        <div class="mh-bar" style="height:${pct}%;background:${bg}"></div>
+        <div class="mh-label">${shortLabel}</div>
       </div>`;
     }).join('');
-    const fbfHTML = `<div class="fbf-wrap">
-      <div class="fbf-filmstrip" id="${stripId}">${frames}</div>
-      <div class="fbf-detail" id="${detailId}">
-        <div><div class="fbf-detail-name" id="${detailId}-name">// выбери кадр</div>
-        <div class="fbf-detail-score" id="${detailId}-score">—</div></div>
-        <div class="fbf-detail-bar"><div class="fbf-detail-fill" id="${detailId}-fill" style="width:0%"></div></div>
-        <div class="fbf-detail-mult" id="${detailId}-mult"></div>
-      </div>
-    </div>`;
 
     const dateObj = new Date(r.createdAt);
     const date = new Date(r.createdAt).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
@@ -4853,7 +4642,7 @@ function renderReviews(reviews, criteriaList) {
           <div class="review-score-big ${scoreTierClass(r.totalScore)}" data-score="${r.totalScore}">${r.totalScore}<span>/110</span></div>
         </div>
         <div class="review-criteria-named">
-          ${fbfHTML}
+          <div class="micro-histogram">${bars}</div>
         </div>
         ${r.comment ? `<p class="review-comment">${escHtml(r.comment)}</p>` : ''}
         <div class="review-footer">
@@ -5377,8 +5166,7 @@ async function submitReview(existingId) {
       showToast('Оценка обновлена');
     } else {
       await api('/api/reviews', 'POST', { tmdbId: id, mediaType: type, criteria, comment, signatureData });
-      const total = calcTotal(state.criteria.map((c,i) => ({ score: scores[i], multiplier: c.multiplier })));
-      runBroadcastInterrupt(total, state.user.username);
+      showToast('Оценка опубликована');
     }
     openMedia(id, type);
   } catch(e) {
@@ -5512,158 +5300,7 @@ function renderProfilePage(user, reviews) {
       });
     }
   }
-
-  // ── Add Watch Party section ──
-  const wpSection = document.createElement('div');
-  wpSection.id = 'wp-section';
-  wpSection.innerHTML = `
-    <div class="wp-section">
-      <div class="wp-section-title">// watch party</div>
-      <div class="wp-actions">
-        <button class="wp-btn primary" id="wp-create-btn">+ Создать комнату</button>
-        <div class="wp-join-wrap">
-          <input id="wp-code-inp" placeholder="ABCD12" maxlength="6"/>
-          <button class="wp-btn" id="wp-join-btn">Войти</button>
-        </div>
-      </div>
-      <div class="wp-error" id="wp-error"></div>
-      <div class="wp-rooms-list" id="wp-rooms-list">
-        <div class="wp-empty">—</div>
-      </div>
-    </div>`;
-  content.appendChild(wpSection);
-
-  // Init watch party section
-  setTimeout(wpInitProfile, 100);
 }
-
-// ─── WATCH PARTY ──────────────────────────────────────────────────────────────
-
-async function wpLoadRooms() {
-  const listEl = document.getElementById('wp-rooms-list');
-  if (!listEl) return;
-  if (!state.token) { listEl.innerHTML = '<div class="wp-empty">Войди в аккаунт чтобы создавать комнаты</div>'; return; }
-  try {
-    const _r = await fetch('/api/rooms', { headers: { 'Authorization': 'Bearer ' + state.token } });
-    if (_r.status === 404) { listEl.innerHTML = '<div class="wp-empty">Обнови сервер — задеплой новый server.js</div>'; return; }
-    if (!_r.ok) { listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>'; return; }
-    const list = await _r.json();
-    if (!Array.isArray(list) || !list.length) { listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>'; return; }
-    listEl.innerHTML = list.map(room => `
-      <div class="wp-room-row" id="wp-row-${room.code}">
-        <div>
-          <div class="wp-room-code">${escHtml(room.code)}</div>
-          <div class="wp-room-meta">${room.members} онлайн${room.title ? ' · ' + escHtml(room.title) : ''}</div>
-        </div>
-        <div class="wp-room-actions">
-          <span class="wp-room-members">${room.members > 0 ? '● ' + room.members : ''}</span>
-          <button class="wp-copy-link" onclick="wpCopyInvite('${room.code}', this)">Ссылка</button>
-          <button class="wp-delete" onclick="wpDeleteRoom('${room.code}')" title="Удалить">✕</button>
-        </div>
-      </div>`).join('');
-  } catch(e) {
-    console.error('[WP] wpLoadRooms error:', e);
-    listEl.innerHTML = '<div class="wp-empty">Ошибка: ' + e.message + '</div>';
-  }
-}
-
-async function wpCreate() {
-  const errEl = document.getElementById('wp-error');
-  if (errEl) errEl.textContent = '';
-  if (!state.token) { if (errEl) errEl.textContent = 'Нужен аккаунт'; return; }
-  const btn = document.getElementById('wp-create-btn');
-  btn.textContent = '...'; btn.disabled = true;
-  try {
-    const data = await api('/api/rooms', 'POST', {});
-    if (data.code) {
-      await wpLoadRooms();
-      wpCopyInvite(data.code, null, true);
-    } else {
-      if (errEl) errEl.textContent = data.error || 'Ошибка';
-    }
-  } catch {
-    if (errEl) errEl.textContent = 'Ошибка сети';
-  } finally {
-    btn.textContent = '+ Создать комнату'; btn.disabled = false;
-  }
-}
-
-async function wpJoin(code) {
-  code = (code || '').trim().toUpperCase();
-  const errEl = document.getElementById('wp-error');
-  if (errEl) errEl.textContent = '';
-  if (!code || code.length !== 6) { if (errEl) errEl.textContent = 'Неверный код'; return; }
-  try {
-    const r = await fetch(`/api/rooms/${code}`);
-    if (!r.ok) { if (errEl) errEl.textContent = 'Комната не найдена'; return; }
-    wpShowToast(`Комната ${code} — открой расширение RATED и введи код`, 4000);
-    wpCopyInvite(code, null, false);
-  } catch { if (errEl) errEl.textContent = 'Ошибка сети'; }
-}
-
-function wpCopyInvite(code, btnEl, showToastFlag = false) {
-  const url = `${location.origin}?join=${code}`;
-  navigator.clipboard.writeText(url).then(() => {
-    if (btnEl) {
-      btnEl.textContent = 'Скопировано'; btnEl.classList.add('copied');
-      setTimeout(() => { btnEl.textContent = 'Ссылка'; btnEl.classList.remove('copied'); }, 2000);
-    }
-    if (showToastFlag) wpShowToast(`Ссылка скопирована — отправь другу. Код: ${code}`, 4000);
-  });
-}
-
-async function wpDeleteRoom(code) {
-  if (!state.token) return;
-  try {
-    await api(`/api/rooms/${code}`, 'DELETE');
-    const row = document.getElementById(`wp-row-${code}`);
-    if (row) row.remove();
-    const listEl = document.getElementById('wp-rooms-list');
-    if (listEl && !listEl.querySelector('.wp-room-row'))
-      listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>';
-  } catch {}
-}
-
-function wpShowToast(msg, dur = 3000) {
-  showToast(msg);
-}
-
-function wpInitProfile() {
-  const createBtn = document.getElementById('wp-create-btn');
-  const joinBtn   = document.getElementById('wp-join-btn');
-  const codeInp   = document.getElementById('wp-code-inp');
-  if (createBtn) createBtn.onclick = wpCreate;
-  if (joinBtn)   joinBtn.onclick   = () => wpJoin(codeInp?.value);
-  if (codeInp) {
-    codeInp.style.textTransform = 'uppercase';
-    codeInp.onkeydown = e => { if (e.key === 'Enter') wpJoin(codeInp.value); };
-  }
-  wpLoadRooms();
-}
-
-// ── Join banner (?join=CODE in URL) ──────────────────────────────────────────
-(function wpCheckJoinParam() {
-  const params = new URLSearchParams(location.search);
-  const code   = params.get('join');
-  if (!code) return;
-  history.replaceState({}, '', location.pathname);
-  const banner = document.getElementById('wp-join-banner');
-  if (!banner) return;
-  document.getElementById('wp-banner-code').textContent = code.toUpperCase();
-  banner.classList.add('show');
-  document.getElementById('wp-banner-dismiss').onclick = () => banner.classList.remove('show');
-  document.getElementById('wp-banner-join').onclick = async () => {
-    const name = document.getElementById('wp-banner-name').value.trim();
-    if (!name) { document.getElementById('wp-banner-name').focus(); return; }
-    try {
-      const r = await fetch(`/api/rooms/${code}`);
-      if (!r.ok) { wpShowToast('Комната не найдена'); banner.classList.remove('show'); return; }
-    } catch { wpShowToast('Ошибка сети'); return; }
-    banner.classList.remove('show');
-    wpShowToast(`Открой расширение RATED, введи код ${code.toUpperCase()} и ник ${name}`, 5000);
-    localStorage.setItem('wp_last_name', name);
-  };
-})();
 
 // ─── VHS FEATURES JS ──────────────────────────────────────────────────────────
 
@@ -6158,139 +5795,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) submitAuth();
   if (e.key === 'Escape') closeModal();
 });
-// ── FBF CLICK ──
-function fbfClick(detailId, name, score, mult, frameEl) {
-  const strip = frameEl.parentElement;
-  strip.querySelectorAll('.fbf-frame').forEach(f => f.classList.remove('active'));
-  frameEl.classList.add('active');
-  const nameEl  = document.getElementById(detailId + '-name');
-  const scoreEl = document.getElementById(detailId + '-score');
-  const fillEl  = document.getElementById(detailId + '-fill');
-  const multEl  = document.getElementById(detailId + '-mult');
-  if (nameEl)  nameEl.textContent  = '// ' + name.toUpperCase();
-  if (scoreEl) scoreEl.textContent = score;
-  if (fillEl)  fillEl.style.width  = (score / 10 * 100) + '%';
-  if (multEl)  multEl.textContent  = '×' + mult + ' вес';
-}
-
-// auto-click first frame when reviews render
-function initFbfStrips() {
-  document.querySelectorAll('.fbf-filmstrip').forEach(strip => {
-    const first = strip.querySelector('.fbf-frame');
-    if (first) first.click();
-  });
-}
-
-// ── REEL SCROLL INDICATOR ──
-(function(){
-  const ind = document.getElementById('reel-indicator');
-  if (!ind) return;
-  const COUNT = 14;
-  const holes = [];
-  for (let i = 0; i < COUNT; i++) {
-    const h = document.createElement('div');
-    h.className = 'ri-hole';
-    ind.appendChild(h);
-    holes.push(h);
-  }
-  function update() {
-    const max = document.body.scrollHeight - window.innerHeight;
-    const pct = max > 0 ? window.scrollY / max : 0;
-    const active = Math.round(pct * (COUNT - 1));
-    holes.forEach((h, i) => {
-      h.className = 'ri-hole' + (i === active ? ' active' : i < active ? ' past' : '');
-    });
-  }
-  window.addEventListener('scroll', update, { passive: true });
-  update();
-})();
-
-// ── BROADCAST INTERRUPT ──
-(function(){
-  const barsWrap = document.getElementById('bcast-bars-wrap');
-  if (!barsWrap) return;
-  const cols = ['#c00','#c0c000','#00c0c0','#00c000','#c000c0','#0000c0','#c06000'];
-  cols.forEach(c => {
-    const b = document.createElement('div');
-    b.className = 'bcast-color-bar';
-    b.style.background = c;
-    barsWrap.appendChild(b);
-  });
-})();
-
-function runBroadcastInterrupt(score, username) {
-  const overlay   = document.getElementById('bcast-overlay');
-  const barsWrap  = document.getElementById('bcast-bars-wrap');
-  const staticCv  = document.getElementById('bcast-static-cv');
-  const interrupt = document.getElementById('bcast-interrupt');
-  const scoreNum  = document.getElementById('bcast-score-num');
-  const scoreSub  = document.getElementById('bcast-score-sub');
-  const ticker    = document.getElementById('bcast-ticker');
-  if (!overlay || overlay._running) return;
-  overlay._running = true;
-
-  const today = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
-  scoreNum.textContent = score;
-  scoreNum.style.color = score > 100 ? 'var(--gold)' : 'var(--white)';
-  scoreSub.textContent = `// ${username.toUpperCase()} · ${today.toUpperCase()}`;
-  ticker.textContent = `RATED.TV · ${username.toUpperCase()} ОЦЕНИЛ: ${score}/110 · RATED.TV · ${username.toUpperCase()} ОЦЕНИЛ: ${score}/110 ·`;
-
-  overlay.style.transition = 'opacity .04s';
-  overlay.style.opacity = '1';
-  overlay.style.pointerEvents = 'all';
-  barsWrap.style.opacity = '1';
-
-  // static noise
-  const W = window.innerWidth, H = window.innerHeight;
-  staticCv.width = W; staticCv.height = H;
-  staticCv.style.opacity = '0.3';
-  const sCtx = staticCv.getContext('2d');
-  let noiseId = setInterval(() => {
-    const img = sCtx.createImageData(W, H);
-    for (let i = 0; i < img.data.length; i += 4) {
-      const v = Math.random() < 0.4 ? Math.floor(Math.random() * 180) : 0;
-      img.data[i] = img.data[i+1] = img.data[i+2] = v;
-      img.data[i+3] = v > 0 ? 200 : 0;
-    }
-    sCtx.putImageData(img, 0, 0);
-  }, 50);
-
-  // phase 2: bars off
-  setTimeout(() => {
-    barsWrap.style.transition = 'opacity .2s';
-    barsWrap.style.opacity = '0';
-    clearInterval(noiseId);
-    sCtx.clearRect(0, 0, W, H);
-    staticCv.style.transition = 'opacity .2s';
-    staticCv.style.opacity = '0';
-  }, 400);
-
-  // phase 3: score appears
-  setTimeout(() => {
-    interrupt.style.opacity = '1';
-  }, 620);
-
-  // phase 4: fade out
-  setTimeout(() => {
-    overlay.style.transition = 'opacity .5s';
-    overlay.style.opacity = '0';
-    interrupt.style.opacity = '0';
-    overlay.style.pointerEvents = 'none';
-    overlay._running = false;
-    openMedia(state.currentMedia.id, state.currentMedia.type);
-  }, 3500);
-
-  // click to skip
-  overlay.onclick = () => {
-    if (!overlay._running) return;
-    overlay.style.opacity = '0';
-    overlay.style.pointerEvents = 'none';
-    interrupt.style.opacity = '0';
-    overlay._running = false;
-    clearInterval(noiseId);
-    openMedia(state.currentMedia.id, state.currentMedia.type);
-  };
-}
 </script>
 
 
