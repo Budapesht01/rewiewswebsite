@@ -1,255 +1,118 @@
-// ── CONFIG — замени на свой домен ──────────────────────────────────────────
-const RATED_HOST = 'rated.yourdomain.com';   // без https://
-const WS_URL     = `wss://${RATED_HOST}`;
-const API_URL    = `https://${RATED_HOST}`;
-// ────────────────────────────────────────────────────────────────────────────
+// ── RATED Watch Party — Content Script ─────────────────────────────────────
+(function() {
+  'use strict';
 
-let ws       = null;
-let myCode   = null;
-let myName   = null;
-let isHost   = false;
-let ignoreNext = false; // prevent echo loop
+  let video      = null;
+  let inRoom     = false;
+  let amHost     = false;
+  let applying   = false;
+  let scanTimer  = null;
 
-// ── STORAGE ─────────────────────────────────────────────────────────────────
-function save(data) { chrome.storage.local.set(data); }
-function load(keys) { return new Promise(r => chrome.storage.local.get(keys, r)); }
-
-// ── UI HELPERS ───────────────────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-
-function showRoom(code) {
-  $('panel-setup').style.display = 'none';
-  $('panel-room').style.display  = 'block';
-  $('room-code-val').textContent = code;
-}
-function showSetup() {
-  $('panel-setup').style.display = 'block';
-  $('panel-room').style.display  = 'none';
-  $('status-dot').classList.remove('connected');
-}
-
-function addChat(from, text, system = false) {
-  const box = $('chat-box');
-  const el  = document.createElement('div');
-  el.className = 'chat-msg' + (system ? ' system' : '');
-  el.innerHTML = system
-    ? `<span class="chat-text">${escHtml(text)}</span>`
-    : `<span class="chat-who">${escHtml(from)}</span><span class="chat-text">${escHtml(text)}</span>`;
-  box.appendChild(el);
-  box.scrollTop = box.scrollHeight;
-}
-
-function renderMembers(members) {
-  const list = $('members-list');
-  list.innerHTML = members.map((m, i) =>
-    `<div class="member-chip ${i===0?'host':''}">${escHtml(m)}${i===0?' ♦':''}</div>`
-  ).join('');
-}
-
-function escHtml(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ── WEBSOCKET ────────────────────────────────────────────────────────────────
-function connect(code, username) {
-  if (ws) { ws.close(); ws = null; }
-  ws = new WebSocket(WS_URL);
-
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'join', code, username }));
-  };
-
-  ws.onmessage = (e) => {
-    let msg;
-    try { msg = JSON.parse(e.data); } catch { return; }
-
-    if (msg.type === 'sync') {
-      isHost = msg.isHost;
-      $('status-dot').classList.add('connected');
-      addChat(null, `Вы в комнате ${code}${msg.isHost ? ' (хост)' : ''}`, true);
-      // Tell content script current state
-      sendToContent({ type: 'sync', state: msg.state, isHost: msg.isHost });
-    }
-
-    if (msg.type === 'members') renderMembers(msg.members);
-
-    if (msg.type === 'play' || msg.type === 'pause' || msg.type === 'seek') {
-      addChat(null, `${msg.from} → ${msg.type}${msg.type==='seek' ? ' '+fmtTime(msg.time) : ''}`, true);
-      ignoreNext = true;
-      sendToContent(msg);
-    }
-
-    if (msg.type === 'chat') addChat(msg.from, msg.text);
-
-    if (msg.type === 'pong') {
-      // drift: if our video time differs by >2s from host, seek
-      if (!isHost) sendToContent({ type: 'driftCheck', state: msg.state });
-    }
-  };
-
-  ws.onclose = () => {
-    $('status-dot').classList.remove('connected');
-    addChat(null, 'Соединение разорвано', true);
-  };
-
-  ws.onerror = () => {
-    addChat(null, 'Ошибка WebSocket', true);
-  };
-}
-
-function sendWS(msg) {
-  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
-}
-
-// ── CONTENT SCRIPT BRIDGE ────────────────────────────────────────────────────
-function sendToContent(msg) {
-  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-    if (!tabs[0]) return;
-    chrome.tabs.sendMessage(tabs[0].id, msg).catch(() => {});
-  });
-}
-
-// Listen from content script (player events)
-chrome.runtime.onMessage.addListener((msg) => {
-  if (!ws || !myCode) return;
-
-  if (ignoreNext && (msg.type === 'play' || msg.type === 'pause' || msg.type === 'seek')) {
-    ignoreNext = false;
-    return;
+  function findVideo() {
+    const videos = [...document.querySelectorAll('video')].filter(v => v.offsetWidth > 0);
+    if (!videos.length) return null;
+    return videos.reduce((a, b) => (a.offsetWidth * a.offsetHeight > b.offsetWidth * b.offsetHeight ? a : b));
   }
 
-  if (msg.type === 'play' || msg.type === 'pause' || msg.type === 'seek') {
-    sendWS({ ...msg });
+  function detectSite() {
+    const h = location.hostname;
+    if (h.includes('youtube.com'))  return 'YouTube';
+    if (h.includes('kinopoisk.ru')) return 'Кинопоиск';
+    if (h.includes('netflix.com'))  return 'Netflix';
+    if (h.includes('okko.tv'))      return 'Okko';
+    if (h.includes('ivi.ru'))       return 'IVI';
+    if (h.includes('twitch.tv'))    return 'Twitch';
+    if (h.includes('vimeo.com'))    return 'Vimeo';
+    return location.hostname;
   }
 
-  if (msg.type === 'playerFound') {
-    $('player-dot').classList.add('found');
-    $('player-text').textContent = `Найден: ${msg.site}`;
+  function attachVideo(v) {
+    if (video === v) return;
+    if (video) detachVideo();
+    video = v;
+    video.addEventListener('play',   onPlay);
+    video.addEventListener('pause',  onPause);
+    video.addEventListener('seeked', onSeeked);
+    chrome.runtime.sendMessage({ type: 'playerFound', site: detectSite() });
   }
 
-  if (msg.type === 'playerLost') {
-    $('player-dot').classList.remove('found');
-    $('player-text').textContent = 'Плеер не найден';
+  function detachVideo() {
+    if (!video) return;
+    video.removeEventListener('play',   onPlay);
+    video.removeEventListener('pause',  onPause);
+    video.removeEventListener('seeked', onSeeked);
+    video = null;
+    chrome.runtime.sendMessage({ type: 'playerLost' });
   }
 
-  if (msg.type === 'pingReply') {
-    sendWS({ type: 'ping', time: msg.time });
-  }
-});
-
-// ── ACTIONS ──────────────────────────────────────────────────────────────────
-$('btn-join').onclick = async () => {
-  const code = $('inp-code').value.trim().toUpperCase();
-  const name = $('inp-name').value.trim();
-  $('join-error').textContent = '';
-  if (!code || code.length !== 6) { $('join-error').textContent = 'Введи 6-значный код'; return; }
-  if (!name) { $('join-error').textContent = 'Введи ник'; return; }
-
-  // verify room exists
-  try {
-    const r = await fetch(`${API_URL}/api/rooms/${code}`);
-    if (!r.ok) { $('join-error').textContent = 'Комната не найдена'; return; }
-  } catch {
-    $('join-error').textContent = 'Сервер недоступен';
-    return;
-  }
-
-  myCode = code; myName = name;
-  save({ room: code, name });
-  showRoom(code);
-  connect(code, name);
-  startPingLoop();
-};
-
-$('btn-create').onclick = async () => {
-  const name = $('inp-host-name').value.trim();
-  if (!name) return;
-
-  // Ask user to create room on site first, or create via API if token stored
-  const { ratedToken } = await load(['ratedToken']);
-  let code;
-
-  if (ratedToken) {
+  function scan() {
     try {
-      const r = await fetch(`${API_URL}/api/rooms`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ratedToken}` },
-        body: JSON.stringify({ title: '' })
-      });
-      const data = await r.json();
-      code = data.code;
-    } catch { code = null; }
+      const v = findVideo();
+      if (v && v !== video) attachVideo(v);
+      if (!v && video)      detachVideo();
+    } catch(e) {}
   }
 
-  if (!code) {
-    // Generate local code if no token — still works via WS
-    code = Math.random().toString(36).slice(2,8).toUpperCase();
+  function onPlay()  { if (applying || !inRoom) return; chrome.runtime.sendMessage({ type: 'play',  time: video.currentTime }); }
+  function onPause() { if (applying || !inRoom) return; chrome.runtime.sendMessage({ type: 'pause', time: video.currentTime }); }
+
+  let lastSeek = 0;
+  function onSeeked() {
+    if (applying || !inRoom) return;
+    const now = Date.now();
+    if (now - lastSeek < 300) return;
+    lastSeek = now;
+    chrome.runtime.sendMessage({ type: 'seek', time: video.currentTime });
   }
 
-  myCode = code; myName = name;
-  save({ room: code, name });
-  showRoom(code);
-  connect(code, name);
-  startPingLoop();
-};
+  function applyCommand(msg) {
+    if (!video) return;
+    applying = true;
+    if (msg.type === 'play')  { if (msg.time != null) video.currentTime = msg.time; video.play().catch(() => {}); }
+    else if (msg.type === 'pause') { if (msg.time != null) video.currentTime = msg.time; video.pause(); }
+    else if (msg.type === 'seek')  { video.currentTime = msg.time; }
+    setTimeout(() => { applying = false; }, 400);
+  }
 
-$('btn-leave').onclick = () => {
-  if (ws) { ws.close(); ws = null; }
-  myCode = null; myName = null;
-  save({ room: null, name: null });
-  showSetup();
-  sendToContent({ type: 'leave' });
-};
+  function driftCheck(state) {
+    if (!video || amHost) return;
+    const elapsed  = (Date.now() - state.updatedAt) / 1000;
+    const hostTime = state.paused ? state.time : state.time + elapsed;
+    if (Math.abs(video.currentTime - hostTime) > 2.5) {
+      applying = true;
+      video.currentTime = hostTime;
+      if (!state.paused && video.paused)  video.play().catch(() => {});
+      if (state.paused  && !video.paused) video.pause();
+      setTimeout(() => { applying = false; }, 400);
+    }
+  }
 
-$('btn-copy').onclick = () => {
-  const inviteUrl = `https://${RATED_HOST}?join=${myCode}`;
-  navigator.clipboard.writeText(inviteUrl).then(() => {
-    const btn = $('btn-copy');
-    btn.textContent = 'Скопировано';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Копировать'; btn.classList.remove('copied'); }, 2000);
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.type === 'sync') {
+      inRoom = true; amHost = msg.isHost;
+      if (!msg.isHost && video) applyCommand({ type: msg.state.paused ? 'pause' : 'play', time: msg.state.time });
+    }
+    if (msg.type === 'leave')      { inRoom = false; amHost = false; }
+    if ((msg.type === 'play' || msg.type === 'pause' || msg.type === 'seek') && inRoom && !amHost) applyCommand(msg);
+    if (msg.type === 'driftCheck') driftCheck(msg.state);
+    if (msg.type === 'checkPlayer' || msg.type === 'requestTime') {
+      scan();
+      if (msg.type === 'requestTime' && video) chrome.runtime.sendMessage({ type: 'pingReply', time: video.currentTime });
+    }
   });
-};
 
-$('btn-send').onclick = sendChat;
-$('chat-inp').onkeydown = e => { if (e.key === 'Enter') sendChat(); };
-
-function sendChat() {
-  const text = $('chat-inp').value.trim();
-  if (!text || !ws) return;
-  sendWS({ type: 'chat', text });
-  addChat(myName, text);
-  $('chat-inp').value = '';
-}
-
-// ── PING LOOP (drift correction every 5s) ────────────────────────────────────
-let pingInterval = null;
-function startPingLoop() {
-  if (pingInterval) clearInterval(pingInterval);
-  pingInterval = setInterval(() => {
-    sendToContent({ type: 'requestTime' });
-  }, 5000);
-}
-
-// ── PLAYER STATUS POLL ───────────────────────────────────────────────────────
-setInterval(() => {
-  if (!myCode) return;
-  sendToContent({ type: 'checkPlayer' });
-}, 3000);
-
-// ── INIT ─────────────────────────────────────────────────────────────────────
-function fmtTime(s) {
-  if (s == null) return '';
-  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
-  return `${m}:${String(sec).padStart(2,'0')}`;
-}
-
-(async () => {
-  const { room, name } = await load(['room', 'name']);
-  if (room && name) {
-    myCode = room; myName = name;
-    showRoom(room);
-    connect(room, name);
-    startPingLoop();
+  // Scan after DOM ready — guard against null body
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scan);
+  } else {
+    scan();
   }
+
+  const root = document.body || document.documentElement;
+  if (root) {
+    const observer = new MutationObserver(() => { clearTimeout(scanTimer); scanTimer = setTimeout(scan, 600); });
+    observer.observe(root, { childList: true, subtree: true });
+  }
+
+  setInterval(scan, 4000);
 })();
