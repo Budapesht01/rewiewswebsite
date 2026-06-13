@@ -1072,6 +1072,207 @@ body {
 #toast.error { background: var(--red); color: var(--white); }
 
 /* ── ANIMATIONS ── */
+
+/* ══════════════════════════════════════
+   VHS TUNER
+══════════════════════════════════════ */
+#vhs-tuner-canvas {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: 490; pointer-events: none;
+  opacity: 0; transition: opacity 0.4s;
+}
+#vhs-tuner-canvas.active { opacity: 1; }
+
+#vhs-tuner-badge {
+  position: fixed; bottom: 22px; left: 20px;
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  letter-spacing: 0.3em; color: var(--dim);
+  z-index: 9990; cursor: pointer; user-select: none;
+  padding: 6px 10px; border: 1px solid var(--line);
+  background: rgba(8,8,8,0.85); backdrop-filter: blur(8px);
+  transition: color 0.2s, border-color 0.2s;
+}
+#vhs-tuner-badge:hover { color: var(--white); border-color: var(--mid); }
+#vhs-tuner-badge.active { color: var(--white); border-color: var(--white); }
+
+/* profile vhs settings panel */
+#vhs-settings-panel {
+  margin-top: 40px; padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--grey);
+}
+.vhs-settings-title {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  letter-spacing: 0.35em; color: var(--dim); margin-bottom: 18px;
+  text-transform: uppercase;
+}
+.vhs-knob-row { margin-bottom: 14px; }
+.vhs-knob-label {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  letter-spacing: 0.25em; color: var(--dim); margin-bottom: 4px;
+  display: flex; justify-content: space-between;
+}
+.vhs-knob-label span { color: var(--mid); }
+.vhs-range {
+  width: 100%; accent-color: var(--white); cursor: pointer;
+  background: none;
+}
+.vhs-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-top: 1px solid var(--line); margin-top: 12px;
+}
+.vhs-toggle-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.2em; color: var(--white);
+}
+.vhs-toggle-btn {
+  background: none; border: 1px solid var(--mid);
+  color: var(--dim); font-family: 'DM Mono', monospace;
+  font-size: 8px; letter-spacing: 0.2em; padding: 5px 12px;
+  cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+}
+.vhs-toggle-btn.on { background: var(--white); color: var(--black); border-color: var(--white); }
+.vhs-glitch-btn {
+  width: 100%; margin-top: 12px;
+  background: none; border: 1px solid #c00;
+  color: #c00; font-family: 'DM Mono', monospace;
+  font-size: 8px; letter-spacing: 0.3em; padding: 8px;
+  cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+}
+.vhs-glitch-btn:hover { background: #c00; color: var(--white); }
+
+/* ══════════════════════════════════════
+   VHS SCRUB
+══════════════════════════════════════ */
+#vhs-scrub-btn {
+  position: fixed; bottom: 22px; right: 20px;
+  width: 36px; height: 36px;
+  background: rgba(8,8,8,0.9); border: 1px solid var(--line);
+  color: var(--dim); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 9990;
+  transition: color 0.2s, border-color 0.2s;
+  backdrop-filter: blur(8px);
+}
+#vhs-scrub-btn:hover { color: var(--white); border-color: var(--mid); }
+
+#vhs-scrub-overlay {
+  position: fixed; inset: 0; z-index: 600;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  background: var(--black);
+}
+#vhs-scrub-canvas { width: 100%; height: 100%; display: block; }
+
+#vhs-scrub-panel {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 9997; background: rgba(8,8,8,0.97);
+  border-top: 1px solid var(--line);
+  padding: 12px 20px; display: none;
+  align-items: center; gap: 16px;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+#vhs-scrub-panel.visible { opacity: 1; transform: none; }
+#vhs-scrub-label {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  letter-spacing: 0.35em; color: var(--dim); white-space: nowrap;
+}
+#vhs-scrub-track {
+  flex: 1; height: 2px; background: var(--line);
+  position: relative; cursor: pointer; user-select: none;
+}
+#vhs-scrub-head {
+  position: absolute; top: -6px; left: 0%;
+  width: 2px; height: 14px; background: var(--white);
+  transform: translateX(-50%); pointer-events: none;
+  transition: left 0.05s;
+}
+.scrub-marker {
+  position: absolute; top: -9px;
+  width: 1px; height: 20px; background: var(--mid);
+  transform: translateX(-50%);
+}
+.scrub-marker-label {
+  position: absolute; top: 22px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'DM Mono', monospace; font-size: 6px;
+  color: var(--dim); white-space: nowrap; letter-spacing: 0.15em;
+}
+#vhs-scrub-tc {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: var(--dim); letter-spacing: 0.2em; white-space: nowrap;
+}
+#vhs-scrub-close {
+  background: none; border: none; color: var(--dim);
+  font-size: 12px; cursor: pointer; padding: 4px 8px;
+  transition: color 0.2s;
+}
+#vhs-scrub-close:hover { color: var(--white); }
+
+/* ══════════════════════════════════════
+   CINEMA REVEAL
+══════════════════════════════════════ */
+#cinema-reveal-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: var(--black);
+  display: none; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.4s;
+}
+#cinema-reveal-overlay.show { display: flex; }
+#cinema-reveal-overlay.visible { opacity: 1; }
+#cinema-reveal-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+#cinema-reveal-ui {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 16px;
+  text-align: center;
+}
+#cinema-reveal-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.4em; color: var(--dim);
+  opacity: 0; transform: translateY(-8px);
+  transition: opacity 0.6s 0.3s, transform 0.6s 0.3s;
+}
+#cinema-reveal-overlay.phase-score #cinema-reveal-label { opacity: 1; transform: none; }
+#cinema-reveal-score-wrap {
+  display: flex; align-items: baseline; gap: 6px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+#cinema-reveal-overlay.phase-score #cinema-reveal-score-wrap { opacity: 1; }
+#cinema-reveal-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(80px, 18vw, 160px);
+  line-height: 1; letter-spacing: -0.02em;
+  color: var(--white);
+  text-shadow: 0 0 80px rgba(242,242,240,0.15);
+  transition: color 0.5s, text-shadow 0.5s;
+}
+#cinema-reveal-score.gold {
+  color: #c8a96e;
+  text-shadow: 0 0 80px rgba(200,169,110,0.5), 0 0 30px rgba(200,169,110,0.3);
+}
+#cinema-reveal-score-sub {
+  font-family: 'DM Mono', monospace; font-size: 16px;
+  color: var(--dim); align-self: flex-end; padding-bottom: 12px;
+}
+#cinema-reveal-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.3em; color: var(--dim); text-transform: uppercase;
+  opacity: 0; transition: opacity 0.5s 0.8s;
+}
+#cinema-reveal-overlay.phase-score #cinema-reveal-title { opacity: 1; }
+#cinema-reveal-skip {
+  position: fixed; bottom: 30px; right: 30px;
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.25em; color: var(--dim); cursor: pointer;
+  opacity: 0; transition: opacity 0.3s 1s, color 0.2s;
+}
+#cinema-reveal-skip:hover { color: var(--white); }
+#cinema-reveal-overlay.phase-score #cinema-reveal-skip { opacity: 1; }
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -2486,6 +2687,34 @@ body {
 <canvas id="cursor-explosion-canvas"></canvas>
 <canvas id="vhs-rewind-canvas"></canvas>
 <canvas id="pixel-rain-cv"></canvas>
+
+<!-- VHS TUNER -->
+<canvas id="vhs-tuner-canvas"></canvas>
+<div id="vhs-tuner-badge">📺 VHS</div>
+
+<!-- VHS SCRUB -->
+<div id="vhs-scrub-overlay"><canvas id="vhs-scrub-canvas"></canvas></div>
+<div id="vhs-scrub-panel">
+  <div id="vhs-scrub-label">⏮ ПЕРЕМОТКА</div>
+  <div id="vhs-scrub-track"><div id="vhs-scrub-head"></div></div>
+  <div id="vhs-scrub-tc">REC 00:00:00</div>
+  <button id="vhs-scrub-close">✕</button>
+</div>
+<button id="vhs-scrub-btn" title="VHS SCRUB — перемотка по истории">⏮</button>
+
+<!-- CINEMA REVEAL -->
+<div id="cinema-reveal-overlay">
+  <canvas id="cinema-reveal-canvas"></canvas>
+  <div id="cinema-reveal-ui">
+    <div id="cinema-reveal-label">// CINEMA REVEAL</div>
+    <div id="cinema-reveal-score-wrap">
+      <div id="cinema-reveal-score">0</div>
+      <div id="cinema-reveal-score-sub">/110</div>
+    </div>
+    <div id="cinema-reveal-title"></div>
+    <div id="cinema-reveal-skip">пропустить</div>
+  </div>
+</div>
 <div id="intro-overlay">
   <div id="intro-logo-wrap">RATED</div>
   <div id="intro-sub">// оцени всё</div>
@@ -2776,6 +3005,7 @@ body {
 <!-- PROFILE PAGE -->
 <div id="profile-page" class="page">
   <div id="profile-content"></div>
+  <div id="vhs-settings-profile-anchor"></div>
 </div>
 
 <script>
@@ -5164,11 +5394,14 @@ async function submitReview(existingId) {
     if (existingId) {
       await api(`/api/reviews/${existingId}`, 'PUT', { criteria, comment, signatureData });
       showToast('Оценка обновлена');
+      openMedia(id, type);
     } else {
       await api('/api/reviews', 'POST', { tmdbId: id, mediaType: type, criteria, comment, signatureData });
-      showToast('Оценка опубликована');
+      // Cinematic score reveal
+      const totalScore = parseFloat(document.getElementById('live-score')?.textContent) || 0;
+      const mediaTitle = state.currentMedia?.media?.title || state.currentMedia?.media?.name || '';
+      CinemaReveal.play(totalScore, mediaTitle, () => openMedia(id, type));
     }
-    openMedia(id, type);
   } catch(e) {
     showToast(e.message || 'Ошибка', true);
     btn.disabled = false;
@@ -5265,6 +5498,10 @@ function renderProfilePage(user, reviews) {
 
   // Animate odometer
   setTimeout(() => profileAnimateOdometer(reviews.length), 300);
+
+  // Inject VHS settings panel into profile
+  const settingsContainer = document.getElementById('vhs-settings-profile-anchor');
+  if (settingsContainer) VHSTuner.renderSettings(settingsContainer);
 
   // Build cassette shelf
   if (reviews.length) {
@@ -5790,8 +6027,762 @@ function plural(n, one, few, many) {
   return many;
 }
 
-// Enter key in auth modal
-document.addEventListener('keydown', e => {
+// ══════════════════════════════════════════════════════════════════════════════
+// VHS TUNER — WebGL2 fullscreen effect (always-on by default)
+// ══════════════════════════════════════════════════════════════════════════════
+const VHSTuner = (function(){
+  let gl, prog, uniLoc = {}, texA, texB, prevLoaded = false;
+  let active = false, animId = null;
+  const t0 = performance.now();
+  const params = { tracking: 0.0, drift: 0.15, rgb: 0.35, noise: 0.28, glitch: 0 };
+
+  // Load saved prefs
+  try {
+    const saved = JSON.parse(localStorage.getItem('vhs_tuner_prefs') || 'null');
+    if (saved) Object.assign(params, saved);
+  } catch(e){}
+
+  const VERT = `#version 300 es
+in vec2 a_pos; out vec2 v_uv;
+void main(){ v_uv=a_pos*.5+.5; gl_Position=vec4(a_pos,0,1); }`;
+
+  const FRAG = `#version 300 es
+precision highp float;
+in vec2 v_uv; out vec4 out_col;
+uniform sampler2D u_tex, u_prev;
+uniform float u_t,u_track,u_drift,u_rgb,u_noise,u_glitch;
+uniform vec2 u_res;
+float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+void main(){
+  vec2 uv=v_uv;
+  float wave=sin(uv.y*80.+u_t*2.)*.003*u_drift+sin(uv.y*13.+u_t*.7)*.006*u_drift;
+  float jmp=step(.97,sin(uv.y*2.8+u_t*.1+u_track*6.28))*u_track*.04;
+  uv.x+=wave+jmp;
+  if(u_glitch>.01){
+    float b=step(.78,hash(vec2(floor(uv.y*16.),floor(u_t*12.))));
+    uv.x+=b*u_glitch*(hash(vec2(uv.y,u_t))*2.-1.)*.1;
+  }
+  float off=u_rgb*.012;
+  float r=texture(u_tex,uv+vec2(off,0.)).r;
+  float g=texture(u_tex,uv).g;
+  float b=texture(u_tex,uv-vec2(off,0.)).b;
+  vec4 col=vec4(r,g,b,1.);
+  col=mix(col,texture(u_prev,uv),.18*u_rgb);
+  float scan=sin(uv.y*u_res.y*3.14159)*.5+.5;
+  col.rgb*=mix(1.,scan*.78+.22,.4);
+  col.rgb+=(hash(uv+vec2(u_t*.017))-.5)*u_noise*.18;
+  col.rgb*=1.-smoothstep(.3,.9,length(uv-.5)*1.5)*.55;
+  if(u_glitch>.01){
+    float fl=step(.9,hash(vec2(floor(uv.y*4.+u_t),1.)));
+    col.rgb+=fl*u_glitch*.7;
+  }
+  out_col=clamp(col,0.,1.);
+}`;
+
+  // offscreen: we draw the real page DOM via html2canvas-lite trick —
+  // instead, we capture the visible viewport into an offscreen canvas
+  let offCvs = document.createElement('canvas');
+  let offCtx = offCvs.getContext('2d');
+
+  function mkShader(type, src){
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s); return s;
+  }
+  function mkTex(){
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    return t;
+  }
+
+  function init(){
+    const c = document.getElementById('vhs-tuner-canvas');
+    gl = c.getContext('webgl2');
+    if(!gl){ console.warn('VHS Tuner: no WebGL2'); return false; }
+    const vs = mkShader(gl.VERTEX_SHADER, VERT);
+    const fs = mkShader(gl.FRAGMENT_SHADER, FRAG);
+    prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'a_pos');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    ['u_tex','u_prev','u_t','u_track','u_drift','u_rgb','u_noise','u_glitch','u_res'].forEach(n => {
+      uniLoc[n] = gl.getUniformLocation(prog, n);
+    });
+    gl.uniform1i(uniLoc.u_tex, 0);
+    gl.uniform1i(uniLoc.u_prev, 1);
+    texA = mkTex(); texB = mkTex();
+    return true;
+  }
+
+  // Capture what's currently on screen via drawImage of the body
+  // We use a screenshot via ImageBitmap of the composited page
+  let lastBitmap = null;
+
+  async function captureScreen(){
+    try {
+      // Use html2canvas-lite: draw visible DOM approximation
+      // We'll use a simpler method: render noise pattern layered on a solid color
+      // that mimics the dark page — the WebGL effect works on ANY texture
+      const W = offCvs.width, H = offCvs.height;
+      offCtx.fillStyle = '#080808';
+      offCtx.fillRect(0, 0, W, H);
+      // draw topbar
+      offCtx.fillStyle = '#0e0e0e';
+      offCtx.fillRect(0, 0, W, 60);
+      offCtx.fillStyle = '#1a1a1a';
+      offCtx.fillRect(0, 60, W, 1);
+      // RATED logo
+      offCtx.fillStyle = '#f2f2f0';
+      offCtx.font = 'bold 28px Bebas Neue, sans-serif';
+      offCtx.fillText('RATED', 40, 40);
+      // subtle content lines suggesting cards/text
+      offCtx.fillStyle = '#0f0f0f';
+      for(let y = 80; y < H; y += 28) {
+        offCtx.fillRect(40, y, W * (0.3 + Math.sin(y * 0.1) * 0.15), 14);
+      }
+      // some card blocks
+      for(let i = 0; i < 4; i++){
+        offCtx.fillStyle = '#111';
+        offCtx.fillRect(40 + i * (W * 0.22), H * 0.3, W * 0.18, H * 0.38);
+      }
+    } catch(e){}
+  }
+
+  function frame(now){
+    if(!active || !gl) return;
+    const W = Math.ceil(window.innerWidth * 0.65) || 1;
+    const H = Math.ceil(window.innerHeight * 0.65) || 1;
+    const c = document.getElementById('vhs-tuner-canvas');
+    if(c.width !== W || c.height !== H){ c.width = W; c.height = H; prevLoaded = false; }
+    gl.viewport(0, 0, W, H);
+    offCvs.width = W; offCvs.height = H;
+
+    captureScreen();
+
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texB);
+    if(prevLoaded) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, offCvs);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texA);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, offCvs);
+    prevLoaded = true;
+
+    const t = (now - t0) * 0.001;
+    gl.useProgram(prog);
+    gl.uniform1f(uniLoc.u_t,      t);
+    gl.uniform1f(uniLoc.u_track,  params.tracking);
+    gl.uniform1f(uniLoc.u_drift,  params.drift);
+    gl.uniform1f(uniLoc.u_rgb,    params.rgb);
+    gl.uniform1f(uniLoc.u_noise,  params.noise);
+    gl.uniform1f(uniLoc.u_glitch, params.glitch);
+    gl.uniform2f(uniLoc.u_res,    W, H);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    if(params.glitch > 0) params.glitch = Math.max(0, params.glitch - 0.04);
+    animId = requestAnimationFrame(frame);
+  }
+
+  function glitch(){
+    params.glitch = 1.0;
+    setTimeout(() => { params.glitch = 0; }, 500);
+  }
+
+  function enable(){
+    active = true;
+    const c = document.getElementById('vhs-tuner-canvas');
+    c.classList.add('active');
+    document.getElementById('vhs-tuner-badge').classList.add('active');
+    prevLoaded = false;
+    requestAnimationFrame(frame);
+    savePrefs();
+  }
+
+  function disable(){
+    active = false;
+    const c = document.getElementById('vhs-tuner-canvas');
+    c.classList.remove('active');
+    document.getElementById('vhs-tuner-badge').classList.remove('active');
+    if(animId) cancelAnimationFrame(animId);
+    savePrefs();
+  }
+
+  function toggle(){
+    active ? disable() : enable();
+  }
+
+  function savePrefs(){
+    try {
+      localStorage.setItem('vhs_tuner_prefs', JSON.stringify({
+        tracking: params.tracking, drift: params.drift,
+        rgb: params.rgb, noise: params.noise, enabled: active
+      }));
+    } catch(e){}
+  }
+
+  function renderSettings(container){
+    container.innerHTML = `
+      <div id="vhs-settings-panel">
+        <div class="vhs-settings-title">// VHS TUNER — НАСТРОЙКИ</div>
+        <div class="vhs-knob-row">
+          <div class="vhs-knob-label">TRACKING <span id="vhs-v-tracking">${Math.round(params.tracking*100)}</span></div>
+          <input class="vhs-range" type="range" id="vhs-k-tracking" min="0" max="100" value="${Math.round(params.tracking*100)}"/>
+        </div>
+        <div class="vhs-knob-row">
+          <div class="vhs-knob-label">DRIFT <span id="vhs-v-drift">${Math.round(params.drift*100)}</span></div>
+          <input class="vhs-range" type="range" id="vhs-k-drift" min="0" max="100" value="${Math.round(params.drift*100)}"/>
+        </div>
+        <div class="vhs-knob-row">
+          <div class="vhs-knob-label">RGB SPLIT <span id="vhs-v-rgb">${Math.round(params.rgb*100)}</span></div>
+          <input class="vhs-range" type="range" id="vhs-k-rgb" min="0" max="100" value="${Math.round(params.rgb*100)}"/>
+        </div>
+        <div class="vhs-knob-row">
+          <div class="vhs-knob-label">NOISE <span id="vhs-v-noise">${Math.round(params.noise*100)}</span></div>
+          <input class="vhs-range" type="range" id="vhs-k-noise" min="0" max="100" value="${Math.round(params.noise*100)}"/>
+        </div>
+        <button class="vhs-glitch-btn" id="vhs-glitch-btn">⚡ GLITCH BURST</button>
+        <div class="vhs-toggle-row">
+          <div class="vhs-toggle-label">VHS ЭФФЕКТ</div>
+          <button class="vhs-toggle-btn ${active?'on':''}" id="vhs-main-toggle">${active?'ON':'OFF'}</button>
+        </div>
+      </div>`;
+
+    const bind = (id, key, vid) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.oninput = () => {
+        params[key] = el.value / 100;
+        document.getElementById(vid).textContent = el.value;
+        savePrefs();
+      };
+    };
+    bind('vhs-k-tracking','tracking','vhs-v-tracking');
+    bind('vhs-k-drift','drift','vhs-v-drift');
+    bind('vhs-k-rgb','rgb','vhs-v-rgb');
+    bind('vhs-k-noise','noise','vhs-v-noise');
+
+    document.getElementById('vhs-glitch-btn').onclick = () => glitch();
+    document.getElementById('vhs-main-toggle').onclick = function(){
+      toggle();
+      this.textContent = active ? 'ON' : 'OFF';
+      this.classList.toggle('on', active);
+    };
+  }
+
+  // Boot
+  function boot(){
+    if(!init()) return;
+    // Check saved pref; default ON
+    try {
+      const saved = JSON.parse(localStorage.getItem('vhs_tuner_prefs') || 'null');
+      if(saved && saved.enabled === false) { return; }
+    } catch(e){}
+    enable();
+  }
+
+  document.getElementById('vhs-tuner-badge').onclick = toggle;
+
+  return { boot, enable, disable, toggle, glitch, renderSettings };
+})();
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VHS SCRUB — history scrubber with VHS noise
+// ══════════════════════════════════════════════════════════════════════════════
+const VHSScrub = (function(){
+  let active = false, dragging = false;
+  let navHistory = []; // {name, label, payload} entries
+  let snapCache = [];
+
+  function addHistory(name, label, payload){
+    // avoid consecutive duplicates
+    const last = navHistory[navHistory.length - 1];
+    if(last && last.name === name && last.label === label) return;
+    navHistory.push({ name, label, payload: payload || {} });
+    // keep last 7
+    if(navHistory.length > 7) navHistory.shift();
+    snapCache = []; // invalidate cache
+  }
+
+  function noise(ctx, W, H, str){
+    const d = ctx.createImageData(W, H);
+    for(let i = 0; i < d.data.length; i += 4){
+      const v = (Math.random() - 0.5) * 60 * str;
+      d.data[i] = d.data[i+1] = d.data[i+2] = 128 + v;
+      d.data[i+3] = Math.random() * 30 * str;
+    }
+    ctx.putImageData(d, 0, 0);
+    for(let y = 0; y < H; y += Math.random() * 32 + 10){
+      if(Math.random() > 0.75){
+        ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.05 * str})`;
+        ctx.fillRect(0, y, W, 1 + Math.random() * 2);
+      }
+    }
+  }
+
+  function drawSnap(canvas, snap, idx){
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#080808'; ctx.fillRect(0, 0, W, H);
+
+    // top bar
+    ctx.fillStyle = '#0d0d0d'; ctx.fillRect(0, 0, W, 52);
+    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 52, W, 1);
+    ctx.fillStyle = '#f2f2f0';
+    ctx.font = `bold ${Math.round(H * 0.045)}px Bebas Neue, sans-serif`;
+    ctx.fillText('RATED', W * 0.04, H * 0.065);
+
+    // page-specific content
+    const name = snap.name;
+    if(name === 'home'){
+      ctx.fillStyle = '#888'; ctx.font = `${Math.round(H * 0.015)}px DM Mono, monospace`;
+      ctx.fillText('// ТВОИ ОЦЕНКИ ИМЕЮТ ВЕС', W * 0.04, H * 0.13);
+      ctx.fillStyle = '#f2f2f0';
+      ctx.font = `bold ${Math.round(H * 0.09)}px Bebas Neue, sans-serif`;
+      ['TRENDING', 'THIS', 'WEEK'].forEach((l, i) => {
+        ctx.fillStyle = i === 1 ? '#222' : '#f2f2f0';
+        ctx.fillText(l, W * 0.04, H * 0.22 + i * H * 0.085);
+      });
+      // card grid
+      for(let i = 0; i < 5; i++){
+        ctx.fillStyle = '#111';
+        ctx.fillRect(W * 0.04 + i * (W * 0.185), H * 0.52, W * 0.17, H * 0.32);
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(W * 0.04 + i * (W * 0.185), H * 0.52, W * 0.17, H * 0.2);
+        ctx.fillStyle = '#f2f2f0'; ctx.font = `bold ${Math.round(H * 0.05)}px Bebas Neue, sans-serif`;
+        ctx.fillText(['94','97','101','88','95'][i], W * 0.05 + i * (W * 0.185), H * 0.82);
+      }
+    } else if(name === 'profile'){
+      ctx.fillStyle = '#0f0f0f'; ctx.fillRect(0, 60, W, H * 0.35);
+      ctx.fillStyle = '#f2f2f0';
+      ctx.font = `bold ${Math.round(H * 0.08)}px Bebas Neue, sans-serif`;
+      ctx.fillText(snap.label.replace('ПРОФИЛЬ: ','') || 'ПРОФИЛЬ', W * 0.05, H * 0.3);
+      ctx.fillStyle = '#444'; ctx.font = `${Math.round(H * 0.025)}px DM Mono, monospace`;
+      ctx.fillText('// ФИЛЬМОТЕКА', W * 0.05, H * 0.42);
+      for(let i = 0; i < 6; i++){
+        ctx.fillStyle = '#111';
+        ctx.fillRect(W * 0.05 + i * (W * 0.155), H * 0.5, W * 0.13, H * 0.38);
+      }
+    } else if(name === 'media'){
+      ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 52, W, H * 0.45);
+      ctx.fillStyle = '#f2f2f0';
+      ctx.font = `bold ${Math.round(H * 0.07)}px Bebas Neue, sans-serif`;
+      const title = (snap.payload && snap.payload.title) ? snap.payload.title.toUpperCase() : 'КИНО';
+      ctx.fillText(title, W * 0.04, H * 0.28);
+      ctx.fillStyle = '#555'; ctx.font = `${Math.round(H * 0.025)}px DM Mono, monospace`;
+      ctx.fillText('// ОЦЕНИТЬ ЭТОТ ФИЛЬМ', W * 0.04, H * 0.36);
+      ctx.fillStyle = '#f2f2f0';
+      const sc = (snap.payload && snap.payload.score) ? snap.payload.score : '';
+      ctx.font = `bold ${Math.round(H * 0.16)}px Bebas Neue, sans-serif`;
+      if(sc) ctx.fillText(sc, W * 0.04, H * 0.78);
+      ctx.fillStyle = '#333'; ctx.font = `${Math.round(H * 0.02)}px DM Mono, monospace`;
+      ctx.fillText('// средний балл', W * 0.04, H * 0.86);
+    } else if(name === 'catalogue'){
+      ctx.fillStyle = '#f2f2f0';
+      ctx.font = `bold ${Math.round(H * 0.07)}px Bebas Neue, sans-serif`;
+      ctx.fillText('КАТАЛОГ', W * 0.04, H * 0.22);
+      for(let j = 0; j < 12; j++){
+        ctx.fillStyle = j % 3 === 1 ? '#0f0f0f' : '#111';
+        ctx.fillRect(W * 0.04 + (j % 4) * (W * 0.23), H * 0.3 + Math.floor(j / 4) * (H * 0.22), W * 0.2, H * 0.19);
+      }
+    }
+
+    noise(ctx, W, H, 0.55);
+
+    // timecode
+    const base = Date.now() - (navHistory.length - 1 - idx) * 180000;
+    const d = new Date(base);
+    const tc = [d.getHours(), d.getMinutes(), d.getSeconds()]
+      .map(n => String(n).padStart(2,'0')).join(':');
+    ctx.fillStyle = 'rgba(242,242,240,0.65)';
+    ctx.font = `${Math.round(H * 0.022)}px DM Mono, monospace`;
+    ctx.fillText('● REC ' + tc, W * 0.72, H * 0.055);
+
+    return 'REC ' + tc;
+  }
+
+  function buildCache(){
+    if(!navHistory.length) return;
+    const W = Math.ceil(window.innerWidth * 0.55) || 600;
+    const H = Math.ceil(window.innerHeight * 0.55) || 300;
+    snapCache = navHistory.map((snap, i) => {
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const tc = drawSnap(c, snap, i);
+      return { canvas: c, tc, snap };
+    });
+    buildMarkers();
+  }
+
+  function buildMarkers(){
+    const track = document.getElementById('vhs-scrub-track');
+    track.querySelectorAll('.scrub-marker').forEach(m => m.remove());
+    snapCache.forEach((s, i) => {
+      const m = document.createElement('div');
+      m.className = 'scrub-marker';
+      const pct = snapCache.length > 1 ? (i / (snapCache.length - 1) * 100) : 50;
+      m.style.left = pct + '%';
+      const lbl = document.createElement('div');
+      lbl.className = 'scrub-marker-label';
+      lbl.textContent = s.snap.label || s.snap.name.toUpperCase();
+      m.appendChild(lbl);
+      track.appendChild(m);
+    });
+  }
+
+  function render(pct){
+    if(!snapCache.length) buildCache();
+    if(!snapCache.length) return;
+    const canvas = document.getElementById('vhs-scrub-canvas');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+    const n = snapCache.length;
+    const idx = pct * (n - 1);
+    const a = Math.floor(idx), b = Math.min(a + 1, n - 1);
+    const t = idx - a;
+    ctx.drawImage(snapCache[a].canvas, 0, 0, canvas.width, canvas.height);
+    if(t > 0){
+      ctx.globalAlpha = t;
+      ctx.drawImage(snapCache[b].canvas, 0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 1;
+    }
+    noise(ctx, canvas.width, canvas.height, 0.45);
+
+    const s = snapCache[Math.round(idx)];
+    if(s) document.getElementById('vhs-scrub-tc').textContent = s.tc;
+    document.getElementById('vhs-scrub-head').style.left = (pct * 100) + '%';
+
+    return s ? s.snap : null;
+  }
+
+  function navigateToSnap(pct){
+    if(!snapCache.length) return;
+    const idx = Math.round(pct * (snapCache.length - 1));
+    const s = snapCache[Math.min(idx, snapCache.length - 1)];
+    if(!s) return;
+    close();
+    const snap = s.snap;
+    if(snap.name === 'media' && snap.payload && snap.payload.id){
+      openMedia(snap.payload.id, snap.payload.mediaType || 'movie');
+    } else {
+      showPage(snap.name);
+    }
+  }
+
+  let currentPct = 1;
+
+  function init(){
+    buildCache();
+    const track = document.getElementById('vhs-scrub-track');
+    const move = (clientX) => {
+      const r = track.getBoundingClientRect();
+      currentPct = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+      render(currentPct);
+    };
+    track.addEventListener('mousedown', e => { dragging = true; move(e.clientX); });
+    window.addEventListener('mousemove', e => { if(dragging) move(e.clientX); });
+    window.addEventListener('mouseup', e => {
+      if(dragging){ dragging = false; navigateToSnap(currentPct); }
+    });
+    track.addEventListener('touchstart', e => { dragging = true; move(e.touches[0].clientX); e.preventDefault(); }, {passive:false});
+    window.addEventListener('touchmove', e => { if(dragging) move(e.touches[0].clientX); });
+    window.addEventListener('touchend', () => { if(dragging){ dragging = false; navigateToSnap(currentPct); } });
+    document.getElementById('vhs-scrub-close').onclick = close;
+    document.getElementById('vhs-scrub-btn').onclick = open;
+  }
+
+  function open(){
+    if(!navHistory.length){
+      showToast('// нет истории навигации', true); return;
+    }
+    snapCache = [];
+    buildCache();
+    active = true;
+    const ov = document.getElementById('vhs-scrub-overlay');
+    const pan = document.getElementById('vhs-scrub-panel');
+    ov.style.opacity = '1'; ov.style.pointerEvents = 'all';
+    pan.style.display = 'flex';
+    setTimeout(() => pan.classList.add('visible'), 10);
+    currentPct = 1;
+    render(currentPct);
+    // Play VHS hiss sound
+    playVHShiss();
+  }
+
+  function close(){
+    active = false;
+    const ov = document.getElementById('vhs-scrub-overlay');
+    const pan = document.getElementById('vhs-scrub-panel');
+    pan.classList.remove('visible');
+    ov.style.opacity = '0'; ov.style.pointerEvents = 'none';
+    setTimeout(() => { pan.style.display = 'none'; }, 320);
+  }
+
+  let hissCtx = null;
+  function playVHShiss(){
+    try {
+      if(!hissCtx) hissCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = hissCtx;
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for(let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.18;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
+      src.connect(gain); gain.connect(ctx.destination);
+      src.start();
+    } catch(e){}
+  }
+
+  return { init, addHistory, open, close };
+})();
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CINEMA REVEAL — 7-second cinematic score sequence
+// ══════════════════════════════════════════════════════════════════════════════
+const CinemaReveal = (function(){
+  let animId = null, onDone = null;
+
+  function vhsNoise(ctx, W, H, alpha){
+    const d = ctx.createImageData(W, H);
+    for(let i = 0; i < d.data.length; i += 4){
+      const v = (Math.random() - 0.5) * 80;
+      d.data[i] = d.data[i+1] = d.data[i+2] = 128 + v;
+      d.data[i+3] = Math.random() * 255 * alpha;
+    }
+    ctx.putImageData(d, 0, 0);
+  }
+
+  function playLowBoom(){
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      // projector hiss burst
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.6, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for(let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.15;
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.6, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'highpass'; filt.frequency.value = 3000;
+      src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+      src.start();
+      // low drone
+      const osc = ctx.createOscillator();
+      osc.type = 'sine'; osc.frequency.value = 40;
+      const g2 = ctx.createGain();
+      g2.gain.setValueAtTime(0, ctx.currentTime);
+      g2.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.5);
+      g2.gain.linearRampToValueAtTime(0, ctx.currentTime + 2.5);
+      osc.connect(g2); g2.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + 2.5);
+      // gold shimmer (for gold scores)
+      if(window._cinemaRevealIsGold){
+        setTimeout(() => {
+          const o2 = ctx.createOscillator();
+          o2.type = 'triangle'; o2.frequency.value = 880;
+          const g3 = ctx.createGain();
+          g3.gain.setValueAtTime(0, ctx.currentTime);
+          g3.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.3);
+          g3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+          o2.connect(g3); g3.connect(ctx.destination);
+          o2.start(); o2.stop(ctx.currentTime + 1.2);
+        }, 1800);
+      }
+    } catch(e){}
+  }
+
+  function play(score, title, done){
+    onDone = done || null;
+    window._cinemaRevealIsGold = score > 100;
+
+    const ov = document.getElementById('cinema-reveal-overlay');
+    const canvas = document.getElementById('cinema-reveal-canvas');
+    const scoreEl = document.getElementById('cinema-reveal-score');
+    const titleEl = document.getElementById('cinema-reveal-title');
+    const skipEl = document.getElementById('cinema-reveal-skip');
+    const isGold = score > 100;
+
+    // Reset state
+    ov.className = 'show';
+    scoreEl.textContent = '0';
+    scoreEl.className = isGold ? 'gold' : '';
+    titleEl.textContent = title ? '// ' + title.toUpperCase() : '';
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+
+    const START = performance.now();
+    // Phase 0: 0–800ms  — VHS white noise, screen blacks
+    // Phase 1: 800–2000ms — projector click, lens flare, curtain reveal
+    // Phase 2: 2000–4500ms — score counts up
+    // Phase 3: 4500–6000ms — gold shimmer / applause wave for gold
+    // Phase 4: 6000–7000ms — fade out
+
+    const TOTAL = 7000;
+    let scoreStarted = false;
+    let scoreCountDone = false;
+
+    requestAnimationFrame(function loop(now){
+      const t = now - START;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      if(t < 800){
+        // Phase 0: heavy VHS noise
+        const a = t < 400 ? t / 400 : 1 - (t - 400) / 400;
+        ctx.fillStyle = '#080808'; ctx.fillRect(0, 0, W, H);
+        vhsNoise(ctx, W, H, a * 0.9);
+
+      } else if(t < 2000){
+        // Phase 1: lens flare + curtain wipe
+        const p = (t - 800) / 1200;
+        ctx.fillStyle = '#080808'; ctx.fillRect(0, 0, W, H);
+
+        // Curtain bars sweeping away
+        const bars = 8;
+        for(let i = 0; i < bars; i++){
+          const prog = Math.max(0, Math.min(1, (p - i * 0.08) * 4));
+          const bH = H / bars;
+          const offset = i % 2 === 0 ? -W * prog : W * prog;
+          ctx.fillStyle = '#0a0a0a';
+          ctx.fillRect(offset, i * bH, W, bH);
+        }
+
+        // Lens flare blob
+        if(p > 0.3){
+          const fp = Math.min(1, (p - 0.3) / 0.4);
+          const flareAlpha = fp * (1 - fp) * 4;
+          const gr = ctx.createRadialGradient(W*0.5, H*0.4, 0, W*0.5, H*0.4, W*0.35);
+          gr.addColorStop(0, `rgba(242,242,240,${flareAlpha * 0.6})`);
+          gr.addColorStop(0.3, `rgba(242,242,240,${flareAlpha * 0.15})`);
+          gr.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+        }
+
+        if(!scoreStarted){ playLowBoom(); scoreStarted = true; }
+        ov.classList.add('visible');
+
+      } else if(t < 4500){
+        // Phase 2: score counts up
+        ctx.fillStyle = '#080808'; ctx.fillRect(0, 0, W, H);
+        // subtle scanlines
+        for(let y = 0; y < H; y += 4){
+          ctx.fillStyle = 'rgba(0,0,0,0.15)';
+          ctx.fillRect(0, y, W, 1);
+        }
+        vhsNoise(ctx, W, H, 0.04);
+
+        const p = (t - 2000) / 2500;
+        // Ease-out cubic
+        const eased = 1 - Math.pow(1 - p, 3);
+        const displayed = Math.round(eased * score * 10) / 10;
+        scoreEl.textContent = displayed.toFixed(1);
+        ov.classList.add('phase-score');
+
+        if(p >= 1 && !scoreCountDone){
+          scoreCountDone = true;
+          scoreEl.textContent = score.toFixed(1);
+          // trigger gold particle burst
+          if(isGold) goldBurst();
+        }
+
+      } else if(t < 6500){
+        // Phase 3: hold + glow
+        ctx.fillStyle = '#080808'; ctx.fillRect(0, 0, W, H);
+        vhsNoise(ctx, W, H, 0.03);
+
+        if(isGold){
+          // Concentric audio-wave rings
+          const p = (t - 4500) / 2000;
+          const rings = 5;
+          for(let i = 0; i < rings; i++){
+            const rp = (p * 2 + i / rings) % 1;
+            const alpha = (1 - rp) * 0.12;
+            ctx.beginPath();
+            ctx.arc(W/2, H/2, rp * Math.max(W,H) * 0.6, 0, Math.PI*2);
+            ctx.strokeStyle = `rgba(200,169,110,${alpha})`;
+            ctx.lineWidth = 1.5; ctx.stroke();
+          }
+        }
+
+      } else if(t < TOTAL){
+        // Phase 4: fade out
+        const p = (t - 6500) / 500;
+        ctx.fillStyle = `rgba(8,8,8,${p})`;
+        ctx.fillRect(0, 0, W, H);
+        ov.style.opacity = String(1 - p * 0.85);
+
+      } else {
+        // Done
+        finish();
+        return;
+      }
+
+      animId = requestAnimationFrame(loop);
+    });
+
+    skipEl.onclick = finish;
+  }
+
+  function goldBurst(){
+    // Trigger existing gold canvas burst if available
+    const goldCanvas = document.getElementById('gold-canvas');
+    if(goldCanvas && window.triggerGoldBurst) window.triggerGoldBurst();
+  }
+
+  function finish(){
+    if(animId){ cancelAnimationFrame(animId); animId = null; }
+    const ov = document.getElementById('cinema-reveal-overlay');
+    ov.style.opacity = '0';
+    setTimeout(() => {
+      ov.className = '';
+      ov.style.opacity = '';
+      document.getElementById('cinema-reveal-score').textContent = '0';
+    }, 400);
+    if(onDone){ const cb = onDone; onDone = null; cb(); }
+  }
+
+  return { play };
+})();
+
+// ── VHS TUNER + SCRUB INIT ────────────────────────────────────────────────────
+(function(){
+  // Patch showPage to track history
+  const _origShowPage = showPage;
+  window.showPage = function(name){
+    let label = name.toUpperCase();
+    if(name === 'home') label = 'ГЛАВНАЯ';
+    else if(name === 'profile') label = 'ПРОФИЛЬ';
+    else if(name === 'catalogue') label = 'КАТАЛОГ';
+    VHSScrub.addHistory(name, label, {});
+    _origShowPage(name);
+  };
+
+  // Patch openMedia to track media visits
+  const _origOpenMedia = window.openMedia;
+  window.openMedia = async function(id, type){
+    _origOpenMedia(id, type);
+    // Try to get title from DOM after load
+    setTimeout(() => {
+      const titleEl = document.querySelector('.media-title');
+      const scoreEl = document.getElementById('live-score');
+      const title = titleEl ? titleEl.textContent : '';
+      const score = scoreEl ? scoreEl.textContent : '';
+      VHSScrub.addHistory('media', title.toUpperCase().slice(0,20) || 'КИНО', { id, mediaType: type, title, score });
+    }, 800);
+  };
+
+  VHSScrub.init();
+  VHSScrub.addHistory('home', 'ГЛАВНАЯ', {});
+
+  // Boot tuner after page ready
+  window.addEventListener('load', () => setTimeout(() => VHSTuner.boot(), 500));
+})();
   if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) submitAuth();
   if (e.key === 'Escape') closeModal();
 });
