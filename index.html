@@ -5544,7 +5544,10 @@ async function wpLoadRooms() {
   if (!listEl) return;
   if (!state.token) { listEl.innerHTML = '<div class="wp-empty">Войди в аккаунт чтобы создавать комнаты</div>'; return; }
   try {
-    const list = await api('/api/rooms');
+    const _r = await fetch('/api/rooms', { headers: { 'Authorization': 'Bearer ' + state.token } });
+    if (_r.status === 404) { listEl.innerHTML = '<div class="wp-empty">Обнови сервер — задеплой новый server.js</div>'; return; }
+    if (!_r.ok) { listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>'; return; }
+    const list = await _r.json();
     if (!list.length) { listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>'; return; }
     listEl.innerHTML = list.map(room => `
       <div class="wp-room-row" id="wp-row-${room.code}">
