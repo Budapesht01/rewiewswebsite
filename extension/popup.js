@@ -1,7 +1,7 @@
 // ── CONFIG — замени на свой домен ──────────────────────────────────────────
-const RATED_HOST = 'rated.yourdomain.com';   // без https://
-const WS_URL     = `wss://${https://rewiewswebsite.onrender.com}`;
-const API_URL    = `https://${https://rewiewswebsite.onrender.com}`;
+const RATED_HOST = 'rewiewswebsite.onrender.com';   // без https://
+const WS_URL     = `wss://${RATED_HOST}`;
+const API_URL    = `https://${RATED_HOST}`;
 // ────────────────────────────────────────────────────────────────────────────
 
 let ws       = null;
