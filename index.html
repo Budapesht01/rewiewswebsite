@@ -5548,7 +5548,7 @@ async function wpLoadRooms() {
     if (_r.status === 404) { listEl.innerHTML = '<div class="wp-empty">Обнови сервер — задеплой новый server.js</div>'; return; }
     if (!_r.ok) { listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>'; return; }
     const list = await _r.json();
-    if (!list.length) { listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>'; return; }
+    if (!Array.isArray(list) || !list.length) { listEl.innerHTML = '<div class="wp-empty">Нет активных комнат</div>'; return; }
     listEl.innerHTML = list.map(room => `
       <div class="wp-room-row" id="wp-row-${room.code}">
         <div>
@@ -5562,7 +5562,8 @@ async function wpLoadRooms() {
         </div>
       </div>`).join('');
   } catch(e) {
-    listEl.innerHTML = '<div class="wp-empty">Ошибка загрузки</div>';
+    console.error('[WP] wpLoadRooms error:', e);
+    listEl.innerHTML = '<div class="wp-empty">Ошибка: ' + e.message + '</div>';
   }
 }
 
