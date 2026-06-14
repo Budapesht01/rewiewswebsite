@@ -64,6 +64,18 @@ body {
   background: var(--white);
 }
 
+/* ── CURSOR TRAIL ── */
+.cursor-trail {
+  position: fixed;
+  border-radius: 50%;
+  background: var(--white);
+  pointer-events: none;
+  z-index: 9990;
+  mix-blend-mode: difference;
+  will-change: transform, opacity;
+  top: 0; left: 0;
+}
+
 /* ── NOISE OVERLAY ── */
 #noise-canvas {
   position: fixed; inset: 0;
@@ -6098,20 +6110,34 @@ const VHSTuner = (function(){
       ctx.fillRect(0, y, W, 1);
     }
 
-    // 2. NOISE STRIPES — at most 2-3, scaled by NOISE
-    const stripeCount = params.noise > 0.02 ? Math.round(1 + params.noise * 2) : 0;
+    // 2. NOISE STRIPES — horizontal VHS tape bands
+    const stripeCount = params.noise > 0.02 ? Math.round(2 + params.noise * 6) : 0;
     for(let i = 0; i < stripeCount; i++){
       const y = Math.random() * H;
-      const h = 1 + Math.random() * (1 + params.noise * 3);
-      const alpha = (0.05 + Math.random() * 0.12) * (0.3 + params.noise);
+      // stripe height: thin lines 1-3px, occasionally a fat band
+      const h = Math.random() < 0.85
+        ? (1 + Math.random() * 2)          // thin line
+        : (4 + Math.random() * 14);        // fat band
+      const alpha = (0.04 + Math.random() * 0.18) * (0.4 + params.noise);
+      // full-width white stripe
       ctx.fillStyle = `rgba(242,242,240,${alpha})`;
       ctx.fillRect(0, y, W, h);
-      if(Math.random() < 0.4){
-        for(let x = 0; x < W; x += 10 + Math.random() * 30){
-          const w = 6 + Math.random() * 36;
-          ctx.fillStyle = `rgba(0,0,0,${alpha * 0.6})`;
-          ctx.fillRect(x, y, w, h);
+      // randomly break the stripe with dark gaps (tape dropout look)
+      if(h < 3 && Math.random() < 0.5){
+        const gapCount = Math.floor(1 + Math.random() * 4);
+        for(let g = 0; g < gapCount; g++){
+          const gx = Math.random() * W;
+          const gw = 20 + Math.random() * 120;
+          ctx.fillStyle = `rgba(0,0,0,${alpha * 1.2})`;
+          ctx.fillRect(gx, y, gw, h);
         }
+      }
+      // chromatic fringe on fat bands
+      if(h >= 4){
+        ctx.fillStyle = `rgba(180,40,20,${alpha * 0.4})`;
+        ctx.fillRect(0, y, W, 1);
+        ctx.fillStyle = `rgba(20,60,200,${alpha * 0.35})`;
+        ctx.fillRect(0, y + h - 1, W, 1);
       }
     }
 
