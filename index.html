@@ -2683,6 +2683,33 @@ body {
 body.vhs-on {
   --vhs-active: 1;
 }
+/* VHS RGB split на текст — через CSS text-shadow аберрации */
+.vhs-on h1,
+.vhs-on .hero-title,
+.vhs-on .media-title,
+.vhs-on .feat-title,
+.vhs-on .profile-name,
+.vhs-on .catalogue-title,
+.vhs-on .genre-curtain-name,
+.vhs-on .score-number,
+.vhs-on .live-score-num,
+.vhs-on .feat-score {
+  text-shadow:
+    -2px 0 rgba(255, 30, 30, 0.55),
+     2px 0 rgba(30, 60, 255, 0.45);
+}
+/* Более тонкие аберрации для мелкого текста */
+.vhs-on .section-label,
+.vhs-on .tab-btn,
+.vhs-on .genre-section-label,
+.vhs-on .rating-form-title,
+.vhs-on .reviews-title,
+.vhs-on .profile-stat-num,
+.vhs-on .logo {
+  text-shadow:
+    -1px 0 rgba(255, 30, 30, 0.4),
+     1px 0 rgba(30, 60, 255, 0.35);
+}
 </style>
 </head>
 <body>
@@ -6040,7 +6067,7 @@ function plural(n, one, few, many) {
 const VHSTuner = (function(){
   let active = false, animId = null;
   const t0 = performance.now();
-  const params = { tracking: 0.0, drift: 0.15, rgb: 0.35, noise: 0.28, glitch: 0 };
+  const params = { tracking: 0.12, drift: 0.22, rgb: 0.55, noise: 0.45, glitch: 0 };
 
   // Load saved prefs
   try {
@@ -6059,9 +6086,9 @@ const VHSTuner = (function(){
     const svg = document.createElementNS(svgNS, 'svg');
     svg.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden;');
     svg.innerHTML = `<defs>
-      <filter id="vhs-css-filter" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
-        <feTurbulence id="vhs-turb" type="fractalNoise" baseFrequency="0.0 0.002" numOctaves="1" seed="2" result="turb"/>
-        <feDisplacementMap id="vhs-disp" in="SourceGraphic" in2="turb" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+      <filter id="vhs-css-filter" x="-2%" y="-1%" width="104%" height="102%" color-interpolation-filters="sRGB">
+        <feTurbulence id="vhs-turb" type="turbulence" baseFrequency="0.0 0.004" numOctaves="1" seed="3" result="turb"/>
+        <feDisplacementMap id="vhs-disp" in="SourceGraphic" in2="turb" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
     </defs>`;
     document.body.appendChild(svg);
@@ -6086,89 +6113,161 @@ const VHSTuner = (function(){
     const ctx = overlayCtx;
     ctx.clearRect(0, 0, W, H);
 
-    // === SCANLINES ===
-    for(let y = 0; y < H; y += 3){
-      ctx.fillStyle = 'rgba(0,0,0,0.07)';
+    // ═══════════════════════════════════════════════
+    // 1. ГОРИЗОНТАЛЬНЫЙ ШУМОВОЙ РАСТР — оптимизировано
+    //    Рисуем тонкую колонку (32px), масштабируем на весь экран
+    //    Это даёт горизонтальные полосы как на реальном VHS
+    // ═══════════════════════════════════════════════
+    const noiseStr = params.noise;
+    if(noiseStr > 0.01){
+      // Offscreen narrow canvas — 32px wide, full height
+      const NW = 32;
+      const nOff = document.createElement('canvas');
+      nOff.width = NW; nOff.height = H;
+      const nCtx = nOff.getContext('2d');
+      const nImg = nCtx.createImageData(NW, H);
+      const nd = nImg.data;
+      for(let py = 0; py < H; py++){
+        // Строчный шум — каждая строка своё случайное значение
+        const rowV = Math.random() * 255;
+        const rowA = Math.random() * 28 * noiseStr;
+        for(let px = 0; px < NW; px++){
+          // Небольшая вариация по X
+          const v = Math.max(0, Math.min(255, rowV + (Math.random()-0.5)*20));
+          const a = rowA * (0.5 + Math.random()*0.5);
+          const i = (py * NW + px) * 4;
+          nd[i] = v; nd[i+1] = v; nd[i+2] = v; nd[i+3] = a;
+        }
+      }
+      nCtx.putImageData(nImg, 0, 0);
+      // Растянуть на весь экран — создаёт горизонтальные полосы
+      ctx.drawImage(nOff, 0, 0, W, H);
+    }
+
+    // ═══════════════════════════════════════════════
+    // 2. СКАНЛАЙНЫ — чёткие горизонтальные полосы
+    //    Точно как на реальном VHS мониторе
+    // ═══════════════════════════════════════════════
+    for(let y = 0; y < H; y += 2){
+      // Чередование: тёмная / чуть светлее
+      ctx.fillStyle = 'rgba(0,0,0,0.13)';
+      ctx.fillRect(0, y, W, 1);
+    }
+    // Каждые ~8px чуть более заметная полоса (строчная структура CRT)
+    for(let y = 0; y < H; y += 8){
+      ctx.fillStyle = 'rgba(0,0,0,0.05)';
       ctx.fillRect(0, y, W, 1);
     }
 
-    // === NOISE GRAIN ===
-    const noiseStr = params.noise;
-    if(noiseStr > 0.02){
-      // Draw noise only on a subsampled region for performance
-      const step = 2;
-      const imgData = ctx.createImageData(W, H);
-      const data = imgData.data;
-      for(let py = 0; py < H; py += step){
-        for(let px = 0; px < W; px += step){
-          if(Math.random() > 0.78){
-            const v = Math.random() * 255;
-            const a = Math.random() * 22 * noiseStr;
-            const idx = (py * W + px) * 4;
-            data[idx] = v; data[idx+1] = v; data[idx+2] = v; data[idx+3] = a;
-            // Fill 2x2 block
-            if(px+1 < W){ const i2=(py*W+px+1)*4; data[i2]=v;data[i2+1]=v;data[i2+2]=v;data[i2+3]=a; }
-            if(py+1 < H){ const i3=((py+1)*W+px)*4; data[i3]=v;data[i3+1]=v;data[i3+2]=v;data[i3+3]=a; }
-          }
+    // ═══════════════════════════════════════════════
+    // 3. TRACKING ПОЛОСЫ — горизонтальные засветки
+    //    Белые/серые полосы разной ширины (VHS tracking)
+    // ═══════════════════════════════════════════════
+    // Медленно движущиеся полосы (как VHS tracking error)
+    const bandY1 = ((t * 0.07) % 1.0) * H;
+    const bandY2 = ((t * 0.05 + 0.4) % 1.0) * H;
+    const bandY3 = ((t * 0.11 + 0.7) % 1.0) * H;
+    
+    ctx.fillStyle = `rgba(255,252,240,${0.04 + params.drift * 0.08})`;
+    ctx.fillRect(0, bandY1, W, 1 + params.drift * 3);
+    ctx.fillStyle = `rgba(255,252,240,${0.025 + params.drift * 0.05})`;
+    ctx.fillRect(0, bandY2, W, 1);
+    ctx.fillStyle = `rgba(255,252,240,${0.02 + params.drift * 0.04})`;
+    ctx.fillRect(0, bandY3, W, 2 + params.drift * 2);
+
+    // Случайные яркие горизонтальные полосы (как на фото 2-4)
+    if(Math.random() > 0.85){
+      const flashY = Math.random() * H;
+      const flashH = 1 + Math.random() * 3;
+      ctx.fillStyle = `rgba(230,225,210,${0.05 + Math.random() * 0.08 + params.tracking * 0.1})`;
+      ctx.fillRect(0, flashY, W * (0.4 + Math.random() * 0.6), flashH);
+    }
+
+    // ═══════════════════════════════════════════════
+    // 4. RGB SPLIT / ХРОМАТИЧЕСКАЯ АБЕРРАЦИЯ
+    //    Canvas-based: красный канал вправо, синий влево
+    //    Применяем к самому canvas через composite
+    // ═══════════════════════════════════════════════
+    const rgbStr = params.rgb;
+    if(rgbStr > 0.01){
+      const shift = Math.round(rgbStr * 3.5); // 0-3.5px смещение
+      // Красный канал — смещение вправо
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = rgbStr * 0.35;
+      ctx.fillStyle = 'rgba(255,0,0,1)';
+      // Рисуем тонкие красные линии рядом с контрастными границами (апроксимация)
+      for(let y = 0; y < H; y += 1){
+        if(Math.random() > 0.97){
+          ctx.fillRect(shift, y, W - shift, 1);
         }
       }
-      ctx.putImageData(imgData, 0, 0);
-    }
-
-    // === HORIZONTAL TRACKING NOISE BANDS ===
-    const numBands = 1 + Math.floor(params.tracking * 3);
-    for(let b = 0; b < numBands; b++){
-      if(Math.random() > 0.93 - params.tracking * 0.3){
-        const by = Math.random() * H;
-        const bh = 1 + Math.random() * (2 + params.tracking * 4);
-        const ba = 0.03 + Math.random() * 0.06 + params.tracking * 0.1;
-        ctx.fillStyle = `rgba(220,215,200,${ba})`;
-        ctx.fillRect(0, by, W * (0.3 + Math.random() * 0.7), bh);
+      // Синий канал — смещение влево  
+      ctx.fillStyle = 'rgba(0,60,255,1)';
+      for(let y = 0; y < H; y += 1){
+        if(Math.random() > 0.97){
+          ctx.fillRect(0, y, W - shift, 1);
+        }
       }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+
+      // Постоянный лёгкий RGB fringe по горизонтали
+      // Красный — правый край каждой яркой полосы
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = rgbStr * 0.12;
+      const rgbGradR = ctx.createLinearGradient(0, 0, W, 0);
+      rgbGradR.addColorStop(0, 'rgba(0,0,0,0)');
+      rgbGradR.addColorStop(0.49, 'rgba(0,0,0,0)');
+      rgbGradR.addColorStop(0.5, 'rgba(180,0,0,0.8)');
+      rgbGradR.addColorStop(1, 'rgba(0,0,0,0)');
+      for(let y = 2; y < H; y += 3){
+        ctx.fillStyle = rgbGradR;
+        ctx.fillRect(0, y, W, 1);
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
     }
 
-    // === DRIFT WAVE LINE (top-tracking artifact) ===
-    if(params.drift > 0.05){
-      const waveAmt = params.drift * 0.15;
-      const waveY = Math.abs(Math.sin(t * 0.8)) * H * 0.15;
-      ctx.fillStyle = `rgba(200,195,180,${waveAmt * 0.12})`;
-      ctx.fillRect(0, waveY, W, 1 + params.drift * 2);
-    }
-
-    // === VIGNETTE ===
-    const vg = ctx.createRadialGradient(W/2, H/2, H*0.25, W/2, H/2, H*0.9);
+    // ═══════════════════════════════════════════════
+    // 5. ВИНЬЕТКА
+    // ═══════════════════════════════════════════════
+    const vg = ctx.createRadialGradient(W/2, H/2, H*0.2, W/2, H/2, H*0.85);
     vg.addColorStop(0, 'rgba(0,0,0,0)');
-    vg.addColorStop(1, 'rgba(0,0,0,0.4)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.35)');
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, W, H);
 
-    // === SUBTLE WARM TINT (VHS color temperature) ===
-    ctx.fillStyle = 'rgba(30,18,0,0.04)';
-    ctx.fillRect(0, 0, W, H);
-
-    // === GLITCH BURST ===
+    // ═══════════════════════════════════════════════
+    // 6. GLITCH BURST
+    // ═══════════════════════════════════════════════
     if(params.glitch > 0.01){
-      const bars = Math.floor(params.glitch * 8);
+      const bars = Math.floor(params.glitch * 10);
       for(let i = 0; i < bars; i++){
         const gy = Math.random() * H;
-        const gh = 1 + Math.random() * 6;
-        const gw = W * (0.2 + Math.random() * 0.8);
-        const gx = Math.random() > 0.5 ? 0 : W - gw;
-        ctx.fillStyle = `rgba(255,250,240,${params.glitch * 0.3})`;
-        ctx.fillRect(gx, gy, gw, gh);
-        // Occasional color glitch bar
-        if(Math.random() > 0.6){
-          ctx.fillStyle = `rgba(80,200,255,${params.glitch * 0.15})`;
-          ctx.fillRect(0, gy + gh, W * Math.random(), 1);
+        const gh = 1 + Math.random() * 8;
+        ctx.fillStyle = `rgba(255,250,240,${params.glitch * 0.4})`;
+        ctx.fillRect(0, gy, W * (0.3 + Math.random() * 0.7), gh);
+        if(Math.random() > 0.5){
+          ctx.fillStyle = `rgba(180,40,20,${params.glitch * 0.25})`;
+          ctx.fillRect(3, gy, W, 1);
+          ctx.fillStyle = `rgba(20,60,200,${params.glitch * 0.2})`;
+          ctx.fillRect(-3, gy + gh, W, 1);
         }
       }
-      params.glitch = Math.max(0, params.glitch - 0.05);
+      params.glitch = Math.max(0, params.glitch - 0.04);
     }
   }
 
-  function applyBodyFilter(){
+  function applyBodyFilter(t){
     if(active){
       document.body.classList.add('vhs-on');
+      // Animate turbulence seed for variation in SVG filter
+      if(feTurbulence){
+        // Slowly drift baseFrequency for subtle wave
+        const bf = 0.004 + Math.sin((t||0) * 0.3) * 0.001;
+        feTurbulence.setAttribute('baseFrequency', `0.0 ${bf.toFixed(4)}`);
+        feTurbulence.setAttribute('seed', Math.floor((t||0)*7) % 100);
+      }
     } else {
       document.body.classList.remove('vhs-on');
     }
@@ -6177,7 +6276,7 @@ const VHSTuner = (function(){
   function frame(now){
     if(!active) return;
     const t = (now - t0) * 0.001;
-    applyBodyFilter();
+    applyBodyFilter(t);
     drawOverlay(t);
     animId = requestAnimationFrame(frame);
   }
