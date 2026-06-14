@@ -1078,8 +1078,9 @@ body {
 ══════════════════════════════════════ */
 #vhs-tuner-canvas {
   position: fixed; inset: 0; width: 100%; height: 100%;
-  z-index: 490; pointer-events: none;
+  z-index: 9900; pointer-events: none;
   opacity: 0; transition: opacity 0.4s;
+  mix-blend-mode: normal;
 }
 #vhs-tuner-canvas.active { opacity: 1; }
 
@@ -2676,6 +2677,12 @@ body {
 .sig-match-label.ok   { color: rgba(242,242,240,0.7); }
 .sig-match-label.fail { color: rgba(180,80,80,0.9); }
 
+
+/* VHS body filter - applied via class to avoid canvas feedback loop */
+/* VHS mode — subtle global warmth via css vars, all heavy FX on canvas */
+body.vhs-on {
+  --vhs-active: 1;
+}
 </style>
 </head>
 <body>
@@ -6031,7 +6038,6 @@ function plural(n, one, few, many) {
 // VHS TUNER — WebGL2 fullscreen effect (always-on by default)
 // ══════════════════════════════════════════════════════════════════════════════
 const VHSTuner = (function(){
-  let gl, prog, uniLoc = {}, texA, texB, prevLoaded = false;
   let active = false, animId = null;
   const t0 = performance.now();
   const params = { tracking: 0.0, drift: 0.15, rgb: 0.35, noise: 0.28, glitch: 0 };
@@ -6042,147 +6048,137 @@ const VHSTuner = (function(){
     if (saved) Object.assign(params, saved);
   } catch(e){}
 
-  const VERT = `#version 300 es
-in vec2 a_pos; out vec2 v_uv;
-void main(){ v_uv=a_pos*.5+.5; gl_Position=vec4(a_pos,0,1); }`;
+  // SVG filter injected into DOM for chromatic aberration on the real page
+  const svgNS = 'http://www.w3.org/2000/svg';
+  let svgFilter = null;
+  let feDisplace = null;
+  let feTurbulence = null;
 
-  const FRAG = `#version 300 es
-precision highp float;
-in vec2 v_uv; out vec4 out_col;
-uniform sampler2D u_tex, u_prev;
-uniform float u_t,u_track,u_drift,u_rgb,u_noise,u_glitch;
-uniform vec2 u_res;
-float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
-void main(){
-  vec2 uv=v_uv;
-  float wave=sin(uv.y*80.+u_t*2.)*.003*u_drift+sin(uv.y*13.+u_t*.7)*.006*u_drift;
-  float jmp=step(.97,sin(uv.y*2.8+u_t*.1+u_track*6.28))*u_track*.04;
-  uv.x+=wave+jmp;
-  if(u_glitch>.01){
-    float b=step(.78,hash(vec2(floor(uv.y*16.),floor(u_t*12.))));
-    uv.x+=b*u_glitch*(hash(vec2(uv.y,u_t))*2.-1.)*.1;
-  }
-  float off=u_rgb*.012;
-  float r=texture(u_tex,uv+vec2(off,0.)).r;
-  float g=texture(u_tex,uv).g;
-  float b=texture(u_tex,uv-vec2(off,0.)).b;
-  vec4 col=vec4(r,g,b,1.);
-  col=mix(col,texture(u_prev,uv),.18*u_rgb);
-  float scan=sin(uv.y*u_res.y*3.14159)*.5+.5;
-  col.rgb*=mix(1.,scan*.78+.22,.4);
-  col.rgb+=(hash(uv+vec2(u_t*.017))-.5)*u_noise*.18;
-  col.rgb*=1.-smoothstep(.3,.9,length(uv-.5)*1.5)*.55;
-  if(u_glitch>.01){
-    float fl=step(.9,hash(vec2(floor(uv.y*4.+u_t),1.)));
-    col.rgb+=fl*u_glitch*.7;
-  }
-  out_col=clamp(col,0.,1.);
-}`;
-
-  // offscreen: we draw the real page DOM via html2canvas-lite trick —
-  // instead, we capture the visible viewport into an offscreen canvas
-  let offCvs = document.createElement('canvas');
-  let offCtx = offCvs.getContext('2d');
-
-  function mkShader(type, src){
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src); gl.compileShader(s); return s;
-  }
-  function mkTex(){
-    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    return t;
+  function injectSVGFilter(){
+    if(svgFilter) return;
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden;');
+    svg.innerHTML = `<defs>
+      <filter id="vhs-css-filter" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
+        <feTurbulence id="vhs-turb" type="fractalNoise" baseFrequency="0.0 0.002" numOctaves="1" seed="2" result="turb"/>
+        <feDisplacementMap id="vhs-disp" in="SourceGraphic" in2="turb" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>`;
+    document.body.appendChild(svg);
+    svgFilter = svg;
+    feDisplace = svg.querySelector('#vhs-disp');
+    feTurbulence = svg.querySelector('#vhs-turb');
   }
 
-  function init(){
-    const c = document.getElementById('vhs-tuner-canvas');
-    gl = c.getContext('webgl2');
-    if(!gl){ console.warn('VHS Tuner: no WebGL2'); return false; }
-    const vs = mkShader(gl.VERTEX_SHADER, VERT);
-    const fs = mkShader(gl.FRAGMENT_SHADER, FRAG);
-    prog = gl.createProgram();
-    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-    const loc = gl.getAttribLocation(prog, 'a_pos');
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    ['u_tex','u_prev','u_t','u_track','u_drift','u_rgb','u_noise','u_glitch','u_res'].forEach(n => {
-      uniLoc[n] = gl.getUniformLocation(prog, n);
-    });
-    gl.uniform1i(uniLoc.u_tex, 0);
-    gl.uniform1i(uniLoc.u_prev, 1);
-    texA = mkTex(); texB = mkTex();
-    return true;
+  // Canvas overlay — draws noise + scanlines + vignette only (transparent bg)
+  let overlayCanvas = null;
+  let overlayCtx = null;
+
+  function initOverlay(){
+    overlayCanvas = document.getElementById('vhs-tuner-canvas');
+    overlayCtx = overlayCanvas.getContext('2d');
   }
 
-  // Capture what's currently on screen via drawImage of the body
-  // We use a screenshot via ImageBitmap of the composited page
-  let lastBitmap = null;
+  function drawOverlay(t){
+    const c = overlayCanvas;
+    const W = window.innerWidth, H = window.innerHeight;
+    if(c.width !== W || c.height !== H){ c.width = W; c.height = H; }
+    const ctx = overlayCtx;
+    ctx.clearRect(0, 0, W, H);
 
-  async function captureScreen(){
-    try {
-      // Use html2canvas-lite: draw visible DOM approximation
-      // We'll use a simpler method: render noise pattern layered on a solid color
-      // that mimics the dark page — the WebGL effect works on ANY texture
-      const W = offCvs.width, H = offCvs.height;
-      offCtx.fillStyle = '#080808';
-      offCtx.fillRect(0, 0, W, H);
-      // draw topbar
-      offCtx.fillStyle = '#0e0e0e';
-      offCtx.fillRect(0, 0, W, 60);
-      offCtx.fillStyle = '#1a1a1a';
-      offCtx.fillRect(0, 60, W, 1);
-      // RATED logo
-      offCtx.fillStyle = '#f2f2f0';
-      offCtx.font = 'bold 28px Bebas Neue, sans-serif';
-      offCtx.fillText('RATED', 40, 40);
-      // subtle content lines suggesting cards/text
-      offCtx.fillStyle = '#0f0f0f';
-      for(let y = 80; y < H; y += 28) {
-        offCtx.fillRect(40, y, W * (0.3 + Math.sin(y * 0.1) * 0.15), 14);
+    // === SCANLINES ===
+    for(let y = 0; y < H; y += 3){
+      ctx.fillStyle = 'rgba(0,0,0,0.07)';
+      ctx.fillRect(0, y, W, 1);
+    }
+
+    // === NOISE GRAIN ===
+    const noiseStr = params.noise;
+    if(noiseStr > 0.02){
+      // Draw noise only on a subsampled region for performance
+      const step = 2;
+      const imgData = ctx.createImageData(W, H);
+      const data = imgData.data;
+      for(let py = 0; py < H; py += step){
+        for(let px = 0; px < W; px += step){
+          if(Math.random() > 0.78){
+            const v = Math.random() * 255;
+            const a = Math.random() * 22 * noiseStr;
+            const idx = (py * W + px) * 4;
+            data[idx] = v; data[idx+1] = v; data[idx+2] = v; data[idx+3] = a;
+            // Fill 2x2 block
+            if(px+1 < W){ const i2=(py*W+px+1)*4; data[i2]=v;data[i2+1]=v;data[i2+2]=v;data[i2+3]=a; }
+            if(py+1 < H){ const i3=((py+1)*W+px)*4; data[i3]=v;data[i3+1]=v;data[i3+2]=v;data[i3+3]=a; }
+          }
+        }
       }
-      // some card blocks
-      for(let i = 0; i < 4; i++){
-        offCtx.fillStyle = '#111';
-        offCtx.fillRect(40 + i * (W * 0.22), H * 0.3, W * 0.18, H * 0.38);
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    // === HORIZONTAL TRACKING NOISE BANDS ===
+    const numBands = 1 + Math.floor(params.tracking * 3);
+    for(let b = 0; b < numBands; b++){
+      if(Math.random() > 0.93 - params.tracking * 0.3){
+        const by = Math.random() * H;
+        const bh = 1 + Math.random() * (2 + params.tracking * 4);
+        const ba = 0.03 + Math.random() * 0.06 + params.tracking * 0.1;
+        ctx.fillStyle = `rgba(220,215,200,${ba})`;
+        ctx.fillRect(0, by, W * (0.3 + Math.random() * 0.7), bh);
       }
-    } catch(e){}
+    }
+
+    // === DRIFT WAVE LINE (top-tracking artifact) ===
+    if(params.drift > 0.05){
+      const waveAmt = params.drift * 0.15;
+      const waveY = Math.abs(Math.sin(t * 0.8)) * H * 0.15;
+      ctx.fillStyle = `rgba(200,195,180,${waveAmt * 0.12})`;
+      ctx.fillRect(0, waveY, W, 1 + params.drift * 2);
+    }
+
+    // === VIGNETTE ===
+    const vg = ctx.createRadialGradient(W/2, H/2, H*0.25, W/2, H/2, H*0.9);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.4)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+
+    // === SUBTLE WARM TINT (VHS color temperature) ===
+    ctx.fillStyle = 'rgba(30,18,0,0.04)';
+    ctx.fillRect(0, 0, W, H);
+
+    // === GLITCH BURST ===
+    if(params.glitch > 0.01){
+      const bars = Math.floor(params.glitch * 8);
+      for(let i = 0; i < bars; i++){
+        const gy = Math.random() * H;
+        const gh = 1 + Math.random() * 6;
+        const gw = W * (0.2 + Math.random() * 0.8);
+        const gx = Math.random() > 0.5 ? 0 : W - gw;
+        ctx.fillStyle = `rgba(255,250,240,${params.glitch * 0.3})`;
+        ctx.fillRect(gx, gy, gw, gh);
+        // Occasional color glitch bar
+        if(Math.random() > 0.6){
+          ctx.fillStyle = `rgba(80,200,255,${params.glitch * 0.15})`;
+          ctx.fillRect(0, gy + gh, W * Math.random(), 1);
+        }
+      }
+      params.glitch = Math.max(0, params.glitch - 0.05);
+    }
+  }
+
+  function applyBodyFilter(){
+    if(active){
+      document.body.classList.add('vhs-on');
+    } else {
+      document.body.classList.remove('vhs-on');
+    }
   }
 
   function frame(now){
-    if(!active || !gl) return;
-    const W = Math.ceil(window.innerWidth * 0.65) || 1;
-    const H = Math.ceil(window.innerHeight * 0.65) || 1;
-    const c = document.getElementById('vhs-tuner-canvas');
-    if(c.width !== W || c.height !== H){ c.width = W; c.height = H; prevLoaded = false; }
-    gl.viewport(0, 0, W, H);
-    offCvs.width = W; offCvs.height = H;
-
-    captureScreen();
-
-    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texB);
-    if(prevLoaded) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, offCvs);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texA);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, offCvs);
-    prevLoaded = true;
-
+    if(!active) return;
     const t = (now - t0) * 0.001;
-    gl.useProgram(prog);
-    gl.uniform1f(uniLoc.u_t,      t);
-    gl.uniform1f(uniLoc.u_track,  params.tracking);
-    gl.uniform1f(uniLoc.u_drift,  params.drift);
-    gl.uniform1f(uniLoc.u_rgb,    params.rgb);
-    gl.uniform1f(uniLoc.u_noise,  params.noise);
-    gl.uniform1f(uniLoc.u_glitch, params.glitch);
-    gl.uniform2f(uniLoc.u_res,    W, H);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    if(params.glitch > 0) params.glitch = Math.max(0, params.glitch - 0.04);
+    applyBodyFilter();
+    drawOverlay(t);
     animId = requestAnimationFrame(frame);
   }
 
@@ -6193,10 +6189,10 @@ void main(){
 
   function enable(){
     active = true;
+    injectSVGFilter();
     const c = document.getElementById('vhs-tuner-canvas');
     c.classList.add('active');
     document.getElementById('vhs-tuner-badge').classList.add('active');
-    prevLoaded = false;
     requestAnimationFrame(frame);
     savePrefs();
   }
@@ -6207,6 +6203,11 @@ void main(){
     c.classList.remove('active');
     document.getElementById('vhs-tuner-badge').classList.remove('active');
     if(animId) cancelAnimationFrame(animId);
+    // Remove body filter
+    document.body.classList.remove('vhs-on');
+    document.body.style.filter = '';
+    // Clear canvas
+    if(overlayCtx) overlayCtx.clearRect(0, 0, c.width, c.height);
     savePrefs();
   }
 
@@ -6274,7 +6275,7 @@ void main(){
 
   // Boot
   function boot(){
-    if(!init()) return;
+    initOverlay();
     // Check saved pref; default ON
     try {
       const saved = JSON.parse(localStorage.getItem('vhs_tuner_prefs') || 'null');
