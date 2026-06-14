@@ -2683,7 +2683,21 @@ body {
 body.vhs-on {
   --vhs-active: 1;
 }
-/* VHS RGB split на текст — через CSS text-shadow аберрации */
+
+/* VHS RGB split — постоянная аберрация на крупном тексте */
+@keyframes vhs-chroma-drift {
+  0%   { text-shadow: -2px 0 rgba(255,30,30,0.55),  2px 0 rgba(30,60,255,0.45); }
+  25%  { text-shadow: -2px 0 rgba(255,30,30,0.50),  2px 0 rgba(30,60,255,0.48); }
+  50%  { text-shadow: -3px 0 rgba(255,30,30,0.52),  2px 0 rgba(30,60,255,0.42); }
+  75%  { text-shadow: -2px 0 rgba(255,30,30,0.58),  3px 0 rgba(30,60,255,0.44); }
+  100% { text-shadow: -2px 0 rgba(255,30,30,0.55),  2px 0 rgba(30,60,255,0.45); }
+}
+@keyframes vhs-chroma-sm {
+  0%   { text-shadow: -1px 0 rgba(255,30,30,0.40),  1px 0 rgba(30,60,255,0.35); }
+  50%  { text-shadow: -1px 0 rgba(255,30,30,0.45),  1px 0 rgba(30,60,255,0.30); }
+  100% { text-shadow: -1px 0 rgba(255,30,30,0.40),  1px 0 rgba(30,60,255,0.35); }
+}
+
 .vhs-on h1,
 .vhs-on .hero-title,
 .vhs-on .media-title,
@@ -2694,9 +2708,7 @@ body.vhs-on {
 .vhs-on .score-number,
 .vhs-on .live-score-num,
 .vhs-on .feat-score {
-  text-shadow:
-    -2px 0 rgba(255, 30, 30, 0.55),
-     2px 0 rgba(30, 60, 255, 0.45);
+  animation: vhs-chroma-drift 4s ease-in-out infinite;
 }
 /* Более тонкие аберрации для мелкого текста */
 .vhs-on .section-label,
@@ -2706,9 +2718,7 @@ body.vhs-on {
 .vhs-on .reviews-title,
 .vhs-on .profile-stat-num,
 .vhs-on .logo {
-  text-shadow:
-    -1px 0 rgba(255, 30, 30, 0.4),
-     1px 0 rgba(30, 60, 255, 0.35);
+  animation: vhs-chroma-sm 5s ease-in-out infinite;
 }
 </style>
 </head>
@@ -6114,118 +6124,90 @@ const VHSTuner = (function(){
     ctx.clearRect(0, 0, W, H);
 
     // ═══════════════════════════════════════════════
-    // 1. ГОРИЗОНТАЛЬНЫЙ ШУМОВОЙ РАСТР — оптимизировано
-    //    Рисуем тонкую колонку (32px), масштабируем на весь экран
-    //    Это даёт горизонтальные полосы как на реальном VHS
+    // 1. ГОРИЗОНТАЛЬНЫЙ ШУМОВОЙ РАСТР — как у старых камер
+    //    Каждая строка одного цвета (минимальная вариация по X)
+    //    Растягиваем 1px колонку → чистые горизонтальные полосы
     // ═══════════════════════════════════════════════
     const noiseStr = params.noise;
     if(noiseStr > 0.01){
-      // Offscreen narrow canvas — 32px wide, full height
-      const NW = 32;
+      // Рисуем 1-пиксельную колонку, каждый Y — своя строка
       const nOff = document.createElement('canvas');
-      nOff.width = NW; nOff.height = H;
+      nOff.width = 1; nOff.height = H;
       const nCtx = nOff.getContext('2d');
-      const nImg = nCtx.createImageData(NW, H);
+      const nImg = nCtx.createImageData(1, H);
       const nd = nImg.data;
       for(let py = 0; py < H; py++){
-        // Строчный шум — каждая строка своё случайное значение
-        const rowV = Math.random() * 255;
-        const rowA = Math.random() * 28 * noiseStr;
-        for(let px = 0; px < NW; px++){
-          // Небольшая вариация по X
-          const v = Math.max(0, Math.min(255, rowV + (Math.random()-0.5)*20));
-          const a = rowA * (0.5 + Math.random()*0.5);
-          const i = (py * NW + px) * 4;
-          nd[i] = v; nd[i+1] = v; nd[i+2] = v; nd[i+3] = a;
+        // Строчный шум — вся строка одного значения (как у аналоговых камер)
+        // Редкие яркие строки + фоновый шум
+        let v, a;
+        const r = Math.random();
+        if(r > 0.995){
+          // Очень яркая полоса (rare hot line)
+          v = 200 + Math.random() * 55;
+          a = 18 + Math.random() * 20;
+        } else if(r > 0.97){
+          // Заметная полоса
+          v = 120 + Math.random() * 80;
+          a = 8 + Math.random() * 12;
+        } else {
+          // Фоновый мелкий шум — низкая яркость
+          v = 80 + Math.random() * 60;
+          a = Math.random() * 6 * noiseStr;
         }
+        a = Math.round(a * noiseStr);
+        nd[py*4]   = v;
+        nd[py*4+1] = v;
+        nd[py*4+2] = v;
+        nd[py*4+3] = a;
       }
       nCtx.putImageData(nImg, 0, 0);
-      // Растянуть на весь экран — создаёт горизонтальные полосы
+      // Растянуть 1px → весь экран: идеально ровные горизонтальные полосы
       ctx.drawImage(nOff, 0, 0, W, H);
     }
 
     // ═══════════════════════════════════════════════
-    // 2. СКАНЛАЙНЫ — чёткие горизонтальные полосы
-    //    Точно как на реальном VHS мониторе
+    // 2. СКАНЛАЙНЫ — чёткие горизонтальные полосы CRT
     // ═══════════════════════════════════════════════
     for(let y = 0; y < H; y += 2){
-      // Чередование: тёмная / чуть светлее
-      ctx.fillStyle = 'rgba(0,0,0,0.13)';
-      ctx.fillRect(0, y, W, 1);
-    }
-    // Каждые ~8px чуть более заметная полоса (строчная структура CRT)
-    for(let y = 0; y < H; y += 8){
-      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      ctx.fillStyle = 'rgba(0,0,0,0.10)';
       ctx.fillRect(0, y, W, 1);
     }
 
     // ═══════════════════════════════════════════════
-    // 3. TRACKING ПОЛОСЫ — горизонтальные засветки
-    //    Белые/серые полосы разной ширины (VHS tracking)
+    // 3. ВИНЬЕТКА ПО КРАЯМ (лёгкая)
+    //    Заменяем мигающие полосы — только постоянный edge gradient
     // ═══════════════════════════════════════════════
-    // Медленно движущиеся полосы (как VHS tracking error)
-    const bandY1 = ((t * 0.07) % 1.0) * H;
-    const bandY2 = ((t * 0.05 + 0.4) % 1.0) * H;
-    const bandY3 = ((t * 0.11 + 0.7) % 1.0) * H;
-    
-    ctx.fillStyle = `rgba(255,252,240,${0.04 + params.drift * 0.08})`;
-    ctx.fillRect(0, bandY1, W, 1 + params.drift * 3);
-    ctx.fillStyle = `rgba(255,252,240,${0.025 + params.drift * 0.05})`;
-    ctx.fillRect(0, bandY2, W, 1);
-    ctx.fillStyle = `rgba(255,252,240,${0.02 + params.drift * 0.04})`;
-    ctx.fillRect(0, bandY3, W, 2 + params.drift * 2);
-
-    // Случайные яркие горизонтальные полосы (как на фото 2-4)
-    if(Math.random() > 0.85){
-      const flashY = Math.random() * H;
-      const flashH = 1 + Math.random() * 3;
-      ctx.fillStyle = `rgba(230,225,210,${0.05 + Math.random() * 0.08 + params.tracking * 0.1})`;
-      ctx.fillRect(0, flashY, W * (0.4 + Math.random() * 0.6), flashH);
-    }
+    // Лёгкий горизонтальный edge-darkening (края экрана темнее)
+    const edgeLR = ctx.createLinearGradient(0, 0, W, 0);
+    edgeLR.addColorStop(0,    'rgba(0,0,0,0.18)');
+    edgeLR.addColorStop(0.06, 'rgba(0,0,0,0)');
+    edgeLR.addColorStop(0.94, 'rgba(0,0,0,0)');
+    edgeLR.addColorStop(1,    'rgba(0,0,0,0.18)');
+    ctx.fillStyle = edgeLR;
+    ctx.fillRect(0, 0, W, H);
 
     // ═══════════════════════════════════════════════
-    // 4. RGB SPLIT / ХРОМАТИЧЕСКАЯ АБЕРРАЦИЯ
-    //    Canvas-based: красный канал вправо, синий влево
-    //    Применяем к самому canvas через composite
+    // 4. RGB SPLIT — только постоянные края (без мигающих полос)
+    //    Аберрации на тексте делаются через CSS text-shadow (body.vhs-on)
+    //    Здесь — только лёгкий цветной fringe по краям экрана
     // ═══════════════════════════════════════════════
     const rgbStr = params.rgb;
     if(rgbStr > 0.01){
-      const shift = Math.round(rgbStr * 3.5); // 0-3.5px смещение
-      // Красный канал — смещение вправо
       ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = rgbStr * 0.35;
-      ctx.fillStyle = 'rgba(255,0,0,1)';
-      // Рисуем тонкие красные линии рядом с контрастными границами (апроксимация)
-      for(let y = 0; y < H; y += 1){
-        if(Math.random() > 0.97){
-          ctx.fillRect(shift, y, W - shift, 1);
-        }
-      }
-      // Синий канал — смещение влево  
-      ctx.fillStyle = 'rgba(0,60,255,1)';
-      for(let y = 0; y < H; y += 1){
-        if(Math.random() > 0.97){
-          ctx.fillRect(0, y, W - shift, 1);
-        }
-      }
-      ctx.globalAlpha = 1;
+      // Красный fringe — левый край
+      const gLeft = ctx.createLinearGradient(0, 0, W * 0.08, 0);
+      gLeft.addColorStop(0, `rgba(180,0,0,${rgbStr * 0.10})`);
+      gLeft.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = gLeft;
+      ctx.fillRect(0, 0, W * 0.08, H);
+      // Синий fringe — правый край
+      const gRight = ctx.createLinearGradient(W * 0.92, 0, W, 0);
+      gRight.addColorStop(0, 'rgba(0,0,0,0)');
+      gRight.addColorStop(1, `rgba(0,40,200,${rgbStr * 0.09})`);
+      ctx.fillStyle = gRight;
+      ctx.fillRect(W * 0.92, 0, W * 0.08, H);
       ctx.globalCompositeOperation = 'source-over';
-
-      // Постоянный лёгкий RGB fringe по горизонтали
-      // Красный — правый край каждой яркой полосы
-      ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = rgbStr * 0.12;
-      const rgbGradR = ctx.createLinearGradient(0, 0, W, 0);
-      rgbGradR.addColorStop(0, 'rgba(0,0,0,0)');
-      rgbGradR.addColorStop(0.49, 'rgba(0,0,0,0)');
-      rgbGradR.addColorStop(0.5, 'rgba(180,0,0,0.8)');
-      rgbGradR.addColorStop(1, 'rgba(0,0,0,0)');
-      for(let y = 2; y < H; y += 3){
-        ctx.fillStyle = rgbGradR;
-        ctx.fillRect(0, y, W, 1);
-      }
       ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
     }
 
     // ═══════════════════════════════════════════════
