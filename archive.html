@@ -46,7 +46,25 @@ body{background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif
 .section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,44px);letter-spacing:.08em;}
 
 /* ── ПОЛКА: крупные корешки с мини-постером ── */
-.spine-shelf{display:flex;gap:4px;align-items:flex-end;overflow-x:auto;padding:24px 0 40px;scrollbar-width:thin;}
+.spine-shelf-wrap{position:relative;}
+.spine-shelf{display:flex;gap:4px;align-items:flex-end;overflow-x:auto;padding:24px 0 0;scrollbar-width:thin;padding-bottom:0;}
+/* Полочная доска */
+.shelf-board{
+  height:8px;background:linear-gradient(to bottom,#2a2a2a,#1a1a1a);
+  border-top:1px solid #3a3a3a;margin-top:0;
+  box-shadow:0 4px 12px rgba(0,0,0,.6);
+  position:relative;
+}
+.shelf-board::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0px,rgba(255,255,255,.03) 1px,transparent 1px,transparent 40px);
+}
+/* Сводка справа от заголовка */
+.shelf-stats{
+  font-family:"DM Mono",monospace;font-size:11px;color:var(--dim);
+  letter-spacing:.08em;line-height:1.9;text-align:right;
+}
+.shelf-stats b{color:var(--white);font-weight:400;}
 .spine{
   flex-shrink:0;width:44px;height:260px;
   background:var(--grey);
@@ -188,9 +206,22 @@ body{background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif
 .timeline-item.gold .timeline-item-score{color:var(--gold);}
 
 /* ── ИТОГИ ГОДА ── */
-.wrapped-section{background:var(--grey);border:1px solid var(--line);padding:32px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;}
+.wrapped-section{background:var(--grey);border:1px solid var(--line);padding:28px;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;}
 .wrapped-canvas-wrap{flex-shrink:0;position:relative;border:1px solid var(--line);}
-#wrapped-canvas{display:block;width:200px;height:356px;}
+#wrapped-canvas{display:block;width:270px;height:480px;}
+.wrapped-top5{flex:1;min-width:200px;}
+.wrapped-top5-title{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.35em;color:var(--dim);text-transform:uppercase;margin-bottom:16px;}
+.wrapped-top5-item{
+  display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--line);padding:10px 0;
+  cursor:default;
+}
+.wrapped-top5-num{font-family:"Bebas Neue",sans-serif;font-size:28px;color:var(--mid);line-height:1;width:28px;flex-shrink:0;}
+.wrapped-top5-info{flex:1;overflow:hidden;}
+.wrapped-top5-name{font-family:"DM Mono",monospace;font-size:11px;color:var(--white);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wrapped-top5-meta{font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:.08em;}
+.wrapped-top5-score{font-family:"Bebas Neue",sans-serif;font-size:22px;color:var(--white);flex-shrink:0;}
+.wrapped-top5-score.gold{color:var(--gold);}
 .wrapped-controls{flex:1;min-width:200px;display:flex;flex-direction:column;gap:12px;}
 .wrapped-year-select{display:flex;gap:8px;flex-wrap:wrap;}
 .wrapped-yr-btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;border:1px solid var(--line);padding:5px 12px;color:var(--dim);cursor:pointer;transition:all .2s;background:none;}
@@ -244,10 +275,14 @@ body{background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif
 
   <!-- ПОЛКА -->
   <div class="archive-section">
-    <div class="section-head">
+    <div class="section-head" style="margin-bottom:20px;">
       <div><div class="section-label">// полка</div><div class="section-title">КОЛЛЕКЦИЯ</div></div>
+      <div class="shelf-stats" id="shelf-stats"></div>
     </div>
-    <div class="spine-shelf" id="spine-shelf"></div>
+    <div class="spine-shelf-wrap">
+      <div class="spine-shelf" id="spine-shelf"></div>
+      <div class="shelf-board"></div>
+    </div>
   </div>
 
   <!-- ПОСТЕР ГОДА -->
@@ -277,23 +312,37 @@ body{background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif
     </div>
     <div class="wrapped-section">
       <div class="wrapped-canvas-wrap">
-        <canvas id="wrapped-canvas" width="1080" height="1920" style="display:block;width:200px;height:356px;"></canvas>
+        <canvas id="wrapped-canvas" width="1080" height="1920" style="display:block;width:270px;height:480px;"></canvas>
       </div>
-      <div class="wrapped-controls">
-        <div class="section-label" style="margin-bottom:8px">// выбери год</div>
-        <div class="wrapped-year-select" id="wrapped-year-select"></div>
-        <div class="wrapped-hint" id="wrapped-hint">Выбери год чтобы увидеть итоги</div>
-        <button class="btn-solid" id="wrapped-download" style="margin-top:8px;display:none">Скачать 1080×1920 ↓</button>
+      <div class="wrapped-controls" style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div class="section-label" style="margin-bottom:8px">// выбери год</div>
+          <div class="wrapped-year-select" id="wrapped-year-select"></div>
+        </div>
+        <div class="wrapped-top5" id="wrapped-top5" style="display:none">
+          <div class="wrapped-top5-title">// топ-5 за год</div>
+          <div id="wrapped-top5-list"></div>
+        </div>
+        <div class="wrapped-hint" id="wrapped-hint" style="font-family:DM Mono,monospace;font-size:10px;color:var(--dim);line-height:1.7">Выбери год чтобы увидеть итоги</div>
+        <button class="btn-solid" id="wrapped-download" style="margin-top:4px;display:none">Скачать 1080×1920 ↓</button>
       </div>
     </div>
   </div>
 
   <!-- ЖАНРЫ -->
-  <div class="archive-section">
-    <div class="section-head">
+  <div class="archive-section" style="padding-top:36px;padding-bottom:36px;">
+    <div class="section-head" style="margin-bottom:24px;">
       <div><div class="section-label">// распределение</div><div class="section-title">ЖАНРЫ</div></div>
     </div>
-    <div class="genre-bars" id="genre-bars"></div>
+    <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="flex:1;min-width:280px;">
+        <div class="genre-bars" id="genre-bars"></div>
+      </div>
+      <div style="flex-shrink:0;">
+        <div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.35em;color:var(--dim);text-transform:uppercase;margin-bottom:12px;">// паутина</div>
+        <svg id="genre-radar" width="220" height="220" viewBox="-110 -110 220 220" style="display:block;overflow:visible;"></svg>
+      </div>
+    </div>
   </div>
 
   <!-- ГРАФИК -->
@@ -480,6 +529,15 @@ function renderHeroSub(data){
 function renderShelf(data){
   var shelf=document.getElementById('spine-shelf');
   var sorted=data.slice().sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt);});
+  // Shelf stats
+  var ssEl=document.getElementById('shelf-stats');
+  if(ssEl&&sorted.length){
+    var goldCount=sorted.filter(function(r){return r.totalScore>100;}).length;
+    var topR=sorted.slice().sort(function(a,b){return b.totalScore-a.totalScore;})[0];
+    ssEl.innerHTML='<b>'+sorted.length+'</b> кассет на полке'
+      +(goldCount?' · <b>'+goldCount+'</b> золотых':'')
+      +(topR?'<br/>лучшая: <b>'+escHtml(topR.title)+'</b> · '+topR.totalScore:'');
+  }
   if(!sorted.length){shelf.innerHTML='<div style="color:var(--dim);font-family:DM Mono,monospace;font-size:11px">Нет записей</div>';return;}
   shelf.innerHTML=sorted.map(function(r){
     var isGold=r.totalScore>100;
@@ -505,26 +563,102 @@ function renderCollage(data){
   ctx.fillStyle='#0a0a0a';ctx.fillRect(0,0,W,H);
   updateCollageMeta(data);
   if(!data.length){return;}
-  var items=data.filter(function(r){return r.poster;}).slice(0,24);
-  if(!items.length){drawCollageOverlay(ctx,W,H,data);return;}
-  var cols=Math.ceil(Math.sqrt(items.length*(W/H)));
-  var rows=Math.ceil(items.length/cols);
-  var cellW=W/cols,cellH=H/rows;
-  var loaded=0;
+  // Процедурный арт-постер: мозаика из цветных плиток + типографика
+  // Избегаем CORS — рисуем всё сами
+  drawArtCollage(ctx,W,H,data);
+}
+
+function drawArtCollage(ctx,W,H,data){
+  ctx.fillStyle='#080808';ctx.fillRect(0,0,W,H);
+
+  // 1. Сетка цветных блоков — каждый блок = один фильм, цвет из hue(tmdbId)
+  var items=data.slice(0,30);
+  var cols=Math.ceil(Math.sqrt(items.length*(W/H)))||1;
+  var rows=Math.ceil(items.length/cols)||1;
+  var cellW=W/cols, cellH=(H*0.72)/rows;
+
   items.forEach(function(r,i){
-    var img=new Image();img.crossOrigin='anonymous';
-    img.onload=function(){
-      var col=i%cols,row=Math.floor(i/cols);
-      var x=col*cellW,y=row*cellH;
-      var sc=Math.max(cellW/img.width,cellH/img.height);
-      var dw=img.width*sc,dh=img.height*sc;
-      ctx.drawImage(img,x+(cellW-dw)/2,y+(cellH-dh)/2,dw,dh);
-      ctx.fillStyle='rgba(8,8,8,.3)';ctx.fillRect(x,y,cellW,cellH);
-      loaded++;if(loaded===items.length)drawCollageOverlay(ctx,W,H,data);
-    };
-    img.onerror=function(){loaded++;if(loaded===items.length)drawCollageOverlay(ctx,W,H,data);};
-    img.src=TMDB_IMG+r.poster;
+    var col=i%cols, row=Math.floor(i/cols);
+    var x=col*cellW, y=row*cellH;
+    var hue=(r.tmdbId*53+r.totalScore*7)%360;
+    var sat=20+Math.min(r.totalScore-60,50)*0.5; // выше оценка — насыщеннее
+    var lit=8+Math.random()*6;
+
+    // Основной цвет блока
+    ctx.fillStyle='hsl('+hue+','+sat+'%,'+lit+'%)';
+    ctx.fillRect(x+1,y+1,cellW-2,cellH-2);
+
+    // Диагональная полоса текстуры
+    ctx.save();
+    ctx.beginPath();ctx.rect(x+1,y+1,cellW-2,cellH-2);ctx.clip();
+    ctx.strokeStyle='hsla('+hue+','+sat+'%,'+(lit+8)+'%,0.3)';
+    ctx.lineWidth=1;
+    for(var d=-cellH;d<cellW+cellH;d+=6){
+      ctx.beginPath();ctx.moveTo(x+d,y);ctx.lineTo(x+d+cellH,y+cellH);ctx.stroke();
+    }
+    ctx.restore();
+
+    // Оценка в блоке (маленькая)
+    if(cellH>28){
+      ctx.fillStyle='hsla('+hue+',60%,80%,0.6)';
+      ctx.font='bold '+Math.round(Math.min(cellH*0.28,16))+'px "Bebas Neue",sans-serif';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(r.totalScore,x+cellW/2,y+cellH/2);
+    }
+
+    // Золотой бордер для >100
+    if(r.totalScore>100){
+      ctx.strokeStyle='rgba(200,169,110,0.5)';ctx.lineWidth=1;
+      ctx.strokeRect(x+1,y+1,cellW-2,cellH-2);
+    }
   });
+  ctx.textAlign='left';
+
+  // 2. Нижняя зона — тёмная полоса с типографикой
+  var bottomY=rows*cellH;
+  ctx.fillStyle='rgba(8,8,8,0.0)';ctx.fillRect(0,bottomY,W,H-bottomY);
+
+  // Большой год / "ВСЁ ВРЕМЯ"
+  var yl=activeYear==='all'?'ВСЁ ВРЕМЯ':activeYear;
+  ctx.fillStyle='rgba(242,242,240,0.07)';
+  ctx.font='bold '+Math.round(W*0.42)+'px "Bebas Neue",sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='bottom';
+  if(activeYear==='all'){
+    ctx.fillText('ВСЁ',W/2,H-80);
+    ctx.fillText('ВРЕМЯ',W/2,H-80+Math.round(W*0.42)*0.85);
+  } else {
+    ctx.fillText(String(activeYear),W/2,H-60);
+  }
+
+  // 3. Grain overlay
+  for(var i=0;i<3000;i++){
+    ctx.fillStyle='rgba(242,242,240,'+(Math.random()*.025)+')';
+    ctx.fillRect(Math.random()*W,Math.random()*H,1,1);
+  }
+
+  // 4. Vignette
+  var vg=ctx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.75);
+  vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.55)');
+  ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+
+  // 5. Scanlines
+  ctx.fillStyle='rgba(0,0,0,0.1)';
+  for(var y=0;y<H;y+=3)ctx.fillRect(0,y,W,1);
+
+  // 6. Шапка — полупрозрачная
+  ctx.fillStyle='rgba(8,8,8,0.82)';ctx.fillRect(0,0,W,52);
+  ctx.fillStyle='#f2f2f0';ctx.font='700 22px "Bebas Neue",sans-serif';
+  ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText('АРХИВ · '+(activeYear==='all'?'ВСЁ ВРЕМЯ':activeYear),14,28);
+  // REC dot
+  ctx.fillStyle='#cc0000';ctx.beginPath();ctx.arc(W-26,28,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f2f2f0';ctx.font='10px "DM Mono",monospace';ctx.textAlign='right';
+  ctx.fillText('REC',W-36,32);
+
+  // 7. Подвал
+  ctx.fillStyle='rgba(8,8,8,0.85)';ctx.fillRect(0,H-44,W,44);
+  ctx.fillStyle='#666';ctx.font='11px "DM Mono",monospace';ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText('// '+data.length+' просмотрено · RATED ARCHIVE',14,H-22);
 }
 function drawCollageOverlay(ctx,W,H,data){
   // Grain
@@ -672,6 +806,25 @@ function buildWrapped(year){
   if(topGenres.length)hint+='топ-жанр: <b>'+topGenres[0]+'</b>';
   document.getElementById('wrapped-hint').innerHTML=hint;
   document.getElementById('wrapped-download').style.display='block';
+
+  // Топ-5 список
+  var top5El=document.getElementById('wrapped-top5');
+  var top5List=document.getElementById('wrapped-top5-list');
+  if(top5El&&top5List){
+    top5El.style.display='block';
+    var top5=data.slice().sort(function(a,b){return b.totalScore-a.totalScore;}).slice(0,5);
+    top5List.innerHTML=top5.map(function(r,i){
+      var isGold=r.totalScore>100;
+      return '<div class="wrapped-top5-item">'+
+        '<div class="wrapped-top5-num">'+String(i+1).padStart(2,'0')+'</div>'+
+        '<div class="wrapped-top5-info">'+
+          '<div class="wrapped-top5-name">'+escHtml(r.title)+'</div>'+
+          '<div class="wrapped-top5-meta">'+r.year+(r.director?' · '+escHtml(r.director):'')+'</div>'+
+        '</div>'+
+        '<div class="wrapped-top5-score'+(isGold?' gold':'')+'">'+r.totalScore+'</div>'+
+      '</div>';
+    }).join('');
+  }
 }
 
 document.getElementById('wrapped-download').onclick=function(){
@@ -699,6 +852,45 @@ function renderGenreBars(data){
   requestAnimationFrame(function(){
     el.querySelectorAll('.genre-bar-fill').forEach(function(b){b.style.width=b.dataset.w+'%';});
   });
+  renderRadar(sorted);
+}
+
+function renderRadar(sorted){
+  var svg=document.getElementById('genre-radar');
+  if(!svg)return;
+  var N=Math.min(sorted.length,8);
+  if(!N){svg.innerHTML='';return;}
+  var R=90, cx=0, cy=0;
+  var max=sorted[0][1]||1;
+  var pts=sorted.slice(0,N).map(function(e,i){
+    var angle=(i/N)*Math.PI*2-Math.PI/2;
+    var r=R*(e[1]/max);
+    return {x:cx+Math.cos(angle)*r, y:cy+Math.sin(angle)*r, lx:cx+Math.cos(angle)*(R+18), ly:cy+Math.sin(angle)*(R+18), label:e[0], val:e[1]};
+  });
+  var gridLines='';
+  // Grid circles
+  [.25,.5,.75,1].forEach(function(t){
+    gridLines+='<circle cx="0" cy="0" r="'+Math.round(R*t)+'" fill="none" stroke="#1a1a1a" stroke-width="1"/>';
+  });
+  // Spokes
+  for(var i=0;i<N;i++){
+    var a=(i/N)*Math.PI*2-Math.PI/2;
+    gridLines+='<line x1="0" y1="0" x2="'+Math.round(Math.cos(a)*R)+'" y2="'+Math.round(Math.sin(a)*R)+'" stroke="#1a1a1a" stroke-width="1"/>';
+  }
+  // Filled polygon
+  var poly=pts.map(function(p){return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');
+  var filled='<polygon points="'+poly+'" fill="rgba(242,242,240,0.06)" stroke="rgba(242,242,240,0.35)" stroke-width="1.5"/>';
+  // Points
+  var dots=pts.map(function(p){
+    return '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3" fill="#f2f2f0"/>';
+  }).join('');
+  // Labels
+  var labels=pts.map(function(p){
+    var anchor=p.lx>5?'start':p.lx<-5?'end':'middle';
+    var name=p.label.length>9?p.label.slice(0,8)+'…':p.label;
+    return '<text x="'+p.lx.toFixed(1)+'" y="'+p.ly.toFixed(1)+'" text-anchor="'+anchor+'" dominant-baseline="middle" font-family="DM Mono,monospace" font-size="7" fill="#666" letter-spacing="0.5">'+name+'</text>';
+  }).join('');
+  svg.innerHTML=gridLines+filled+dots+labels;
 }
 
 // ── ГРАФИК С FILL ─────────────────────────────────────────────────────────────
