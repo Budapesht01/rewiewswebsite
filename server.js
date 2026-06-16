@@ -586,6 +586,58 @@ app.get('/api/profile/reviews', auth, async (req, res) => {
   }
 });
 
+// ─── ARCHIVE ──────────────────────────────────────────────────────────────────
+// Genre name map (TMDB ids → readable label)
+const GENRE_NAMES = {
+  28: 'Боевик', 12: 'Приключения', 16: 'Анимация', 35: 'Комедия',
+  80: 'Криминал', 99: 'Документальное', 18: 'Драма', 10751: 'Семейное',
+  14: 'Фэнтези', 36: 'История', 27: 'Ужасы', 10402: 'Музыка',
+  9648: 'Детектив', 10749: 'Романтика', 878: 'Фантастика', 10770: 'ТВ-фильм',
+  53: 'Триллер', 10752: 'Военное', 37: 'Вестерн',
+  10759: 'Боевик и приключения', 10762: 'Детское', 10763: 'Новости',
+  10764: 'Реалити', 10765: 'Фантастика и фэнтези', 10766: 'Мыльная опера',
+  10767: 'Ток-шоу', 10768: 'Война и политика'
+};
+
+// Full archive — reviews enriched with poster, year, genres, director/creator
+app.get('/api/profile/archive', auth, async (req, res) => {
+  try {
+    const reviews = await Review.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const enriched = await Promise.all(reviews.map(async r => {
+      try {
+        const [detail, credits] = await Promise.all([
+          tmdb(`/${r.mediaType}/${r.tmdbId}`),
+          tmdb(`/${r.mediaType}/${r.tmdbId}/credits`)
+        ]);
+        const director = r.mediaType === 'movie'
+          ? credits.crew?.find(c => c.job === 'Director')?.name
+          : (detail.created_by?.[0]?.name || credits.crew?.find(c => c.job === 'Executive Producer')?.name);
+        return {
+          _id:        r._id,
+          tmdbId:     r.tmdbId,
+          mediaType:  r.mediaType,
+          totalScore: r.totalScore,
+          comment:    r.comment,
+          criteria:   r.criteria,
+          createdAt:  r.createdAt,
+          title:      detail.title || detail.name,
+          poster:     detail.poster_path,
+          backdrop:   detail.backdrop_path,
+          year:       (detail.release_date || detail.first_air_date || '').slice(0, 4),
+          genres:     (detail.genres || []).map(g => GENRE_NAMES[g.id] || g.name),
+          genreIds:   (detail.genres || []).map(g => g.id),
+          director:   director || null
+        };
+      } catch {
+        return { ...r.toObject(), title: '???', year: '', genres: [], genreIds: [], director: null };
+      }
+    }));
+    res.json(enriched);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Public profile
 app.get('/api/profile/:username', async (req, res) => {
   try {
