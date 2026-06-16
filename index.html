@@ -2791,6 +2791,7 @@ body.vhs-on {
     </div>
     <div id="user-btn" style="display:none">
       <button class="btn-ghost" onclick="showPage('profile')" id="username-btn"></button>
+      <button class="btn-ghost" id="archive-btn" onclick="goToArchive()" style="display:none">Archive</button>
       <button class="btn-ghost" onclick="logout()">Выйти</button>
     </div>
     <button class="burger-btn" id="burger-btn" onclick="toggleMobileMenu()" aria-label="Меню">
@@ -2817,6 +2818,7 @@ body.vhs-on {
   <div class="mob-menu-section" id="mob-user-section">
     <div class="mob-menu-label">// аккаунт</div>
     <button class="mob-menu-btn" id="mob-username-label" onclick="closeMobileMenu(); showPage('profile')" style="color:var(--white)"></button>
+    <button class="mob-menu-btn" onclick="closeMobileMenu(); goToArchive()">Archive</button>
     <button class="mob-menu-btn" onclick="closeMobileMenu(); logout()">Выйти</button>
   </div>
 </div>
@@ -3208,6 +3210,15 @@ function vhsRewindTransition(cb) {
   setTimeout(() => { if (!canvas._cbCalled) { canvas._cbCalled = true; cb(); } }, 215);
   requestAnimationFrame(frame);
 }
+
+// ─── ARCHIVE TRANSITION ───────────────────────────────────────────────────────
+function goToArchive() {
+  if (!state.user) { openModal('login'); return; }
+  vhsRewindTransition(() => {
+    window.location.href = '/archive.html';
+  });
+}
+
 
 // ─── 2. HERO PARALLAX ────────────────────────────────────────────────────────
 function initParallax() {
@@ -5849,6 +5860,8 @@ function updateAuthUI() {
     userBtn.style.display = 'flex';
     userBtn.style.gap = '10px';
     document.getElementById('username-btn').textContent = state.user.username;
+    const archiveBtn = document.getElementById('archive-btn');
+    if (archiveBtn) archiveBtn.style.display = 'inline-block';
     mobAuth.style.display = 'none';
     mobUser.style.display = 'block';
     if (mobProfileBtn) mobProfileBtn.style.display = 'block';
@@ -5856,6 +5869,8 @@ function updateAuthUI() {
   } else {
     authBtns.style.display = 'flex';
     userBtn.style.display = 'none';
+    const archiveBtn = document.getElementById('archive-btn');
+    if (archiveBtn) archiveBtn.style.display = 'none';
     mobAuth.style.display = 'block';
     mobUser.style.display = 'none';
     if (mobProfileBtn) mobProfileBtn.style.display = 'none';
