@@ -2737,6 +2737,43 @@ body.vhs-on {
 .vhs-on .logo {
   animation: vhs-chroma-sm 5s ease-in-out infinite;
 }
+/* ── COMPRESSION ARTIFACT OVERLAY ── */
+.card-artifact {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 3;
+  mix-blend-mode: multiply;
+}
+.card-artifact.visible { opacity: 1; }
+.card-artifact canvas {
+  width: 100%; height: 100%;
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* ── GENRE SOUND RIPPLE ── */
+.genre-sound-ripple {
+  position: absolute;
+  left: 0; top: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--dim), transparent);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.genre-section { position: relative; }
+.genre-section.sound-playing .genre-sound-ripple {
+  animation: genreRipple 0.6s ease-out forwards;
+}
+@keyframes genreRipple {
+  0%   { opacity: 0.8; transform: scaleX(0); }
+  60%  { opacity: 0.4; transform: scaleX(1); }
+  100% { opacity: 0;   transform: scaleX(1); }
+}
 </style>
 </head>
 <body>
@@ -4703,6 +4740,9 @@ function cardHTML(item, mediaType, siteScore, featured = false) {
       </div>`;
   }
 
+  const artifactHTML = (siteScore != null && siteScore < 55)
+    ? `<div class="card-artifact" data-artifact-score="${siteScore}"></div>` : '';
+
   return `
     <div class="card" onclick="openMedia(${item.id}, '${mediaType}')">
       ${poster ? `<img src="${poster}" alt="${escHtml(title)}" loading="lazy"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
@@ -4711,6 +4751,7 @@ function cardHTML(item, mediaType, siteScore, featured = false) {
         ${year ? `<div class="card-year">${year}</div>` : ''}
       </div>
       <div class="card-grain"></div>
+      ${artifactHTML}
       ${siteScore != null ? `<div class="card-score-ghost">${siteScore}</div>` : ''}
       ${siteScoreHTML}
       ${score ? `<div class="card-score-badge">${score}</div>` : ''}
@@ -4799,7 +4840,8 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
         <canvas class="hero-burn-canvas" id="hero-burn-canvas"></canvas>
         <canvas class="hero-grain-canvas" id="hero-grain-canvas"></canvas>` : ''}
       <div class="media-hero-content">
-        ${poster ? `<div class="media-poster${releaseYear > 0 && releaseYear <= 1999 ? ' film-vintage' : ''}"><img src="${poster}" alt="${escHtml(title)}"/>
+        ${poster ? `<div class="media-poster${releaseYear > 0 && releaseYear <= 1999 ? ' film-vintage' : ''}">
+          <img src="${poster}" alt="${escHtml(title)}"/>
           ${releaseYear > 0 && releaseYear <= 1999 ? `
             <div class="poster-perforations">
               <div class="poster-perf-strip" id="poster-perf-l"></div>
@@ -4807,6 +4849,7 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
             </div>
             <canvas class="poster-grain-canvas"   id="poster-grain"></canvas>
             <canvas class="poster-scratch-canvas" id="poster-scratch"></canvas>` : ''}
+          ${avgScore != null && parseFloat(avgScore) < 55 ? `<div class="card-artifact" data-artifact-score="${avgScore}"></div>` : ''}
         </div>` : ''}
         <div class="media-info">
           <div class="media-type-badge">// ${typeLabel}</div>
@@ -4851,6 +4894,17 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
 
   // init review signature canvas
   requestAnimationFrame(() => initReviewSig());
+
+  // артефакты сжатия на постере медиа
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.card-artifact[data-artifact-score]:not([data-rendered])').forEach(el => {
+      el.dataset.rendered = '1';
+      const score = parseFloat(el.dataset.artifactScore);
+      const cv = buildArtifactCanvas(score);
+      el.appendChild(cv);
+      requestAnimationFrame(() => el.classList.add('visible'));
+    });
+  });
 
   // cinematic backdrop reveal
   requestAnimationFrame(() => setTimeout(cinematicReveal, 30));
@@ -6015,6 +6069,8 @@ async function enrichReelWithScores(trackId, items, mediaType) {
       sc.className = 'genre-reel-frame-score' + (scores[item.id] > 100 ? ' gold' : '');
       sc.textContent = scores[item.id];
       frame.appendChild(sc);
+      // артефакты сжатия для низких оценок
+      if (scores[item.id] < 55) applyArtifacts(frame, scores[item.id]);
     });
   } catch(e) {}
 }
@@ -6937,10 +6993,272 @@ function toggleWatched(tmdbId, type) {
   }
 }
 
+// ─── COMPRESSION ARTIFACTS (фич #13) ────────────────────────────────────────
+// Рисует JPEG-подобные блочные артефакты на canvas поверх постера карточки
+// Интенсивность зависит от siteScore: чем ниже — тем хуже "сжатие"
+
+function buildArtifactCanvas(score) {
+  const canvas = document.createElement('canvas');
+  // низкое разрешение = крупные блоки
+  const intensity = Math.max(0, 1 - (score / 110)); // 0 (хорошо) → 1 (ужасно)
+  const blockSize = Math.max(4, Math.round(4 + intensity * 28)); // 4px → 32px
+  const W = Math.ceil(200 / blockSize);
+  const H = Math.ceil(300 / blockSize);
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // seeded random чтобы артефакты были стабильны при ре-рендере
+  let seed = score * 7 + 13;
+  const rnd = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; };
+
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (rnd() > intensity * 0.85) continue; // пропускаем большинство блоков
+      // цветовые сдвиги — зелёный/пурпурный как на VHS
+      const r = Math.floor(rnd() * 60 * intensity);
+      const g = Math.floor(rnd() * 40 * intensity);
+      const b = Math.floor(rnd() * 60 * intensity);
+      const a = 0.25 + rnd() * 0.55 * intensity;
+      // чередуем тёмные и светлые блоки как JPEG DCT артефакт
+      const bright = rnd() > 0.5;
+      ctx.fillStyle = bright
+        ? `rgba(${200+r},${180+g},${200+b},${a * 0.6})`
+        : `rgba(${r},${g},${b},${a})`;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  // горизонтальные полосы смещения (характерный VHS/MPEG артефакт)
+  const stripeCount = Math.floor(intensity * 6);
+  for (let i = 0; i < stripeCount; i++) {
+    const sy = Math.floor(rnd() * H);
+    const sw = Math.floor(rnd() * W * 0.6 + W * 0.2);
+    const sx = Math.floor(rnd() * (W - sw));
+    const sa = 0.15 + rnd() * 0.3 * intensity;
+    ctx.fillStyle = `rgba(${Math.floor(rnd()*255)},${Math.floor(rnd()*120)},${Math.floor(rnd()*255)},${sa})`;
+    ctx.fillRect(sx, sy, sw, 1);
+  }
+
+  return canvas;
+}
+
+function applyArtifacts(cardEl, score) {
+  if (score == null || score >= 55) return; // только для плохих оценок
+  // не добавлять дважды
+  if (cardEl.querySelector('.card-artifact')) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'card-artifact';
+  const cv = buildArtifactCanvas(score);
+  wrap.appendChild(cv);
+  cardEl.appendChild(wrap);
+
+  // небольшая задержка чтобы transition сработал
+  requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.add('visible')));
+}
+
+// Патчим enrichReelWithScores чтобы артефакты применялись когда score известен
+// (вызов applyArtifacts вставлен напрямую в enrichReelWithScores выше)
+
+// Для грида карточек — рендерим canvas в .card-artifact после вставки в DOM
+function initArtifactObserver() {
+  function renderPendingArtifacts(root) {
+    (root || document).querySelectorAll('.card-artifact[data-artifact-score]').forEach(el => {
+      if (el.dataset.rendered) return;
+      el.dataset.rendered = '1';
+      const score = parseFloat(el.dataset.artifactScore);
+      const cv = buildArtifactCanvas(score);
+      el.appendChild(cv);
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+    });
+  }
+
+  const observer = new MutationObserver(() => renderPendingArtifacts());
+  ['home-grid','catalogue-grid'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) observer.observe(el, { childList: true, subtree: true });
+  });
+  // на случай если грид уже заполнен
+  renderPendingArtifacts();
+}
+
+// Также патчим cardHTML чтобы data-site-score был на элементе
+// (рендеринг артефактов теперь через .card-artifact div выше)
+
+
+// ─── GENRE SOUND (фич #8) ────────────────────────────────────────────────────
+// Процедурные звуки при наведении на жанровую секцию — уникальный тембр для каждого
+
+const GENRE_SOUNDS = {
+  action:      { type: 'impact',  freq: 80,   dur: 0.35, decay: 15, distortion: 0.6, hpFreq: 200  },
+  horror:      { type: 'drone',   freq: 38,   dur: 1.1,  decay: 1.2, reverb: true,  lpFreq: 400  },
+  drama:       { type: 'sine',    freq: 220,  dur: 0.9,  decay: 2.5, vibrato: true               },
+  thriller:    { type: 'tension', freq: 110,  dur: 0.7,  decay: 3,   tremolo: true               },
+  scifi:       { type: 'sweep',   freq: 600,  dur: 0.8,  decay: 2,   sweep: 0.3                  },
+  comedy:      { type: 'pop',     freq: 440,  dur: 0.25, decay: 8                                 },
+  crime:       { type: 'stab',    freq: 65,   dur: 0.4,  decay: 6,   distortion: 0.3             },
+  animation:   { type: 'chime',   freq: 880,  dur: 0.5,  decay: 3                                 },
+  newReleases: { type: 'click',   freq: 1200, dur: 0.15, decay: 20                                },
+};
+
+const _genreSoundCooldown = {};
+
+function playGenreSound(genreKey) {
+  try {
+    const now = Date.now();
+    if (_genreSoundCooldown[genreKey] && now - _genreSoundCooldown[genreKey] < 2000) return;
+    _genreSoundCooldown[genreKey] = now;
+
+    const ctx = getAudioCtx();
+    const t = ctx.currentTime;
+    const cfg = GENRE_SOUNDS[genreKey];
+    if (!cfg) return;
+
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0, t);
+    masterGain.gain.linearRampToValueAtTime(0.08, t + 0.02);
+    masterGain.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
+    masterGain.connect(ctx.destination);
+
+    if (cfg.type === 'drone' || cfg.type === 'sine') {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(cfg.freq, t);
+
+      if (cfg.vibrato) {
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.value = 5;
+        lfoGain.gain.value = 3;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        lfo.start(t); lfo.stop(t + cfg.dur);
+      }
+
+      if (cfg.lpFreq) {
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = cfg.lpFreq;
+        osc.connect(lp); lp.connect(masterGain);
+      } else {
+        osc.connect(masterGain);
+      }
+
+      if (cfg.reverb) {
+        // простой синтетический реверб через delay
+        const delay = ctx.createDelay(0.5);
+        delay.delayTime.value = 0.18;
+        const fbGain = ctx.createGain();
+        fbGain.gain.value = 0.35;
+        const delayMaster = ctx.createGain();
+        delayMaster.gain.value = 0.4;
+        osc.connect(delay);
+        delay.connect(fbGain);
+        fbGain.connect(delay);
+        delay.connect(delayMaster);
+        delayMaster.connect(ctx.destination);
+      }
+
+      osc.start(t); osc.stop(t + cfg.dur + 0.05);
+
+    } else if (cfg.type === 'impact' || cfg.type === 'stab') {
+      // шумовой удар через буфер
+      const sr = ctx.sampleRate;
+      const frames = Math.floor(sr * cfg.dur);
+      const buf = ctx.createBuffer(1, frames, sr);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < frames; i++) {
+        const tt = i / sr;
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-tt * cfg.decay);
+      }
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = cfg.hpFreq || 300;
+      src.connect(lp); lp.connect(masterGain);
+      src.start(t);
+
+    } else if (cfg.type === 'sweep') {
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(cfg.freq, t);
+      osc.frequency.exponentialRampToValueAtTime(cfg.freq * 0.3, t + cfg.dur);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1200;
+      osc.connect(lp); lp.connect(masterGain);
+      osc.start(t); osc.stop(t + cfg.dur + 0.05);
+
+    } else if (cfg.type === 'tension') {
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(cfg.freq, t);
+      osc.frequency.linearRampToValueAtTime(cfg.freq * 1.5, t + cfg.dur);
+      if (cfg.tremolo) {
+        const lfo = ctx.createOscillator();
+        const lfoG = ctx.createGain(); lfoG.gain.value = 0.5;
+        lfo.frequency.value = 8;
+        lfo.connect(lfoG); lfoG.connect(masterGain.gain);
+        lfo.start(t); lfo.stop(t + cfg.dur);
+      }
+      osc.connect(masterGain);
+      osc.start(t); osc.stop(t + cfg.dur + 0.05);
+
+    } else if (cfg.type === 'chime') {
+      [1, 1.5, 2, 2.67].forEach((ratio, i) => {
+        const osc = ctx.createOscillator();
+        const g   = ctx.createGain();
+        osc.type = 'sine'; osc.frequency.value = cfg.freq * ratio;
+        g.gain.setValueAtTime(0.6 / (i+1), t + i * 0.03);
+        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur + i * 0.05);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(t + i * 0.03); osc.stop(t + cfg.dur + 0.2);
+      });
+
+    } else if (cfg.type === 'pop' || cfg.type === 'click') {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(cfg.freq, t);
+      osc.frequency.exponentialRampToValueAtTime(cfg.freq * 0.5, t + cfg.dur);
+      osc.connect(masterGain);
+      osc.start(t); osc.stop(t + cfg.dur);
+    }
+
+  } catch(e) { /* audio not available */ }
+}
+
+function initGenreSounds() {
+  const wrap = document.getElementById('genre-sections');
+  if (!wrap) return;
+
+  wrap.addEventListener('mouseover', e => {
+    const section = e.target.closest('.genre-section');
+    if (!section) return;
+    const trackEl = section.querySelector('[id^="genre-row-"]');
+    if (!trackEl) return;
+    const key = trackEl.id.replace('genre-row-', '');
+    if (!key) return;
+    playGenreSound(key);
+    let ripple = section.querySelector('.genre-sound-ripple');
+    if (!ripple) {
+      ripple = document.createElement('div');
+      ripple.className = 'genre-sound-ripple';
+      section.appendChild(ripple);
+    }
+    section.classList.remove('sound-playing');
+    void section.offsetWidth;
+    section.classList.add('sound-playing');
+    setTimeout(() => section.classList.remove('sound-playing'), 700);
+  });
+}
+
 // Enter key in auth modal
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) submitAuth();
   if (e.key === 'Escape') closeModal();
+});
+
+// инициализация обоих эффектов
+document.addEventListener('DOMContentLoaded', () => {
+  initArtifactObserver();
+  // genre sounds инициализируем после первого рендера жанров
+  setTimeout(initGenreSounds, 1500);
 });
 </script>
 
