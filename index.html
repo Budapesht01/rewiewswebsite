@@ -626,6 +626,10 @@ body {
 .criterion-row {
   margin-bottom: 16px;
 }
+.criterion-row-independent {
+  margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line);
+}
+.criterion-row-independent .criterion-name { color: var(--gold); }
 .criterion-name {
   font-size: 11px; color: #777; margin-bottom: 8px;
   font-weight: 300;
@@ -660,6 +664,10 @@ body {
 .mult-badge {
   font-family: 'DM Mono', monospace; font-size: 9px;
   color: var(--dim); width: 28px;
+}
+.mult-badge-independent {
+  width: auto; white-space: nowrap; color: var(--gold);
+  text-transform: uppercase; letter-spacing: .04em;
 }
 .live-score-wrap {
   border: 1px solid var(--line); padding: 20px 24px;
@@ -1546,43 +1554,55 @@ body {
 
 /* ── DARKROOM TIMER DIAL (genre filter) ── */
 .genre-dial-wrap{
-  display:flex; align-items:center; gap:14px;
+  display:flex; align-items:center; gap:16px;
   background:var(--grey); border:1px solid var(--line);
-  padding:8px 16px 8px 10px;
+  padding:14px 20px;
 }
+.genre-dial-arrow{
+  width:30px; height:30px; flex-shrink:0;
+  background:none; border:1px solid var(--line); color:var(--dim);
+  font-family:'DM Mono',monospace; font-size:13px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:.2s;
+}
+.genre-dial-arrow:hover{ border-color:var(--white); color:var(--white); background:rgba(255,255,255,0.04); }
 .genre-dial{
-  width:46px; height:46px; border-radius:50%; flex-shrink:0;
-  background:radial-gradient(circle at 35% 30%, #262626, #0c0c0c 72%);
+  width:88px; height:88px; border-radius:50%; flex-shrink:0;
+  background:radial-gradient(circle at 35% 30%, #2c2c2c, #0c0c0c 72%);
   border:1px solid var(--mid); position:relative; cursor:pointer;
-  box-shadow:inset 0 0 10px rgba(0,0,0,.7);
-  transition: box-shadow .2s;
+  box-shadow:inset 0 0 16px rgba(0,0,0,.75);
+  transition: box-shadow .2s, border-color .2s;
 }
-.genre-dial:hover{ box-shadow:inset 0 0 10px rgba(0,0,0,.7), 0 0 0 1px var(--dim); }
+.genre-dial:hover{ box-shadow:inset 0 0 16px rgba(0,0,0,.75), 0 0 0 2px rgba(255,255,255,0.12); border-color:var(--dim); }
 .genre-dial-tick{
-  position:absolute; left:50%; top:3px; width:1px; height:5px;
-  background:var(--mid); transform-origin:50% 20px;
+  position:absolute; left:50%; top:6px; width:2px; height:9px;
+  background:var(--mid); transform-origin:50% 38px;
 }
-.genre-dial-tick.active{ background:var(--gold); height:6px; }
+.genre-dial-tick.active{ background:var(--gold); height:11px; width:3px; box-shadow:0 0 6px rgba(200,169,110,0.7); }
 .genre-dial-pointer{
-  position:absolute; left:50%; top:50%; width:2px; height:18px;
+  position:absolute; left:50%; top:50%; width:3px; height:33px;
   background:var(--gold); transform-origin:top center;
   transform:translate(-50%,0) rotate(0deg);
   transition: transform .45s cubic-bezier(.3,1,.4,1);
+  box-shadow: 0 0 8px rgba(200,169,110,0.5);
 }
 .genre-dial-center{
-  position:absolute; left:50%; top:50%; width:7px; height:7px;
+  position:absolute; left:50%; top:50%; width:13px; height:13px;
   background:var(--mid); border:1px solid #555; border-radius:50%;
   transform:translate(-50%,-50%);
 }
-.genre-dial-readout{ font-family:'DM Mono', monospace; line-height:1.5; }
-.genre-dial-readout .gd-label{ font-size:8px; letter-spacing:.2em; color:var(--dim); text-transform:uppercase; }
-.genre-dial-readout .gd-value{ font-size:12px; letter-spacing:.05em; color:var(--white); }
+.genre-dial-readout{ font-family:'DM Mono', monospace; line-height:1.5; min-width:120px; }
+.genre-dial-readout .gd-label{ font-size:9px; letter-spacing:.22em; color:var(--dim); text-transform:uppercase; }
+.genre-dial-readout .gd-value{ font-size:18px; letter-spacing:.03em; color:var(--white); font-family:'Bebas Neue',sans-serif; margin-top:2px; }
 .genre-dial-reset{
   background:none; border:1px solid var(--line); color:var(--dim);
-  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em;
-  padding:5px 9px; cursor:pointer; text-transform:uppercase; transition:.2s;
+  font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em;
+  padding:7px 11px; cursor:pointer; text-transform:uppercase; transition:.2s;
 }
 .genre-dial-reset:hover{ border-color:var(--white); color:var(--white); }
+@media (max-width:768px){
+  .genre-dial-wrap{ width:100%; }
+}
 
 /* ── CONTACT SHEET VIEW (catalogue alt layout) ── */
 .view-toggle{ display:flex; border:1px solid var(--line); }
@@ -1629,6 +1649,72 @@ body {
   .sheet-grid{ padding:14px 16px; }
   .sheet-frame{ flex-basis:42%; }
 }
+
+/* ── COMPARE PAGE ── */
+.compare-header{ padding:48px 40px 24px; border-bottom:1px solid var(--line); }
+.compare-title{ font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:.03em; }
+.compare-sub{ font-family:'DM Mono',monospace; font-size:11px; color:var(--dim); margin-top:8px; }
+.compare-slots{
+  display:grid; grid-template-columns:1fr auto 1fr; gap:24px; align-items:start;
+  padding:32px 40px; border-bottom:1px solid var(--line);
+}
+.compare-vs{
+  font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--dim);
+  align-self:center; padding-top:40px;
+}
+.compare-slot{ min-height:120px; }
+.compare-search-input{
+  width:100%; background:var(--grey); border:1px solid var(--line); color:var(--white);
+  padding:12px 14px; font-family:'DM Mono',monospace; font-size:12px; outline:none;
+  transition:border-color .2s;
+}
+.compare-search-input:focus{ border-color:var(--dim); }
+.compare-search-results{ margin-top:6px; border:1px solid var(--line); background:var(--grey); max-height:280px; overflow-y:auto; }
+.compare-search-item{
+  display:flex; align-items:center; gap:10px; padding:8px 12px; cursor:pointer; transition:background .15s;
+}
+.compare-search-item:hover{ background:var(--mid); }
+.compare-search-item img{ width:32px; height:46px; object-fit:cover; flex-shrink:0; background:#000; }
+.compare-search-item-title{ font-size:12px; color:var(--white); }
+.compare-search-item-year{ font-size:9px; color:var(--dim); font-family:'DM Mono',monospace; margin-top:2px; }
+.compare-slot-filled{
+  display:flex; gap:14px; background:var(--grey); border:1px solid var(--line); padding:14px; position:relative;
+}
+.compare-slot-filled img{ width:70px; height:104px; object-fit:cover; flex-shrink:0; }
+.compare-slot-filled-title{ font-family:'Bebas Neue',sans-serif; font-size:18px; line-height:1.15; }
+.compare-slot-filled-year{ font-family:'DM Mono',monospace; font-size:10px; color:var(--dim); margin-top:4px; }
+.compare-slot-filled-score{ font-family:'Bebas Neue',sans-serif; font-size:26px; margin-top:10px; }
+.compare-slot-filled-score span{ font-family:'DM Mono',monospace; font-size:10px; color:var(--dim); }
+.compare-slot-clear{
+  position:absolute; top:8px; right:8px; background:none; border:1px solid var(--line); color:var(--dim);
+  width:22px; height:22px; cursor:pointer; font-size:11px; transition:.2s;
+}
+.compare-slot-clear:hover{ border-color:var(--white); color:var(--white); }
+.compare-results{ padding:36px 40px 80px; }
+.compare-results-empty{ text-align:center; color:var(--dim); font-family:'DM Mono',monospace; font-size:12px; padding:60px 0; }
+.compare-total-row{ display:flex; justify-content:center; align-items:center; gap:50px; margin-bottom:48px; }
+.compare-total-num{ font-family:'Bebas Neue',sans-serif; font-size:54px; text-align:center; }
+.compare-total-num span{ display:block; font-family:'DM Mono',monospace; font-size:10px; color:var(--dim); letter-spacing:.1em; margin-top:4px; }
+.compare-total-num.winner{ color:var(--gold); text-shadow:0 0 18px rgba(200,169,110,0.4); }
+.compare-total-vs{ font-family:'Bebas Neue',sans-serif; font-size:18px; color:var(--dim); }
+.compare-criterion-block{ margin-bottom:30px; }
+.compare-criterion-name{
+  text-align:center; font-family:'DM Mono',monospace; font-size:10px;
+  letter-spacing:.1em; color:var(--white); text-transform:uppercase; margin-bottom:10px;
+}
+.compare-criterion-name.independent{ color:var(--gold); }
+.compare-criterion-name.independent::after{ content:' · независимый, не влияет на /110'; color:var(--dim); text-transform:none; letter-spacing:0; }
+.compare-vu-row{ display:flex; align-items:flex-end; justify-content:center; gap:60px; }
+.compare-vu-side{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+.compare-vu-name{ font-family:'DM Mono',monospace; font-size:9px; color:var(--dim); max-width:120px; text-align:center; }
+@media (max-width:768px){
+  .compare-slots{ grid-template-columns:1fr; padding:20px; }
+  .compare-vs{ padding-top:0; text-align:center; }
+  .compare-header{ padding:32px 20px 18px; }
+  .compare-results{ padding:24px 20px 60px; }
+  .compare-vu-row{ gap:24px; }
+  .compare-total-row{ gap:24px; }
+}
 .catalogue-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -1666,34 +1752,24 @@ body {
   margin-bottom: 14px;
 }
 
-/* ── MICRO HISTOGRAM → VU METER ── */
+/* ── MICRO HISTOGRAM (review card criteria bars) ── */
 .micro-histogram {
   display: flex; align-items: flex-end;
-  gap: 7px; height: 48px;
+  gap: 3px; height: 48px;
   margin-bottom: 26px; /* more space for bigger labels */
 }
 .mh-bar-wrap {
-  flex: 1; height: 100%; max-width: 22px;
+  flex: 1; height: 100%;
   display: flex; flex-direction: column;
   align-items: center; justify-content: flex-end;
   position: relative;
 }
-.mh-vu-track{
-  width: 100%; height: 100%; background:#000; border:1px solid var(--line);
-  display:flex; flex-direction:column-reverse; padding:2px; gap:2px;
-}
-.mh-vu-seg{
-  height: 7%; min-height:2px; border-radius:0.5px;
-  background: rgba(240,239,233,0.08);
+.mh-bar {
+  width: 100%;
+  background: rgba(240,239,233,0.18);
   transition: background 0.2s;
 }
-.mh-vu-seg.on{ background: rgba(240,239,233,0.55); }
-.mh-vu-seg.on.hi{ background: var(--white); }
-.mh-vu-seg.on.peak{ background: var(--red); }
-.mh-vu-seg.on.gold{ background: var(--gold); }
-.mh-bar-wrap:hover .mh-vu-seg.on{ background: var(--white); }
-.mh-bar-wrap:hover .mh-vu-seg.on.peak{ background: var(--red); }
-.mh-bar-wrap:hover .mh-vu-seg.on.gold{ background: var(--gold); }
+.mh-bar-wrap:hover .mh-bar { background: var(--white); }
 /* label under bar */
 .mh-label {
   position: absolute; top: calc(100% + 5px); left: 50%;
@@ -1717,6 +1793,28 @@ body {
   z-index: 20;
 }
 .mh-bar-wrap:hover::after { opacity: 1; }
+
+/* ── VU METER (used on the Compare page) ── */
+.vu-row{ display:flex; align-items:center; gap:14px; margin-bottom:22px; }
+.vu-row-label{
+  width:100%; text-align:center; font-family:'DM Mono',monospace; font-size:9px;
+  letter-spacing:.12em; color:var(--dim); text-transform:uppercase; margin-bottom:8px;
+}
+.vu-pair{ display:flex; align-items:flex-end; justify-content:center; gap:18px; }
+.vu-meter{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+.vu-meter-track{
+  width:26px; height:90px; background:#000; border:1px solid var(--line);
+  display:flex; flex-direction:column-reverse; padding:2px; gap:2px;
+}
+.vu-meter-seg{ height:8%; min-height:2px; background:rgba(240,239,233,0.08); transition: background .25s; }
+.vu-meter-seg.on{ background: rgba(240,239,233,0.5); }
+.vu-meter-seg.on.hi{ background: var(--white); }
+.vu-meter-seg.on.peak{ background: var(--red); }
+.vu-meter-seg.on.gold{ background: var(--gold); }
+.vu-meter-val{ font-family:'DM Mono',monospace; font-size:10px; color:var(--dim); }
+.vu-meter.side-a .vu-meter-seg.on{ background: rgba(240,239,233,0.55); }
+.vu-meter.side-b .vu-meter-seg.on{ background: rgba(200,169,110,0.55); }
+.vu-meter.side-b .vu-meter-seg.on.peak{ background: var(--gold); }
 
 /* divider before comment */
 .review-comment {
@@ -2895,6 +2993,7 @@ body.vhs-on {
     <span>ОЦЕНИ ВСЁ</span>
   </div>
   <div class="nav-right">
+    <button class="btn-ghost" onclick="showPage('compare')" style="margin-right:4px;">⇄ Сравнить</button>
     <div class="search-wrap">
       <span class="search-icon">⌕</span>
       <input type="text" id="search-input" placeholder="Поиск фильмов и сериалов…" autocomplete="off"/>
@@ -3127,10 +3226,12 @@ body.vhs-on {
     <div class="catalogue-title" id="catalogue-title">КАТАЛОГ</div>
     <div class="filter-wrap">
       <div class="genre-dial-wrap">
+        <button class="genre-dial-arrow" id="genre-dial-prev" title="Предыдущий жанр">‹</button>
         <div class="genre-dial" id="genre-dial" title="Прокрутите жанр">
           <div class="genre-dial-pointer" id="genre-dial-pointer"></div>
           <div class="genre-dial-center"></div>
         </div>
+        <button class="genre-dial-arrow" id="genre-dial-next" title="Следующий жанр">›</button>
         <div class="genre-dial-readout">
           <div class="gd-label">// genre dial</div>
           <div class="gd-value" id="genre-dial-value">Все жанры</div>
@@ -3170,6 +3271,33 @@ body.vhs-on {
     <div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>
   </div>
   <div class="catalogue-pagination" id="catalogue-pagination"></div>
+</div>
+
+<!-- COMPARE PAGE -->
+<div id="compare-page" class="page">
+  <div class="back-btn" onclick="showPage('home')">← Назад</div>
+  <div class="compare-header">
+    <div class="compare-title">// СРАВНЕНИЕ</div>
+    <div class="compare-sub">выберите два тайтла — оценки сравним по каждому критерию, VU-метрами</div>
+  </div>
+  <div class="compare-slots">
+    <div class="compare-slot" id="compare-slot-a" data-side="a">
+      <div class="compare-slot-empty" id="compare-empty-a">
+        <input type="text" class="compare-search-input" id="compare-search-a" placeholder="Найти фильм или сериал…" autocomplete="off" oninput="compareSearch('a')"/>
+        <div class="compare-search-results" id="compare-results-a"></div>
+      </div>
+      <div class="compare-slot-filled" id="compare-filled-a" style="display:none"></div>
+    </div>
+    <div class="compare-vs">VS</div>
+    <div class="compare-slot" id="compare-slot-b" data-side="b">
+      <div class="compare-slot-empty" id="compare-empty-b">
+        <input type="text" class="compare-search-input" id="compare-search-b" placeholder="Найти фильм или сериал…" autocomplete="off" oninput="compareSearch('b')"/>
+        <div class="compare-search-results" id="compare-results-b"></div>
+      </div>
+      <div class="compare-slot-filled" id="compare-filled-b" style="display:none"></div>
+    </div>
+  </div>
+  <div class="compare-results" id="compare-results-block"></div>
 </div>
 
 <!-- MEDIA DETAIL PAGE -->
@@ -3231,6 +3359,7 @@ function showPage(name) {
   const pageId = name === 'media' ? 'media-page'
                : name === 'profile' ? 'profile-page'
                : name === 'catalogue' ? 'catalogue-page'
+               : name === 'compare' ? 'compare-page'
                : 'home';
   const current = document.querySelector('.page.active');
   const next = document.getElementById(pageId);
@@ -3246,11 +3375,13 @@ function showPage(name) {
       next.classList.add('active');
       window.scrollTo(0, 0);
       if (name === 'profile') loadProfile();
+      if (name === 'compare') initComparePage();
     });
   } else {
     next.classList.add('active');
     window.scrollTo(0, 0);
     if (name === 'profile') loadProfile();
+    if (name === 'compare') initComparePage();
   }
 }
 
@@ -4734,6 +4865,14 @@ function initGenreDial() {
     genreDialIdx = (genreDialIdx + (goingForward ? 1 : -1) + n) % n;
     applyGenreDial();
   });
+  document.getElementById('genre-dial-prev')?.addEventListener('click', () => {
+    genreDialIdx = (genreDialIdx - 1 + n) % n;
+    applyGenreDial();
+  });
+  document.getElementById('genre-dial-next')?.addEventListener('click', () => {
+    genreDialIdx = (genreDialIdx + 1) % n;
+    applyGenreDial();
+  });
   document.getElementById('genre-dial-reset')?.addEventListener('click', (e) => {
     e.stopPropagation();
     genreDialIdx = 0;
@@ -4998,7 +5137,143 @@ async function doSearch(q) {
   } catch(e) {}
 }
 
-// ─── MEDIA DETAIL ─────────────────────────────────────────────────────────────
+// ─── COMPARE PAGE ───────────────────────────────────────────────────────────
+let compareState = { a: null, b: null };
+let compareTimers = { a: null, b: null };
+
+function initComparePage() {
+  // re-render results if both slots are already filled from a previous visit
+  if (compareState.a && compareState.b) renderCompareResults();
+}
+
+function compareSearch(side) {
+  clearTimeout(compareTimers[side]);
+  const input = document.getElementById(`compare-search-${side}`);
+  const resultsBox = document.getElementById(`compare-results-${side}`);
+  const q = input.value.trim();
+  if (!q) { resultsBox.innerHTML = ''; return; }
+  compareTimers[side] = setTimeout(async () => {
+    try {
+      const items = await api(`/api/media/search?q=${encodeURIComponent(q)}`);
+      resultsBox.innerHTML = items.map(item => {
+        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : '';
+        const title = item.title || item.name || '';
+        const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+        return `<div class="compare-search-item" onclick='selectCompareItem("${side}", ${JSON.stringify({ id: item.id, type: item.media_type, title, year, poster: item.poster_path || '' }).replace(/'/g, "&#39;")})'>
+          ${poster ? `<img src="${poster}" alt=""/>` : '<div style="width:32px;height:46px;background:var(--mid)"></div>'}
+          <div>
+            <div class="compare-search-item-title">${escHtml(title)}</div>
+            <div class="compare-search-item-year">${item.media_type === 'movie' ? 'Фильм' : 'Сериал'}${year ? ' · ' + year : ''}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) {}
+  }, 350);
+}
+
+function selectCompareItem(side, item) {
+  compareState[side] = item;
+  document.getElementById(`compare-search-${side}`).value = '';
+  document.getElementById(`compare-results-${side}`).innerHTML = '';
+  document.getElementById(`compare-empty-${side}`).style.display = 'none';
+  const filled = document.getElementById(`compare-filled-${side}`);
+  filled.style.display = 'flex';
+  const poster = item.poster ? `https://image.tmdb.org/t/p/w154${item.poster}` : '';
+  filled.innerHTML = `
+    <button class="compare-slot-clear" onclick="clearCompareSlot('${side}')">✕</button>
+    ${poster ? `<img src="${poster}" alt="${escHtml(item.title)}"/>` : '<div style="width:70px;height:104px;background:var(--mid)"></div>'}
+    <div>
+      <div class="compare-slot-filled-title">${escHtml(item.title)}</div>
+      <div class="compare-slot-filled-year">${item.type === 'movie' ? 'Фильм' : 'Сериал'}${item.year ? ' · ' + item.year : ''}</div>
+      <div class="compare-slot-filled-score" id="compare-score-${side}">…<span>/110</span></div>
+    </div>`;
+  renderCompareResults();
+}
+
+function clearCompareSlot(side) {
+  compareState[side] = null;
+  document.getElementById(`compare-filled-${side}`).style.display = 'none';
+  document.getElementById(`compare-filled-${side}`).innerHTML = '';
+  document.getElementById(`compare-empty-${side}`).style.display = 'block';
+  document.getElementById('compare-results-block').innerHTML = '';
+}
+
+function vuSegHTML(score, isB) {
+  const lit = Math.round(score || 0);
+  let segs = '';
+  for (let i = 0; i < 10; i++) {
+    const on = i < lit;
+    let cls = 'vu-meter-seg';
+    if (on) {
+      cls += ' on';
+      if (i >= 9) cls += isB ? ' gold' : ' peak';
+      else if (i >= 7) cls += ' hi';
+    }
+    segs += `<div class="${cls}"></div>`;
+  }
+  return segs;
+}
+
+async function renderCompareResults() {
+  const block = document.getElementById('compare-results-block');
+  const { a, b } = compareState;
+  if (!a || !b) { block.innerHTML = ''; return; }
+  if (a.type !== b.type) {
+    block.innerHTML = '<div class="compare-results-empty">Сравнение доступно только между двумя фильмами или двумя сериалами</div>';
+    return;
+  }
+  block.innerHTML = morseLoaderHTML();
+  try {
+    const [dataA, dataB] = await Promise.all([
+      api(`/api/media/${a.type}/${a.id}/criteria-avg`),
+      api(`/api/media/${b.type}/${b.id}/criteria-avg`)
+    ]);
+    const scoreA = document.getElementById('compare-score-a');
+    const scoreB = document.getElementById('compare-score-b');
+    if (scoreA) scoreA.innerHTML = `${dataA.avgTotal != null ? dataA.avgTotal : '—'}<span>/110</span>`;
+    if (scoreB) scoreB.innerHTML = `${dataB.avgTotal != null ? dataB.avgTotal : '—'}<span>/110</span>`;
+
+    if (!dataA.count || !dataB.count) {
+      block.innerHTML = '<div class="compare-results-empty">У одного из тайтлов пока нет оценок — сравнение появится, как только наберутся отзывы</div>';
+      return;
+    }
+
+    const aWins = dataA.avgTotal > dataB.avgTotal;
+    const bWins = dataB.avgTotal > dataA.avgTotal;
+    let html = `<div class="compare-total-row">
+      <div class="compare-total-num${aWins ? ' winner' : ''}">${dataA.avgTotal}<span>${escHtml(a.title).toUpperCase()}</span></div>
+      <div class="compare-total-vs">VS</div>
+      <div class="compare-total-num${bWins ? ' winner' : ''}">${dataB.avgTotal}<span>${escHtml(b.title).toUpperCase()}</span></div>
+    </div>`;
+
+    dataA.criteria.forEach((c, i) => {
+      const cb = dataB.criteria[i];
+      const valA = c.avg != null ? c.avg : 0;
+      const valB = cb && cb.avg != null ? cb.avg : 0;
+      html += `<div class="compare-criterion-block">
+        <div class="compare-criterion-name${c.independent ? ' independent' : ''}">${escHtml(c.name)}</div>
+        <div class="compare-vu-row">
+          <div class="compare-vu-side">
+            <div class="vu-meter side-a"><div class="vu-meter-track">${vuSegHTML(valA, false)}</div></div>
+            <div class="vu-meter-val">${c.avg != null ? c.avg : '—'}</div>
+            <div class="compare-vu-name">${escHtml(a.title)}</div>
+          </div>
+          <div class="compare-vu-side">
+            <div class="vu-meter side-b"><div class="vu-meter-track">${vuSegHTML(valB, true)}</div></div>
+            <div class="vu-meter-val">${cb && cb.avg != null ? cb.avg : '—'}</div>
+            <div class="compare-vu-name">${escHtml(b.title)}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+
+    block.innerHTML = html;
+  } catch(e) {
+    block.innerHTML = '<div class="compare-results-empty">Ошибка загрузки сравнения</div>';
+  }
+}
+
+
 async function openMedia(id, type) {
   showPage('media');
   const content = document.getElementById('media-content');
@@ -5139,23 +5414,17 @@ function renderReviews(reviews, criteriaList) {
     const isGold = r.totalScore > 100;
     // micro-histogram bars
     const bars = r.criteria.map(c => {
-      const lit = Math.round(c.score); // 0-10 segments lit
+      const pct = Math.round(c.score / 10 * 100);
       const shortLabel = c.name.split(/[\s,]/)[0].slice(0,4).toUpperCase();
       const fullLabel = c.name.split(/[\s,]/)[0].trim();
-      let segs = '';
-      for (let i = 0; i < 10; i++) {
-        const on = i < lit;
-        let cls = 'mh-vu-seg';
-        if (on) {
-          cls += ' on';
-          if (isGold && i >= 8) cls += ' gold';
-          else if (i >= 9) cls += ' peak';
-          else if (i >= 7) cls += ' hi';
-        }
-        segs += `<div class="${cls}"></div>`;
-      }
+      const bg = isGold && c.score >= 9
+        ? 'rgba(200,169,110,0.75)'
+        : c.score >= 9 ? 'rgba(240,239,233,0.75)'
+        : c.score >= 7 ? 'rgba(240,239,233,0.4)'
+        : c.score >= 5 ? 'rgba(240,239,233,0.2)'
+        : 'rgba(240,239,233,0.08)';
       return `<div class="mh-bar-wrap" data-tip="${escHtml(fullLabel)}: ${c.score}">
-        <div class="mh-vu-track">${segs}</div>
+        <div class="mh-bar" style="height:${pct}%;background:${bg}"></div>
         <div class="mh-label">${shortLabel}</div>
       </div>`;
     }).join('');
@@ -5223,17 +5492,19 @@ function renderRatingForm(type, criteriaList, myReview) {
       <button class="btn-solid" onclick="openModal('login')">Войти</button>
     </div>`;
   }
-  const vals = myReview
-    ? myReview.criteria.map(c => c.score)
-    : criteriaList.map(() => 5);
+  const vals = criteriaList.map((c, i) =>
+    (myReview && myReview.criteria[i] && typeof myReview.criteria[i].score === 'number')
+      ? myReview.criteria[i].score
+      : 5
+  );
 
   const rows = criteriaList.map((c, i) => `
-    <div class="criterion-row">
+    <div class="criterion-row${c.multiplier === 0 ? ' criterion-row-independent' : ''}">
       <div class="criterion-name">${escHtml(c.name)}</div>
       <div class="criterion-control">
         <input type="range" class="score-slider" min="0" max="10" step="0.5" value="${vals[i]}" data-idx="${i}" oninput="onSlider(this)"/>
         <div class="score-val" id="sv-${i}">${vals[i]}</div>
-        <div class="mult-badge">×${c.multiplier}</div>
+        <div class="mult-badge${c.multiplier === 0 ? ' mult-badge-independent' : ''}">${c.multiplier === 0 ? 'не влияет' : '×' + c.multiplier}</div>
       </div>
     </div>`).join('');
 
