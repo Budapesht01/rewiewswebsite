@@ -191,7 +191,8 @@ const CRITERIA = {
     { name: 'Темп, Плотность и Зрительский захват',              multiplier: 1.0 },
     { name: 'Кастинг и Второстепенные линии',                    multiplier: 1.0 },
     { name: 'Цельность и Качество финала',                       multiplier: 1.0 },
-    { name: 'Культурный феномен и Влияние',                      multiplier: 1.0 }
+    { name: 'Культурный феномен и Влияние',                      multiplier: 1.0 },
+    { name: 'Общее впечатление',                                 multiplier: 0, independent: true }
   ],
   tv: [
     { name: 'Сценарий, Главный сюжет и Логика',                  multiplier: 1.3 },
@@ -203,7 +204,8 @@ const CRITERIA = {
     { name: 'Темп, Плотность и Бинж-фактор',                     multiplier: 1.0 },
     { name: 'Кастинг и Второстепенные линии',                    multiplier: 1.0 },
     { name: 'Цельность сезонов и Качество финала',               multiplier: 1.0 },
-    { name: 'Культурный феномен и Влияние',                      multiplier: 1.0 }
+    { name: 'Культурный феномен и Влияние',                      multiplier: 1.0 },
+    { name: 'Общее впечатление',                                 multiplier: 0, independent: true }
   ],
   game: [
     { name: 'Геймплей, Механики и Боевая система',               multiplier: 1.3 },
@@ -215,7 +217,8 @@ const CRITERIA = {
     { name: 'Арт-дизайн и Стилистика',                           multiplier: 1.0 },
     { name: 'Игровой темп и Плотность контента',                 multiplier: 1.0 },
     { name: 'Цельность проекта и Качество финала',               multiplier: 1.0 },
-    { name: 'Влияние на индустрию и Наследие',                   multiplier: 1.0 }
+    { name: 'Влияние на индустрию и Наследие',                   multiplier: 1.0 },
+    { name: 'Общее впечатление',                                 multiplier: 0, independent: true }
   ]
 };
 
@@ -423,6 +426,32 @@ app.get('/api/media/imdb/:type/:id', async (req, res) => {
 });
 
 // Batch scores — GET /api/media/scores?ids=1,2,3&type=tv
+// Per-criterion averages for two-title comparison (VU meters)
+app.get('/api/media/:type/:id/criteria-avg', async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    if (type !== 'movie' && type !== 'tv' && type !== 'game')
+      return res.status(400).json({ error: 'Invalid type' });
+
+    const reviews = await Review.find({ tmdbId: Number(id), mediaType: type });
+    const criteriaList = CRITERIA[type] || [];
+    const criteria = criteriaList.map((c, i) => {
+      const scores = reviews.map(r => r.criteria[i]?.score).filter(v => typeof v === 'number');
+      const avg = scores.length
+        ? parseFloat((scores.reduce((s, v) => s + v, 0) / scores.length).toFixed(2))
+        : null;
+      return { name: c.name, multiplier: c.multiplier, independent: !!c.independent, avg };
+    });
+    const avgTotal = reviews.length
+      ? parseFloat((reviews.reduce((s, r) => s + r.totalScore, 0) / reviews.length).toFixed(2))
+      : null;
+
+    res.json({ criteria, avgTotal, count: reviews.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/media/scores', async (req, res) => {
   try {
     const ids = (req.query.ids || '').split(',').map(Number).filter(Boolean);
