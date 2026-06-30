@@ -556,6 +556,7 @@ body {
   color: var(--white);
 }
 .score-max { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--dim); }
+.score-sigma-label { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--dim); align-self: flex-end; margin-right: 6px; margin-bottom: 6px; letter-spacing: 0.05em; }
 .score-count { font-size: 12px; color: var(--dim); font-family: 'DM Mono', monospace; }
 
 /* ── REVIEW SECTION ── */
@@ -1081,30 +1082,9 @@ body {
 
 /* ── ANIMATIONS ── */
 
-/* ══════════════════════════════════════
-   VHS TUNER
-══════════════════════════════════════ */
-#vhs-tuner-canvas {
-  position: fixed; inset: 0; width: 100%; height: 100%;
-  z-index: 9900; pointer-events: none;
-  opacity: 0; transition: opacity 0.4s;
-  mix-blend-mode: normal;
-}
-#vhs-tuner-canvas.active { opacity: 1; }
+/* VHS tuner removed — no permanent grain/scanline filter. */
 
-#vhs-tuner-badge {
-  position: fixed; bottom: 22px; left: 20px;
-  font-family: 'DM Mono', monospace; font-size: 8px;
-  letter-spacing: 0.3em; color: var(--dim);
-  z-index: 9990; cursor: pointer; user-select: none;
-  padding: 6px 10px; border: 1px solid var(--line);
-  background: rgba(8,8,8,0.85); backdrop-filter: blur(8px);
-  transition: color 0.2s, border-color 0.2s;
-}
-#vhs-tuner-badge:hover { color: var(--white); border-color: var(--mid); }
-#vhs-tuner-badge.active { color: var(--white); border-color: var(--white); }
-
-/* profile vhs settings panel */
+/* profile vhs settings panel — removed along with VHS tuner */
 #vhs-settings-panel {
   margin-top: 40px; padding: 24px;
   border: 1px solid var(--line);
@@ -2947,7 +2927,6 @@ body.vhs-on {
 
 <!-- VHS TUNER -->
 <canvas id="vhs-tuner-canvas"></canvas>
-<div id="vhs-tuner-badge">📺 VHS</div>
 
 <!-- VHS SCRUB -->
 <div id="vhs-scrub-overlay"><canvas id="vhs-scrub-canvas"></canvas></div>
@@ -2963,7 +2942,7 @@ body.vhs-on {
 <div id="cinema-reveal-overlay">
   <canvas id="cinema-reveal-canvas"></canvas>
   <div id="cinema-reveal-ui">
-    <div id="cinema-reveal-label">// CINEMA REVEAL</div>
+    <div id="cinema-reveal-label">// ВЫЧИСЛЕНИЕ ЗАВЕРШЕНО</div>
     <div id="cinema-reveal-score-wrap">
       <div id="cinema-reveal-score">0</div>
       <div id="cinema-reveal-score-sub">/110</div>
@@ -2974,7 +2953,7 @@ body.vhs-on {
 </div>
 <div id="intro-overlay">
   <div id="intro-logo-wrap">RATED</div>
-  <div id="intro-sub">// оцени всё</div>
+  <div id="intro-sub">// инициализация архива</div>
 </div>
 
 <!-- VHS TIMECODE -->
@@ -3046,108 +3025,109 @@ body.vhs-on {
     <div id="modal-register" style="display:none">
       <div class="modal-contract">
         <div class="modal-doc-stamp">
-          RATED // Dark entity<br>
-          Договор книги мертвых<br>
-          Составлен в час без имени
+          RATED // Архив<br>
+          Протокол допуска к системе<br>
+          Регистрационный узел
         </div>
-        <div class="modal-doc-header">ПЕРВИЧНАЯ РЕГИСТРАЦИЯ ДУШИ</div>
-        <div class="modal-doc-title">ДОГОВОР<br>С ТЬМОЙ</div>
+        <div class="modal-doc-header">ПЕРВИЧНАЯ РЕГИСТРАЦИЯ НАБЛЮДАТЕЛЯ</div>
+        <div class="modal-doc-title">ДОГОВОР<br>ДОСТУПА К АРХИВУ</div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 1 · Участники сделки</span>
+          <span class="modal-art-num">§ 1 · Стороны соглашения</span>
           Настоящий договор заключается между
-          <strong>RATED</strong> (далее — «Тёмная сущность») и существом,
-          добровольно отдавшим свою душу, именуемым «Посвещенным».
+          <strong>RATED</strong> (далее — «Архив») и лицом,
+          запрашивающим доступ к системе анализа, именуемым «Наблюдателем».
         </div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 2 · Сведения о душе</span>
-          Существо предоставляет следующие данные
-          для подписания договора с тёмной сущностью:<br><br>
-          Имя в мире живых: <input class="doc-inline" id="reg-username" placeholder="известное тебе имя" maxlength="32" autocomplete="off"/>
+          <span class="modal-art-num">§ 2 · Идентификационные данные</span>
+          Наблюдатель предоставляет следующие данные
+          для регистрации в системе:<br><br>
+          Имя наблюдателя: <input class="doc-inline" id="reg-username" placeholder="как к вам обращаться" maxlength="32" autocomplete="off"/>
           <br>
         
-          Канал связи: <input class="doc-inline" id="reg-email" type="email" placeholder="куда слать знаки" style="min-width:175px"/>
+          Канал связи: <input class="doc-inline" id="reg-email" type="email" placeholder="адрес для уведомлений" style="min-width:175px"/>
           <br>
-          Слово-оберег: <input class="doc-inline pw" id="reg-password" placeholder="••••••••" maxlength="64" autocomplete="new-password"/>
+          Код доступа: <input class="doc-inline pw" id="reg-password" placeholder="••••••••" maxlength="64" autocomplete="new-password"/>
         </div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 3 · Цена сделки</span>
-          Подписавшийся отдаёт <strong>право на молчание</strong>,
-          каждый просмотренный фильм требует вердикта. Уклонение не предусмотрено. Ложь — наказуема.
+          <span class="modal-art-num">§ 3 · Условия участия</span>
+          Наблюдатель обязуется фиксировать результат по каждому
+          просмотренному материалу. Каждое наблюдение проходит через
+          систему взвешенных критериев и становится частью архива.
         </div>
 
         <div class="modal-doc-art">
           <span class="modal-art-num">§ 4 · Подпись как идентификатор</span>
-          Собственноручная подпись Участника является неотъемлемой частью
-          подписания договора и используется в качестве дополнительного фактора
-          подтверждения при публикации материалов на Платформе.
+          Собственноручная подпись Наблюдателя фиксируется системой
+          и используется как фактор верификации при публикации
+          материалов в архиве.
         </div>
 
         <div class="modal-sig-section">
           <div class="modal-sig-row">
             <div>
-              <div class="modal-sig-label">Подпись посвященного</div>
+              <div class="modal-sig-label">Подпись наблюдателя</div>
               <canvas class="modal-sig-canvas" id="regSigCanvas"></canvas>
               <div class="review-sig-row-controls">
-                <div class="modal-sig-hint">// распишитесь для заключения договора</div>
+                <div class="modal-sig-hint">// распишитесь для подтверждения доступа</div>
                 <button class="modal-sig-clear" onclick="clearModalSig()">очистить</button>
               </div>
             </div>
             <div style="text-align:center">
-              <div class="modal-sig-label">Печать</div>
+              <div class="modal-sig-label">Печать архива</div>
               <div class="modal-seal" id="regSeal">
                 <div class="modal-seal-logo">RATED</div>
-                <div class="modal-seal-text">Тьма<br>// оцени всё</div>
+                <div class="modal-seal-text">Архив<br>// допуск подтверждён</div>
               </div>
             </div>
           </div>
           <div class="modal-error" id="modal-error-reg"></div>
           <button class="submit-btn" id="modal-submit-reg" onclick="submitRegister()">
-            ПОДПИСАТЬ КРОВЬЮ
+            ПОДТВЕРДИТЬ ДОСТУП
           </button>
           <div class="modal-footer">
-            Уже продал душу? <a onclick="openModal('login')">подтвердить личность</a>
+            Уже зарегистрированы? <a onclick="openModal('login')">подтвердить личность</a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ══ LOGIN CONTRACT ══ -->
+    <!-- ══ LOGIN — ARCHIVE RE-ACCESS ══ -->
     <div id="modal-login" style="display:none">
       <div class="modal-contract">
         <div class="modal-doc-stamp">
-          RATED // Dark entity<br>
-          Договор книги мертвых<br>
-          Составлен в час без имени
+          RATED // Архив<br>
+          Протокол повторного входа<br>
+          Регистрационный узел
         </div>
-        <div class="modal-doc-header">ПОВТОРНОЕ ЯВЛЕНИЕ</div>
-        <div class="modal-doc-title">ВЕРНИСЬ<br>ВО ТЬМУ</div>
+        <div class="modal-doc-header">ПОВТОРНЫЙ ВХОД</div>
+        <div class="modal-doc-title">ВОЗВРАТ<br>В АРХИВ</div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 1 · Распознавание</span>
-          <strong>RATED</strong> помнит всех. Но ты должен доказать, что сделка по-прежнему в силе.
-        </div>
-
-        <div class="modal-doc-art">
-          <span class="modal-art-num">§ 2 · Предъяви метку</span>
-          Знак: <input class="doc-inline" id="login-email" type="email" placeholder="почта из договора" style="min-width:200px"/><br>
-          Оберег: <input class="doc-inline pw" id="login-password" placeholder="••••••••" maxlength="64" autocomplete="current-password"/>
+          <span class="modal-art-num">§ 1 · Идентификация</span>
+          <strong>RATED</strong> хранит данные всех зарегистрированных наблюдателей. Подтвердите личность для восстановления доступа.
         </div>
 
         <div class="modal-doc-art">
-          <span class="modal-art-num">§ 3 · Что тебя ждёт</span>
-          Тьма откроется. Все твои вердикты — нетронуты. Сделка
-          <strong>не имеет срока давности.</strong>
+          <span class="modal-art-num">§ 2 · Учётные данные</span>
+          Почта: <input class="doc-inline" id="login-email" type="email" placeholder="почта при регистрации" style="min-width:200px"/><br>
+          Код доступа: <input class="doc-inline pw" id="login-password" placeholder="••••••••" maxlength="64" autocomplete="current-password"/>
+        </div>
+
+        <div class="modal-doc-art">
+          <span class="modal-art-num">§ 3 · После входа</span>
+          Все ваши наблюдения сохранены без изменений. Доступ к архиву
+          <strong>не имеет срока действия.</strong>
         </div>
 
         <div class="modal-error" id="modal-error-login"></div>
         <button class="submit-btn" id="modal-submit-login" onclick="submitLogin()" style="margin-top:24px">
-          ЯВИТЬСЯ К ТЕМНОЙ СУЩНОСТИ
+          ВОЙТИ В АРХИВ
         </button>
         <div class="modal-footer" style="margin-top:16px">
-         Ещё не связан договором? <a onclick="openModal('register')">Заключить сделку</a>
+         Ещё нет доступа? <a onclick="openModal('register')">Зарегистрироваться</a>
         </div>
       </div>
     </div>
@@ -3170,14 +3150,14 @@ body.vhs-on {
     <div class="hero-left">
       <div class="hero-bg"></div>
       <div class="hero-glitch-bars"></div>
-      <div class="hero-label">// платформа оценок</div>
+      <div class="hero-label">// архив математического анализа кино</div>
       <h1 class="hero-title">
-        ТВОИ<br/>
+        МЫ НЕ<br/>
+        СТАВИМ<br/>
         <em>ОЦЕНКИ</em><br/>
-        ИМЕЮТ<br/>
-        ВЕС
+        МЫ ИХ ВЫЧИСЛЯЕМ
       </h1>
-      <p class="hero-sub">Математическая система оценки фильмов, сериалов и игр. Не просто звёзды — настоящий анализ.</p>
+      <p class="hero-sub">Каждый фильм, сериал и игра проходит через систему взвешенных критериев. Результат — не мнение, а вычисление.</p>
       <div class="hero-num">110</div>
     </div>
 
@@ -3278,7 +3258,7 @@ body.vhs-on {
   <div class="back-btn" onclick="showPage('home')">← Назад</div>
   <div class="compare-header">
     <div class="compare-title">// СРАВНЕНИЕ</div>
-    <div class="compare-sub">выберите два тайтла — оценки сравним по каждому критерию, VU-метрами</div>
+    <div class="compare-sub">выберите два тайтла — система сопоставит их по каждому критерию, VU-метрами</div>
   </div>
   <div class="compare-slots">
     <div class="compare-slot" id="compare-slot-a" data-side="a">
@@ -5339,12 +5319,13 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
           </div>
           ${avgScore ? `
             <div class="score-display">
+              <div class="score-sigma-label">Σ =</div>
               <div class="score-number ${avgScore > 100 ? 'gold' : ''}" data-target="${avgScore}" data-glitch-text="${avgScore}">0</div>
               <div>
                 <div class="score-max">/110</div>
-                <div class="score-count" data-target="${reviews.length}" data-suffix=" ${plural(reviews.length, 'оценка','оценки','оценок')}">0</div>
+                <div class="score-count" data-target="${reviews.length}" data-suffix=" ${plural(reviews.length, 'наблюдение','наблюдения','наблюдений')}">0</div>
               </div>
-            </div>` : '<div style="color:var(--dim);font-size:13px;margin-bottom:16px">Будьте первым, кто оценит</div>'}
+            </div>` : '<div style="color:var(--dim);font-size:13px;margin-bottom:16px">// данных недостаточно — первое наблюдение запускает вычисление</div>'}
           ${media.overview ? `<p class="media-overview">${escHtml(media.overview)}</p>` : ''}
           <div class="genre-chips">${genres}</div>
           ${state.user ? `<button class="btn-watched ${myReview ? 'watched' : ''}" id="watched-btn" onclick="toggleWatched(${media.id},'${type}')" title="${myReview ? 'Уже в архиве' : 'Добавить в просмотренное'}">
@@ -5488,7 +5469,7 @@ function renderReviews(reviews, criteriaList) {
 function renderRatingForm(type, criteriaList, myReview) {
   if (!state.user) {
     return `<div class="login-prompt">
-      <p>Войдите, чтобы оставить оценку</p>
+      <p>// требуется доступ к архиву — войдите, чтобы добавить наблюдение</p>
       <button class="btn-solid" onclick="openModal('login')">Войти</button>
     </div>`;
   }
@@ -5511,7 +5492,7 @@ function renderRatingForm(type, criteriaList, myReview) {
   const initial = calcTotal(criteriaList.map((c,i) => ({ score: vals[i], multiplier: c.multiplier })));
 
   return `
-    <div class="rating-form-title">${myReview ? '// ваша оценка' : '// оценить'}</div>
+    <div class="rating-form-title">${myReview ? '// ваше наблюдение' : '// новое наблюдение'}</div>
     ${rows}
     <div class="live-score-wrap" id="live-score-wrap">
       <div class="live-score-label">Ваш итог</div>
@@ -5527,7 +5508,7 @@ function renderRatingForm(type, criteriaList, myReview) {
         <button class="review-sig-clear-btn" onclick="clearReviewSig()">очистить</button>
       </div>
       <div class="sig-match-bar"><div class="sig-match-fill" id="sig-match-fill"></div></div>
-      <div class="sig-match-label" id="sig-match-label">// нарисуйте подпись</div>
+      <div class="sig-match-label" id="sig-match-label">// подпись не зафиксирована</div>
     </div>
     <button class="submit-btn" id="submit-review-btn" onclick="submitReview('${myReview ? myReview._id : ''}')">
       ${myReview ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ'}
@@ -5852,7 +5833,7 @@ function updateSigMatchUI(score) {
   fill.style.width = pct + '%';
   if (score >= SIG_THRESHOLD) {
     fill.style.background = 'rgba(242,242,240,0.7)';
-    label.textContent = '// подпись подтверждена — ' + pct + '%';
+    label.textContent = '// верификация пройдена — совпадение ' + pct + '%';
     label.className = 'sig-match-label ok';
     _sigVerified = true;
   } else if (score > 0.2) {
@@ -5862,7 +5843,7 @@ function updateSigMatchUI(score) {
     _sigVerified = false;
   } else {
     fill.style.background = 'var(--mid)';
-    label.textContent = pct > 0 ? '// непохоже — попробуйте ещё раз' : '// нарисуйте подпись';
+    label.textContent = pct > 0 ? '// совпадение не достигнуто — повторите' : '// подпись не зафиксирована';
     label.className = 'sig-match-label' + (score > 0 ? ' fail' : '');
     _sigVerified = false;
   }
@@ -5878,7 +5859,7 @@ function scheduleCompare() {
       // No reference — allow (user registered before this feature)
       _sigVerified = true;
       const label = document.getElementById('sig-match-label');
-      if (label) { label.textContent = '// подпись принята'; label.className = 'sig-match-label ok'; }
+      if (label) { label.textContent = '// подпись верифицирована'; label.className = 'sig-match-label ok'; }
       return;
     }
     _refSigDataUrl = refUrl;
@@ -5963,7 +5944,7 @@ function clearReviewSig() {
 async function submitReview(existingId) {
   if (!state.user) { openModal('login'); return; }
   if (!reviewSig.hasData) {
-    showToast('// поставьте подпись для публикации', true);
+    showToast('// подпись требуется для верификации записи', true);
     document.getElementById('reviewSigCanvas')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
@@ -5973,7 +5954,7 @@ async function submitReview(existingId) {
     const score = await compareSigCanvases(_refSigDataUrl, reviewSig.canvas);
     updateSigMatchUI(score);
     if (score < SIG_THRESHOLD) {
-      showToast('// подпись не совпадает с регистрационной', true);
+      showToast('// подпись не прошла верификацию — не совпадает с эталоном', true);
       document.getElementById('reviewSigCanvas')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
@@ -6090,7 +6071,7 @@ function renderProfilePage(user, reviews) {
            <div class="shelf-row" id="profile-shelf-row"></div>
            <div class="shelf-plank"></div>
          </div>`
-      : '<div class="empty-state"><div class="empty-state-icon">◈</div><p>Нет оценок</p></div>'}`;
+      : '<div class="empty-state"><div class="empty-state-icon">◈</div><p>// наблюдений не зафиксировано</p></div>'}`;
 
   // Animate odometer
   setTimeout(() => profileAnimateOdometer(reviews.length), 300);
@@ -6320,7 +6301,7 @@ async function submitRegister() {
   if (!username) { errEl.textContent = '// псевдоним обязателен'; return; }
   if (!email || !email.includes('@')) { errEl.textContent = '// укажите корректную почту'; return; }
   if (password.length < 6) { errEl.textContent = '// пароль минимум 6 символов'; return; }
-  if (!modalSig.hasData) { errEl.textContent = '// подпись обязательна для подтверждения договора'; return; }
+  if (!modalSig.hasData) { errEl.textContent = '// подпись обязательна для подтверждения доступа'; return; }
   btn.disabled = true; btn.textContent = '// ОБРАБОТКА...';
   try {
     const signatureData = getModalSigData();
@@ -6628,303 +6609,13 @@ function plural(n, one, few, many) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// VHS TUNER — WebGL2 fullscreen effect (always-on by default)
+// VHS TUNER — removed. The archive runs clean: no permanent grain/scanline
+// filter. Visual artifacts of the analysis appear only as deliberate,
+// momentary accents tied to specific events (see analysis reveal sequence),
+// not as an always-on background filter.
 // ══════════════════════════════════════════════════════════════════════════════
-const VHSTuner = (function(){
-  let active = false, animId = null;
-  const t0 = performance.now();
-  const params = { tracking: 0.12, drift: 0.22, rgb: 0.55, noise: 0.45, glitch: 0 };
+const VHSTuner = { boot(){}, enable(){}, disable(){}, toggle(){}, glitch(){}, renderSettings(){} };
 
-  // Load saved prefs
-  try {
-    const saved = JSON.parse(localStorage.getItem('vhs_tuner_prefs') || 'null');
-    if (saved) Object.assign(params, saved);
-  } catch(e){}
-
-  // SVG filter injected into DOM for chromatic aberration on the real page
-  const svgNS = 'http://www.w3.org/2000/svg';
-  let svgFilter = null;
-  let feDisplace = null;
-  let feTurbulence = null;
-
-  function injectSVGFilter(){
-    if(svgFilter) return;
-    const svg = document.createElementNS(svgNS, 'svg');
-    svg.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden;');
-    svg.innerHTML = `<defs>
-      <filter id="vhs-css-filter" x="-2%" y="-1%" width="104%" height="102%" color-interpolation-filters="sRGB">
-        <feTurbulence id="vhs-turb" type="turbulence" baseFrequency="0.0 0.004" numOctaves="1" seed="3" result="turb"/>
-        <feDisplacementMap id="vhs-disp" in="SourceGraphic" in2="turb" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
-      </filter>
-    </defs>`;
-    document.body.appendChild(svg);
-    svgFilter = svg;
-    feDisplace = svg.querySelector('#vhs-disp');
-    feTurbulence = svg.querySelector('#vhs-turb');
-  }
-
-  // Canvas overlay — draws noise + scanlines + vignette only (transparent bg)
-  let overlayCanvas = null;
-  let overlayCtx = null;
-
-  function initOverlay(){
-    overlayCanvas = document.getElementById('vhs-tuner-canvas');
-    overlayCtx = overlayCanvas.getContext('2d');
-  }
-
-  function drawOverlay(t){
-    const c = overlayCanvas;
-    const W = window.innerWidth, H = window.innerHeight;
-    if(c.width !== W || c.height !== H){ c.width = W; c.height = H; }
-    const ctx = overlayCtx;
-    ctx.clearRect(0, 0, W, H);
-
-    // ═══════════════════════════════════════════════
-    // 1. ГОРИЗОНТАЛЬНЫЙ ШУМОВОЙ РАСТР — как у старых камер
-    //    Каждая строка одного цвета (минимальная вариация по X)
-    //    Растягиваем 1px колонку → чистые горизонтальные полосы
-    // ═══════════════════════════════════════════════
-    const noiseStr = params.noise;
-    if(noiseStr > 0.01){
-      // Рисуем 1-пиксельную колонку, каждый Y — своя строка
-      const nOff = document.createElement('canvas');
-      nOff.width = 1; nOff.height = H;
-      const nCtx = nOff.getContext('2d');
-      const nImg = nCtx.createImageData(1, H);
-      const nd = nImg.data;
-      for(let py = 0; py < H; py++){
-        // Строчный шум — вся строка одного значения (как у аналоговых камер)
-        // Редкие яркие строки + фоновый шум
-        let v, a;
-        const r = Math.random();
-        if(r > 0.995){
-          // Очень яркая полоса (rare hot line)
-          v = 200 + Math.random() * 55;
-          a = 18 + Math.random() * 20;
-        } else if(r > 0.97){
-          // Заметная полоса
-          v = 120 + Math.random() * 80;
-          a = 8 + Math.random() * 12;
-        } else {
-          // Фоновый мелкий шум — низкая яркость
-          v = 80 + Math.random() * 60;
-          a = Math.random() * 6 * noiseStr;
-        }
-        a = Math.round(a * noiseStr);
-        nd[py*4]   = v;
-        nd[py*4+1] = v;
-        nd[py*4+2] = v;
-        nd[py*4+3] = a;
-      }
-      nCtx.putImageData(nImg, 0, 0);
-      // Растянуть 1px → весь экран: идеально ровные горизонтальные полосы
-      ctx.drawImage(nOff, 0, 0, W, H);
-    }
-
-    // ═══════════════════════════════════════════════
-    // 2. СКАНЛАЙНЫ — чёткие горизонтальные полосы CRT
-    // ═══════════════════════════════════════════════
-    for(let y = 0; y < H; y += 2){
-      ctx.fillStyle = 'rgba(0,0,0,0.10)';
-      ctx.fillRect(0, y, W, 1);
-    }
-
-    // ═══════════════════════════════════════════════
-    // 3. ВИНЬЕТКА ПО КРАЯМ (лёгкая)
-    //    Заменяем мигающие полосы — только постоянный edge gradient
-    // ═══════════════════════════════════════════════
-    // Лёгкий горизонтальный edge-darkening (края экрана темнее)
-    const edgeLR = ctx.createLinearGradient(0, 0, W, 0);
-    edgeLR.addColorStop(0,    'rgba(0,0,0,0.18)');
-    edgeLR.addColorStop(0.06, 'rgba(0,0,0,0)');
-    edgeLR.addColorStop(0.94, 'rgba(0,0,0,0)');
-    edgeLR.addColorStop(1,    'rgba(0,0,0,0.18)');
-    ctx.fillStyle = edgeLR;
-    ctx.fillRect(0, 0, W, H);
-
-    // ═══════════════════════════════════════════════
-    // 4. RGB SPLIT — только постоянные края (без мигающих полос)
-    //    Аберрации на тексте делаются через CSS text-shadow (body.vhs-on)
-    //    Здесь — только лёгкий цветной fringe по краям экрана
-    // ═══════════════════════════════════════════════
-    const rgbStr = params.rgb;
-    if(rgbStr > 0.01){
-      ctx.globalCompositeOperation = 'screen';
-      // Красный fringe — левый край
-      const gLeft = ctx.createLinearGradient(0, 0, W * 0.08, 0);
-      gLeft.addColorStop(0, `rgba(180,0,0,${rgbStr * 0.10})`);
-      gLeft.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = gLeft;
-      ctx.fillRect(0, 0, W * 0.08, H);
-      // Синий fringe — правый край
-      const gRight = ctx.createLinearGradient(W * 0.92, 0, W, 0);
-      gRight.addColorStop(0, 'rgba(0,0,0,0)');
-      gRight.addColorStop(1, `rgba(0,40,200,${rgbStr * 0.09})`);
-      ctx.fillStyle = gRight;
-      ctx.fillRect(W * 0.92, 0, W * 0.08, H);
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.globalAlpha = 1;
-    }
-
-    // ═══════════════════════════════════════════════
-    // 5. ВИНЬЕТКА
-    // ═══════════════════════════════════════════════
-    const vg = ctx.createRadialGradient(W/2, H/2, H*0.2, W/2, H/2, H*0.85);
-    vg.addColorStop(0, 'rgba(0,0,0,0)');
-    vg.addColorStop(1, 'rgba(0,0,0,0.35)');
-    ctx.fillStyle = vg;
-    ctx.fillRect(0, 0, W, H);
-
-    // ═══════════════════════════════════════════════
-    // 6. GLITCH BURST
-    // ═══════════════════════════════════════════════
-    if(params.glitch > 0.01){
-      const bars = Math.floor(params.glitch * 10);
-      for(let i = 0; i < bars; i++){
-        const gy = Math.random() * H;
-        const gh = 1 + Math.random() * 8;
-        ctx.fillStyle = `rgba(255,250,240,${params.glitch * 0.4})`;
-        ctx.fillRect(0, gy, W * (0.3 + Math.random() * 0.7), gh);
-        if(Math.random() > 0.5){
-          ctx.fillStyle = `rgba(180,40,20,${params.glitch * 0.25})`;
-          ctx.fillRect(3, gy, W, 1);
-          ctx.fillStyle = `rgba(20,60,200,${params.glitch * 0.2})`;
-          ctx.fillRect(-3, gy + gh, W, 1);
-        }
-      }
-      params.glitch = Math.max(0, params.glitch - 0.04);
-    }
-  }
-
-  function applyBodyFilter(t){
-    if(active){
-      document.body.classList.add('vhs-on');
-      // Animate turbulence seed for variation in SVG filter
-      if(feTurbulence){
-        // Slowly drift baseFrequency for subtle wave
-        const bf = 0.004 + Math.sin((t||0) * 0.3) * 0.001;
-        feTurbulence.setAttribute('baseFrequency', `0.0 ${bf.toFixed(4)}`);
-        feTurbulence.setAttribute('seed', Math.floor((t||0)*7) % 100);
-      }
-    } else {
-      document.body.classList.remove('vhs-on');
-    }
-  }
-
-  function frame(now){
-    if(!active) return;
-    const t = (now - t0) * 0.001;
-    applyBodyFilter(t);
-    drawOverlay(t);
-    animId = requestAnimationFrame(frame);
-  }
-
-  function glitch(){
-    params.glitch = 1.0;
-    setTimeout(() => { params.glitch = 0; }, 500);
-  }
-
-  function enable(){
-    active = true;
-    injectSVGFilter();
-    const c = document.getElementById('vhs-tuner-canvas');
-    c.classList.add('active');
-    document.getElementById('vhs-tuner-badge').classList.add('active');
-    requestAnimationFrame(frame);
-    savePrefs();
-  }
-
-  function disable(){
-    active = false;
-    const c = document.getElementById('vhs-tuner-canvas');
-    c.classList.remove('active');
-    document.getElementById('vhs-tuner-badge').classList.remove('active');
-    if(animId) cancelAnimationFrame(animId);
-    // Remove body filter
-    document.body.classList.remove('vhs-on');
-    document.body.style.filter = '';
-    // Clear canvas
-    if(overlayCtx) overlayCtx.clearRect(0, 0, c.width, c.height);
-    savePrefs();
-  }
-
-  function toggle(){
-    active ? disable() : enable();
-  }
-
-  function savePrefs(){
-    try {
-      localStorage.setItem('vhs_tuner_prefs', JSON.stringify({
-        tracking: params.tracking, drift: params.drift,
-        rgb: params.rgb, noise: params.noise, enabled: active
-      }));
-    } catch(e){}
-  }
-
-  function renderSettings(container){
-    container.innerHTML = `
-      <div id="vhs-settings-panel">
-        <div class="vhs-settings-title">// VHS TUNER — НАСТРОЙКИ</div>
-        <div class="vhs-knob-row">
-          <div class="vhs-knob-label">TRACKING <span id="vhs-v-tracking">${Math.round(params.tracking*100)}</span></div>
-          <input class="vhs-range" type="range" id="vhs-k-tracking" min="0" max="100" value="${Math.round(params.tracking*100)}"/>
-        </div>
-        <div class="vhs-knob-row">
-          <div class="vhs-knob-label">DRIFT <span id="vhs-v-drift">${Math.round(params.drift*100)}</span></div>
-          <input class="vhs-range" type="range" id="vhs-k-drift" min="0" max="100" value="${Math.round(params.drift*100)}"/>
-        </div>
-        <div class="vhs-knob-row">
-          <div class="vhs-knob-label">RGB SPLIT <span id="vhs-v-rgb">${Math.round(params.rgb*100)}</span></div>
-          <input class="vhs-range" type="range" id="vhs-k-rgb" min="0" max="100" value="${Math.round(params.rgb*100)}"/>
-        </div>
-        <div class="vhs-knob-row">
-          <div class="vhs-knob-label">NOISE <span id="vhs-v-noise">${Math.round(params.noise*100)}</span></div>
-          <input class="vhs-range" type="range" id="vhs-k-noise" min="0" max="100" value="${Math.round(params.noise*100)}"/>
-        </div>
-        <button class="vhs-glitch-btn" id="vhs-glitch-btn">⚡ GLITCH BURST</button>
-        <div class="vhs-toggle-row">
-          <div class="vhs-toggle-label">VHS ЭФФЕКТ</div>
-          <button class="vhs-toggle-btn ${active?'on':''}" id="vhs-main-toggle">${active?'ON':'OFF'}</button>
-        </div>
-      </div>`;
-
-    const bind = (id, key, vid) => {
-      const el = document.getElementById(id);
-      if(!el) return;
-      el.oninput = () => {
-        params[key] = el.value / 100;
-        document.getElementById(vid).textContent = el.value;
-        savePrefs();
-      };
-    };
-    bind('vhs-k-tracking','tracking','vhs-v-tracking');
-    bind('vhs-k-drift','drift','vhs-v-drift');
-    bind('vhs-k-rgb','rgb','vhs-v-rgb');
-    bind('vhs-k-noise','noise','vhs-v-noise');
-
-    document.getElementById('vhs-glitch-btn').onclick = () => glitch();
-    document.getElementById('vhs-main-toggle').onclick = function(){
-      toggle();
-      this.textContent = active ? 'ON' : 'OFF';
-      this.classList.toggle('on', active);
-    };
-  }
-
-  // Boot
-  function boot(){
-    initOverlay();
-    // Check saved pref; default ON
-    try {
-      const saved = JSON.parse(localStorage.getItem('vhs_tuner_prefs') || 'null');
-      if(saved && saved.enabled === false) { return; }
-    } catch(e){}
-    enable();
-  }
-
-  document.getElementById('vhs-tuner-badge').onclick = toggle;
-
-  return { boot, enable, disable, toggle, glitch, renderSettings };
-})();
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VHS SCRUB — history scrubber with VHS noise
