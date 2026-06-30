@@ -62,8 +62,9 @@
   /* ─── DOOR / UNFOLD TRANSITION ─── */
   #unfold {
     position: fixed; inset:0; z-index: 20; pointer-events:none;
-    display:flex;
+    display:flex; opacity: 0; transition: opacity 0s;
   }
+  #unfold.active { opacity: 1; }
   #unfold .leaf { flex:1; background: var(--black); transform-origin: center; }
   #unfold.active .leaf-l { animation: unfoldL 0.9s cubic-bezier(0.76,0,0.24,1) forwards; }
   #unfold.active .leaf-r { animation: unfoldR 0.9s cubic-bezier(0.76,0,0.24,1) forwards; }
