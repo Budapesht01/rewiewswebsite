@@ -1543,12 +1543,99 @@ body {
   cursor: pointer; transition: opacity 0.2s;
 }
 .filter-btn:hover { opacity: 0.85; }
+
+/* ── DARKROOM TIMER DIAL (genre filter) ── */
+.genre-dial-wrap{
+  display:flex; align-items:center; gap:14px;
+  background:var(--grey); border:1px solid var(--line);
+  padding:8px 16px 8px 10px;
+}
+.genre-dial{
+  width:46px; height:46px; border-radius:50%; flex-shrink:0;
+  background:radial-gradient(circle at 35% 30%, #262626, #0c0c0c 72%);
+  border:1px solid var(--mid); position:relative; cursor:pointer;
+  box-shadow:inset 0 0 10px rgba(0,0,0,.7);
+  transition: box-shadow .2s;
+}
+.genre-dial:hover{ box-shadow:inset 0 0 10px rgba(0,0,0,.7), 0 0 0 1px var(--dim); }
+.genre-dial-tick{
+  position:absolute; left:50%; top:3px; width:1px; height:5px;
+  background:var(--mid); transform-origin:50% 20px;
+}
+.genre-dial-tick.active{ background:var(--gold); height:6px; }
+.genre-dial-pointer{
+  position:absolute; left:50%; top:50%; width:2px; height:18px;
+  background:var(--gold); transform-origin:top center;
+  transform:translate(-50%,0) rotate(0deg);
+  transition: transform .45s cubic-bezier(.3,1,.4,1);
+}
+.genre-dial-center{
+  position:absolute; left:50%; top:50%; width:7px; height:7px;
+  background:var(--mid); border:1px solid #555; border-radius:50%;
+  transform:translate(-50%,-50%);
+}
+.genre-dial-readout{ font-family:'DM Mono', monospace; line-height:1.5; }
+.genre-dial-readout .gd-label{ font-size:8px; letter-spacing:.2em; color:var(--dim); text-transform:uppercase; }
+.genre-dial-readout .gd-value{ font-size:12px; letter-spacing:.05em; color:var(--white); }
+.genre-dial-reset{
+  background:none; border:1px solid var(--line); color:var(--dim);
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em;
+  padding:5px 9px; cursor:pointer; text-transform:uppercase; transition:.2s;
+}
+.genre-dial-reset:hover{ border-color:var(--white); color:var(--white); }
+
+/* ── CONTACT SHEET VIEW (catalogue alt layout) ── */
+.view-toggle{ display:flex; border:1px solid var(--line); }
+.view-toggle button{
+  background:none; border:none; color:var(--dim); padding:7px 13px;
+  font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; cursor:pointer; transition:.2s;
+  border-right:1px solid var(--line);
+}
+.view-toggle button:last-child{ border-right:none; }
+.view-toggle button.active{ background:var(--white); color:var(--black); }
+.view-toggle button:not(.active):hover{ color:var(--white); }
+
+.sheet-grid{ padding:24px 40px; background:#000; }
+.sheet-row{ display:flex; align-items:stretch; border-bottom:1px solid #161616; }
+.sheet-sprockets{ display:flex; flex-direction:column; justify-content:space-around; padding:0 7px; background:#040404; flex-shrink:0; }
+.sheet-sprockets span{ width:6px; height:6px; background:#000; border:1px solid #262626; border-radius:1px; margin:5px 0; }
+.sheet-frames{ display:flex; flex:1; flex-wrap:wrap; }
+.sheet-frame{
+  flex:1 1 150px; aspect-ratio:2/3; position:relative; cursor:pointer;
+  border-left:1px solid #161616; overflow:hidden;
+}
+.sheet-frame img{
+  width:100%; height:100%; object-fit:cover; display:block;
+  filter:invert(1) grayscale(1) contrast(1.05) brightness(1.05);
+  transition: filter .45s ease;
+}
+.sheet-frame:hover img{ filter:none; }
+.sheet-frame-info{
+  position:absolute; left:0; right:0; bottom:0; padding:8px;
+  background:linear-gradient(to top, rgba(0,0,0,.85), transparent);
+  font-family:'DM Mono',monospace;
+}
+.sheet-frame-title{ font-size:10px; color:var(--white); mix-blend-mode:difference; line-height:1.3; }
+.sheet-frame-year{ font-size:8px; color:var(--dim); mix-blend-mode:difference; margin-top:2px; }
+.sheet-frame-score{
+  position:absolute; top:8px; right:8px; font-family:'Bebas Neue',sans-serif;
+  font-size:15px; color:var(--white); mix-blend-mode:difference; opacity:0;
+  transition:opacity .3s;
+}
+.sheet-frame:hover .sheet-frame-score{ opacity:1; }
+.sheet-frame-score.gold{ color:var(--gold); }
+@media (max-width:768px){
+  .sheet-grid{ padding:14px 16px; }
+  .sheet-frame{ flex-basis:42%; }
+}
 .catalogue-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 2px;
   padding: 24px 40px;
 }
+.catalogue-grid.is-sheet { display: block; padding: 0; }
 .catalogue-pagination {
   display: flex; align-items: center; justify-content: center; gap: 12px;
   padding: 24px 40px 48px;
@@ -1579,24 +1666,34 @@ body {
   margin-bottom: 14px;
 }
 
-/* ── MICRO HISTOGRAM ── */
+/* ── MICRO HISTOGRAM → VU METER ── */
 .micro-histogram {
   display: flex; align-items: flex-end;
-  gap: 3px; height: 48px;
+  gap: 7px; height: 48px;
   margin-bottom: 26px; /* more space for bigger labels */
 }
 .mh-bar-wrap {
-  flex: 1; height: 100%;
+  flex: 1; height: 100%; max-width: 22px;
   display: flex; flex-direction: column;
   align-items: center; justify-content: flex-end;
   position: relative;
 }
-.mh-bar {
-  width: 100%;
-  background: rgba(240,239,233,0.18);
+.mh-vu-track{
+  width: 100%; height: 100%; background:#000; border:1px solid var(--line);
+  display:flex; flex-direction:column-reverse; padding:2px; gap:2px;
+}
+.mh-vu-seg{
+  height: 7%; min-height:2px; border-radius:0.5px;
+  background: rgba(240,239,233,0.08);
   transition: background 0.2s;
 }
-.mh-bar-wrap:hover .mh-bar { background: var(--white); }
+.mh-vu-seg.on{ background: rgba(240,239,233,0.55); }
+.mh-vu-seg.on.hi{ background: var(--white); }
+.mh-vu-seg.on.peak{ background: var(--red); }
+.mh-vu-seg.on.gold{ background: var(--gold); }
+.mh-bar-wrap:hover .mh-vu-seg.on{ background: var(--white); }
+.mh-bar-wrap:hover .mh-vu-seg.on.peak{ background: var(--red); }
+.mh-bar-wrap:hover .mh-vu-seg.on.gold{ background: var(--gold); }
 /* label under bar */
 .mh-label {
   position: absolute; top: calc(100% + 5px); left: 50%;
@@ -3029,7 +3126,18 @@ body.vhs-on {
   <div class="catalogue-header">
     <div class="catalogue-title" id="catalogue-title">КАТАЛОГ</div>
     <div class="filter-wrap">
-      <select class="filter-select" id="filter-genre" onchange="applyFilters()">
+      <div class="genre-dial-wrap">
+        <div class="genre-dial" id="genre-dial" title="Прокрутите жанр">
+          <div class="genre-dial-pointer" id="genre-dial-pointer"></div>
+          <div class="genre-dial-center"></div>
+        </div>
+        <div class="genre-dial-readout">
+          <div class="gd-label">// genre dial</div>
+          <div class="gd-value" id="genre-dial-value">Все жанры</div>
+        </div>
+        <button class="genre-dial-reset" id="genre-dial-reset" title="Сбросить">✕</button>
+      </div>
+      <select class="filter-select" id="filter-genre" onchange="applyFilters()" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
         <option value="">Все жанры</option>
         <option value="28">Боевик</option>
         <option value="27">Хоррор</option>
@@ -3052,6 +3160,10 @@ body.vhs-on {
         <option value="release_date.desc">Дата (новые)</option>
         <option value="release_date.asc">Дата (старые)</option>
       </select>
+      <div class="view-toggle" id="catalogue-view-toggle">
+        <button class="active" data-view="grid" onclick="setCatalogueView('grid')">■ Сетка</button>
+        <button data-view="sheet" onclick="setCatalogueView('sheet')">▤ Контрольный лист</button>
+      </div>
     </div>
   </div>
   <div class="catalogue-grid" id="catalogue-grid">
@@ -3101,6 +3213,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMomentumScroll();
   initSplitCompare();
   initScrambleHero();
+  initGenreDial();
   const saved = localStorage.getItem('rated_token');
   const savedUser = localStorage.getItem('rated_user');
   if (saved && savedUser) {
@@ -4563,15 +4676,18 @@ async function loadGenreSections(mediaType) {
 }
 
 // ─── CATALOGUE ────────────────────────────────────────────────────────────────
-let catalogueState = { mediaType: 'movie', genre: '', sort: 'popularity.desc', page: 1, totalPages: 1 };
+let catalogueState = { mediaType: 'movie', genre: '', sort: 'popularity.desc', page: 1, totalPages: 1, view: 'grid' };
 
 function openCatalogue(mediaType, genreId, sort, label) {
-  catalogueState = { mediaType, genre: genreId, sort: sort || 'popularity.desc', page: 1, totalPages: 1 };
+  catalogueState = { mediaType, genre: genreId, sort: sort || 'popularity.desc', page: 1, totalPages: 1, view: 'grid' };
   document.getElementById('catalogue-title').textContent = label ? label.toUpperCase() : 'КАТАЛОГ';
   document.getElementById('filter-genre').value = genreId;
   document.getElementById('filter-sort').value = sort || 'popularity.desc';
   document.getElementById('filter-year-from').value = '';
   document.getElementById('filter-year-to').value = '';
+  document.querySelectorAll('#catalogue-view-toggle button').forEach(b => b.classList.toggle('active', b.dataset.view === 'grid'));
+  document.getElementById('catalogue-grid').classList.remove('is-sheet');
+  if (typeof syncGenreDial === 'function') syncGenreDial();
   showPage('catalogue');
   fetchCatalogue();
 }
@@ -4583,11 +4699,80 @@ function applyFilters() {
   fetchCatalogue();
 }
 
+// ─── GENRE DIAL (darkroom timer style filter) ──────────────────────────────────
+const GENRE_DIAL_LIST = [
+  { id: '',     name: 'Все жанры'  },
+  { id: '28',   name: 'Боевик'     },
+  { id: '27',   name: 'Хоррор'     },
+  { id: '18',   name: 'Драма'      },
+  { id: '53',   name: 'Триллер'    },
+  { id: '878',  name: 'Фантастика' },
+  { id: '35',   name: 'Комедия'    },
+  { id: '80',   name: 'Криминал'   },
+  { id: '16',   name: 'Анимация'   },
+  { id: '12',   name: 'Приключения'},
+  { id: '10749',name: 'Романтика'  },
+  { id: '9648', name: 'Мистика'    },
+  { id: '14',   name: 'Фэнтези'    }
+];
+let genreDialIdx = 0;
+
+function initGenreDial() {
+  const dial = document.getElementById('genre-dial');
+  if (!dial) return;
+  const n = GENRE_DIAL_LIST.length;
+  for (let i = 0; i < n; i++) {
+    const t = document.createElement('div');
+    t.className = 'genre-dial-tick';
+    t.style.transform = `translateX(-50%) rotate(${(360 / n) * i}deg)`;
+    dial.appendChild(t);
+  }
+  dial.addEventListener('click', (e) => {
+    const rect = dial.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const goingForward = e.clientX >= cx;
+    genreDialIdx = (genreDialIdx + (goingForward ? 1 : -1) + n) % n;
+    applyGenreDial();
+  });
+  document.getElementById('genre-dial-reset')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    genreDialIdx = 0;
+    applyGenreDial();
+  });
+}
+
+function applyGenreDial() {
+  const n = GENRE_DIAL_LIST.length;
+  const g = GENRE_DIAL_LIST[genreDialIdx];
+  const pointer = document.getElementById('genre-dial-pointer');
+  const value = document.getElementById('genre-dial-value');
+  const select = document.getElementById('filter-genre');
+  if (pointer) pointer.style.transform = `translate(-50%,0) rotate(${(360 / n) * genreDialIdx}deg)`;
+  if (value) value.textContent = g.name;
+  document.querySelectorAll('.genre-dial-tick').forEach((t, i) => t.classList.toggle('active', i === genreDialIdx));
+  if (select) select.value = g.id;
+  applyFilters();
+}
+
+// keeps the dial in sync when genre is set programmatically (e.g. openCatalogue)
+function syncGenreDial() {
+  const select = document.getElementById('filter-genre');
+  if (!select) return;
+  const idx = GENRE_DIAL_LIST.findIndex(g => g.id === (select.value || ''));
+  genreDialIdx = idx >= 0 ? idx : 0;
+  const n = GENRE_DIAL_LIST.length;
+  const pointer = document.getElementById('genre-dial-pointer');
+  const value = document.getElementById('genre-dial-value');
+  if (pointer) pointer.style.transform = `translate(-50%,0) rotate(${(360 / n) * genreDialIdx}deg)`;
+  if (value) value.textContent = GENRE_DIAL_LIST[genreDialIdx].name;
+  document.querySelectorAll('.genre-dial-tick').forEach((t, i) => t.classList.toggle('active', i === genreDialIdx));
+}
+
 async function fetchCatalogue() {
   const grid = document.getElementById('catalogue-grid');
   grid.innerHTML = morseLoaderHTML();
   try {
-    const { mediaType, genre, sort, page } = catalogueState;
+    const { mediaType, genre, sort, page, view } = catalogueState;
     const yearFrom = document.getElementById('filter-year-from').value;
     const yearTo   = document.getElementById('filter-year-to').value;
     let qs = `/api/media/catalogue/${mediaType}?sort=${sort}&page=${page}`;
@@ -4597,12 +4782,69 @@ async function fetchCatalogue() {
     const data = await api(qs);
     catalogueState.totalPages = data.total_pages;
     const results = data.results || [];
-    grid.innerHTML = results.map(item => cardHTML(item, mediaType)).join('') || '<div class="empty-state"><p>Ничего не найдено</p></div>';
-    renderCataloguePagination();
-    if (results.length) enrichGridWithScores(grid, results, mediaType);
+    if (view === 'sheet') {
+      grid.classList.add('is-sheet');
+      grid.innerHTML = results.length ? sheetGridHTML(results, mediaType) : '<div class="empty-state"><p>Ничего не найдено</p></div>';
+      renderCataloguePagination();
+      if (results.length) enrichSheetWithScores(grid, results, mediaType);
+    } else {
+      grid.classList.remove('is-sheet');
+      grid.innerHTML = results.map(item => cardHTML(item, mediaType)).join('') || '<div class="empty-state"><p>Ничего не найдено</p></div>';
+      renderCataloguePagination();
+      if (results.length) enrichGridWithScores(grid, results, mediaType);
+    }
   } catch(e) {
     grid.innerHTML = '<div class="empty-state"><p>Ошибка загрузки</p></div>';
   }
+}
+
+function setCatalogueView(view) {
+  catalogueState.view = view;
+  document.querySelectorAll('#catalogue-view-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+  fetchCatalogue();
+}
+
+function sheetFrameHTML(item, mediaType, siteScore) {
+  const poster = item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : '';
+  const title = item.title || item.name || '';
+  const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+  const scoreHTML = siteScore != null
+    ? `<div class="sheet-frame-score${siteScore > 100 ? ' gold' : ''}">${siteScore}</div>`
+    : '';
+  return `<div class="sheet-frame" data-id="${item.id}" onclick="openMedia(${item.id}, '${mediaType}')">
+    ${poster ? `<img src="${poster}" alt="${escHtml(title)}" loading="lazy"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
+    ${scoreHTML}
+    <div class="sheet-frame-info">
+      <div class="sheet-frame-title">${escHtml(title)}</div>
+      ${year ? `<div class="sheet-frame-year">${year}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function sheetGridHTML(items, mediaType, scores) {
+  const perRow = 3;
+  let rows = '';
+  for (let i = 0; i < items.length; i += perRow) {
+    const chunk = items.slice(i, i + perRow);
+    const holes = Array(6).fill('<span></span>').join('');
+    const frames = chunk.map(it => sheetFrameHTML(it, mediaType, scores ? scores[it.id] : null)).join('');
+    rows += `<div class="sheet-row">
+      <div class="sheet-sprockets">${holes}</div>
+      <div class="sheet-frames">${frames}</div>
+      <div class="sheet-sprockets">${holes}</div>
+    </div>`;
+  }
+  return `<div class="sheet-grid">${rows}</div>`;
+}
+
+async function enrichSheetWithScores(grid, items, mediaType) {
+  try {
+    const ids = items.map(i => i.id).join(',');
+    const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
+    grid.innerHTML = sheetGridHTML(items, mediaType, scores);
+  } catch(e) { /* fail silently — frames already visible */ }
 }
 
 function renderCataloguePagination() {
@@ -4897,17 +5139,23 @@ function renderReviews(reviews, criteriaList) {
     const isGold = r.totalScore > 100;
     // micro-histogram bars
     const bars = r.criteria.map(c => {
-      const pct = Math.round(c.score / 10 * 100);
+      const lit = Math.round(c.score); // 0-10 segments lit
       const shortLabel = c.name.split(/[\s,]/)[0].slice(0,4).toUpperCase();
       const fullLabel = c.name.split(/[\s,]/)[0].trim();
-      const bg = isGold && c.score >= 9
-        ? 'rgba(200,169,110,0.75)'
-        : c.score >= 9 ? 'rgba(240,239,233,0.75)'
-        : c.score >= 7 ? 'rgba(240,239,233,0.4)'
-        : c.score >= 5 ? 'rgba(240,239,233,0.2)'
-        : 'rgba(240,239,233,0.08)';
+      let segs = '';
+      for (let i = 0; i < 10; i++) {
+        const on = i < lit;
+        let cls = 'mh-vu-seg';
+        if (on) {
+          cls += ' on';
+          if (isGold && i >= 8) cls += ' gold';
+          else if (i >= 9) cls += ' peak';
+          else if (i >= 7) cls += ' hi';
+        }
+        segs += `<div class="${cls}"></div>`;
+      }
       return `<div class="mh-bar-wrap" data-tip="${escHtml(fullLabel)}: ${c.score}">
-        <div class="mh-bar" style="height:${pct}%;background:${bg}"></div>
+        <div class="mh-vu-track">${segs}</div>
         <div class="mh-label">${shortLabel}</div>
       </div>`;
     }).join('');
