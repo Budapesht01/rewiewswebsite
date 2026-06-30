@@ -2933,7 +2933,7 @@ body.vhs-on {
 <div id="vhs-scrub-panel">
   <div id="vhs-scrub-label">⏮ ПЕРЕМОТКА</div>
   <div id="vhs-scrub-track"><div id="vhs-scrub-head"></div></div>
-  <div id="vhs-scrub-tc">REC 00:00:00</div>
+  <div id="vhs-scrub-tc">STORAGE ARCHIVE 00:00:00</div>
   <button id="vhs-scrub-close">✕</button>
 </div>
 <button id="vhs-scrub-btn" title="VHS SCRUB — перемотка по истории">⏮</button>
@@ -3188,7 +3188,7 @@ body.vhs-on {
   </div>
 
   <div class="section">
-    <div class="section-label" id="trending-label">// в тренде на этой неделе</div>
+    <div class="section-label" id="trending-label">// наиболее исследуемые объекты</div>
     <div class="cards-grid" id="trending-grid">
       <div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>
     </div>
@@ -4749,7 +4749,7 @@ async function loadGenreSections(mediaType) {
             <div class="genre-curtain-left">
               <div class="vhs-glitch-bar"></div>
               <div class="vhs-glitch-bar2"></div>
-              <div class="vhs-rec"><div class="vhs-rec-dot"></div>REC</div>
+              <div class="vhs-rec"><div class="vhs-rec-dot"></div>STORAGE ARCHIVE</div>
               <div class="vhs-timecode">00:00:00:00</div>
               <div class="genre-curtain-name">ЖАНР</div>
             </div>
@@ -5000,8 +5000,8 @@ function updateSplitCompare(movies) {
   const getYear  = m => (m.release_date || m.first_air_date || '').slice(0, 4);
   const ta = document.getElementById('scp-title-a'); if (ta) ta.textContent = getTitle(a);
   const tb = document.getElementById('scp-title-b'); if (tb) tb.textContent = getTitle(b);
-  const sa = document.getElementById('scp-sub-a');   if (sa) sa.textContent = `// В тренде · ${getYear(a)}`;
-  const sb = document.getElementById('scp-sub-b');   if (sb) sb.textContent = `// В тренде · ${getYear(b)}`;
+  const sa = document.getElementById('scp-sub-a');   if (sa) sa.textContent = `// объект исследования · ${getYear(a)}`;
+  const sb = document.getElementById('scp-sub-b');   if (sb) sb.textContent = `// объект исследования · ${getYear(b)}`;
   // Scores will be enriched separately; for now show TMDB as placeholder
   const sca = document.getElementById('scp-score-a');
   const scb = document.getElementById('scp-score-b');
@@ -6019,7 +6019,7 @@ async function showPublicProfile(username) {
     const data = await api(`/api/profile/${username}`);
     renderProfilePage(data.user, data.reviews);
   } catch(e) {
-    content.innerHTML = '<div class="empty-state"><p>Пользователь не найден</p></div>';
+    content.innerHTML = '<div class="empty-state"><p>Observer не найден</p></div>';
   }
 }
 
