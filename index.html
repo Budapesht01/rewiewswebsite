@@ -75,122 +75,83 @@
   #hall {
     position: fixed; inset:0; overflow-y:auto; z-index: 1;
     opacity:0; visibility:hidden;
-    display:flex;
   }
   #hall.active { opacity:1; visibility:visible; transition: opacity 0.7s ease 0.5s; }
 
-  /* ─── SIDEBAR ─── */
-  .hall-sidebar {
-    width: 250px; flex-shrink:0; min-height:100vh;
-    border-right: 1px solid var(--line);
-    padding: 40px 28px; display:flex; flex-direction:column;
-    position: sticky; top:0; align-self:flex-start;
+  .hall-wrap { max-width: 1100px; margin: 0 auto; padding: 64px 32px 80px; }
+
+  .hall-top {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom: 56px; flex-wrap:wrap; gap:24px;
   }
-  .sb-logo { font-family:'Bebas Neue',sans-serif; font-size: 26px; letter-spacing: 0.3em; }
-  .sb-tagline {
-    font-family:'DM Sans',sans-serif; font-size: 13px; line-height:1.5;
-    color: var(--white); margin-top: 22px; max-width: 180px;
+  .hall-logo { font-family:'Bebas Neue',sans-serif; font-size: 30px; letter-spacing: 0.12em; }
+  .hall-logo span { display:block; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.25em; color:var(--dim); margin-top:2px; }
+
+  .observer-card {
+    font-family:'DM Mono',monospace; font-size: 11px; color: var(--dim);
+    border: 1px solid var(--line); padding: 14px 18px; min-width: 200px;
+    line-height: 2;
   }
-  .sb-since { font-family:'DM Mono',monospace; font-size: 10px; color: var(--dim); margin-top: 16px; letter-spacing:0.08em; }
-  .sb-spacer { flex:1; min-height: 80px; }
-  .sb-quote {
-    font-family:'DM Sans',sans-serif; font-style: italic; font-size: 12.5px;
-    line-height: 1.7; color: var(--dim); max-width: 170px;
+  .observer-card b { color: var(--white); font-weight:500; }
+  .observer-card .ob-id { color: var(--white); letter-spacing:0.05em; display:block; margin-bottom:6px; }
+
+  .hall-section-label {
+    font-family:'DM Mono',monospace; font-size: 10px; letter-spacing:0.3em;
+    color: var(--dim); margin-bottom: 18px;
   }
 
-  /* ─── MAIN ─── */
-  .hall-main { flex:1; min-width:0; padding: 40px 40px 0; display:flex; flex-direction:column; }
-
-  .hall-topnav {
-    display:flex; justify-content:flex-end; align-items:center; gap: 32px;
-    margin-bottom: 44px; flex-wrap:wrap;
-  }
-  .hall-topnav a {
-    font-family:'DM Mono',monospace; font-size: 10.5px; letter-spacing:0.15em;
-    color: var(--dim); text-decoration:none; transition: color 0.2s;
-  }
-  .hall-topnav a:hover { color: var(--white); }
-  .hall-observer-btn {
-    font-family:'DM Mono',monospace; font-size: 10px; letter-spacing:0.15em;
-    color: var(--white); background:none; border: 1px solid var(--line);
-    padding: 11px 18px; display:flex; align-items:center; gap:10px; cursor:pointer;
-    transition: border-color 0.2s;
-  }
-  .hall-observer-btn:hover { border-color: var(--mid); }
-  .hall-observer-btn .dot { width:7px; height:7px; border-radius:50%; border:1px solid var(--dim); }
-
-  /* ─── WINGS GRID (3 col x 2 row cards) ─── */
+  /* ─── WINGS GRID ─── */
   .wings-grid {
-    display:grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    display:grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
     background: var(--line); border:1px solid var(--line);
+    margin-bottom: 64px;
   }
-  @media (max-width: 980px){ .wings-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 620px){ .wings-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 720px){ .wings-grid { grid-template-columns: 1fr; } }
 
   .wing {
-    background: var(--black); position:relative;
-    min-height: 170px; display:flex;
+    background: var(--black); padding: 32px 28px; position:relative;
+    min-height: 150px; display:flex; flex-direction:column; justify-content:space-between;
     text-decoration:none; color:inherit; cursor:pointer;
     transition: background 0.25s;
   }
   .wing.active-wing:hover { background: #0d0d0d; }
-  .wing.locked { cursor:default; }
-  .wing.locked .wing-visual { opacity: 0.55; }
-  .wing.locked .wing-text { opacity: 0.7; }
+  .wing.locked { cursor:default; opacity: 0.5; }
 
-  .wing-text { padding: 22px 20px; display:flex; flex-direction:column; justify-content:space-between; flex: 1.3; min-width:0; }
-  .wing-index { font-family:'DM Mono',monospace; font-size: 10px; color: var(--dim); margin-bottom: 14px; }
-  .wing-name { font-family:'DM Sans',sans-serif; font-weight:500; font-size: 16px; letter-spacing:0.02em; margin-bottom: 10px; }
-  .wing-desc {
-    font-family:'DM Sans',sans-serif; font-size: 11.5px; color: var(--dim);
-    line-height: 1.55; flex:1;
-  }
-  .wing-count { font-family:'DM Mono',monospace; font-size: 11px; color: var(--white); margin-top: 14px; }
+  .wing-top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .wing-name { font-family:'Bebas Neue',sans-serif; font-size: 30px; letter-spacing:0.04em; }
   .wing-status {
-    position:absolute; top:14px; right:14px;
-    font-family:'DM Mono',monospace; font-size: 8px; letter-spacing:0.15em;
-    border: 1px solid var(--line); padding: 3px 7px; color: var(--dim); white-space:nowrap;
+    font-family:'DM Mono',monospace; font-size: 9px; letter-spacing:0.15em;
+    border: 1px solid var(--line); padding: 4px 9px; color: var(--dim); white-space:nowrap;
   }
   .wing-status.open { color: var(--white); border-color: var(--mid); }
 
-  .wing-visual {
-    flex: 1; position:relative; overflow:hidden; min-width: 90px;
-    background: radial-gradient(circle at 30% 20%, #1c1c1c, #0a0a0a 70%);
-  }
-  .wing-visual::before {
-    content:''; position:absolute; inset:0;
-    background-image:
-      repeating-linear-gradient(115deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 9px);
-  }
-  .wing-visual::after {
-    content:''; position:absolute; inset:0;
-    background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.5) 100%);
-  }
-  .wing-visual-icon {
-    position:absolute; bottom:14px; right:14px; font-size: 22px; opacity:0.5;
-    font-family:'DM Mono',monospace;
+  .wing-desc {
+    font-family:'DM Mono',monospace; font-size: 10.5px; color: var(--dim);
+    line-height: 1.6; margin-top: 14px; max-width: 320px;
   }
 
-  /* ─── LATEST ENTRIES TICKER ─── */
-  .hall-ticker {
-    margin-top: 0; border-top: 1px solid var(--line);
-    padding: 18px 0; display:flex; align-items:center; gap: 26px;
-    flex-wrap:wrap; font-family:'DM Mono',monospace; font-size: 10.5px; color: var(--dim);
+  .wing-arrow {
+    font-family:'DM Mono',monospace; font-size: 11px; color: var(--white);
+    margin-top: 18px; opacity:0; transform: translateX(-6px);
+    transition: opacity 0.25s, transform 0.25s;
   }
-  .hall-ticker .tk-label { letter-spacing:0.25em; color: var(--white); font-size:9px; }
-  .hall-ticker .tk-item { white-space:nowrap; }
-  .hall-ticker .tk-item .tk-time { color: var(--mid); margin-left:6px; }
-  .hall-ticker .tk-sep { color: var(--mid); }
-  .hall-ticker .tk-view {
-    margin-left:auto; color: var(--white); text-decoration:none;
-    letter-spacing:0.15em; font-size:10px; display:flex; align-items:center; gap:6px;
-  }  @media (max-width: 760px) {
-    #hall { flex-direction: column; }
-    .hall-sidebar { width:100%; min-height:auto; position:static; border-right:none; border-bottom:1px solid var(--line); flex-direction:row; flex-wrap:wrap; align-items:center; gap:20px; }
-    .sb-spacer { display:none; }
-    .sb-quote { max-width:none; }
-    .hall-main { padding: 24px 18px 0; }
-    .hall-topnav { justify-content:space-between; }
+  .wing.active-wing:hover .wing-arrow { opacity:1; transform: translateX(0); }
+
+  /* ─── RECENT ARTIFACTS (placeholder) ─── */
+  .artifacts-list { display:flex; flex-direction:column; }
+  .artifact-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 14px 0; border-bottom: 1px dashed var(--line);
+    font-family:'DM Mono',monospace; font-size: 12px; color: var(--dim);
+  }
+  .artifact-row .a-id { color: var(--white); width: 110px; }
+  .artifact-row .a-title { flex:1; color: var(--white); font-family:'DM Sans',sans-serif; font-size: 13px; }
+  .artifact-row .a-meta { text-align:right; }
+
+  .hall-footer {
+    margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line);
+    font-family:'DM Mono',monospace; font-size: 9px; color: var(--mid); letter-spacing:0.1em;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
   }
 </style>
 </head>
@@ -214,106 +175,67 @@
 
 <!-- ═══ HALL ═══ -->
 <div id="hall">
+  <div class="hall-wrap">
 
-  <div class="hall-sidebar">
-    <div class="sb-logo">ARCHIVE</div>
-    <div class="sb-tagline">The Human Archive<br/>Institute of Cultural Analysis</div>
-    <div class="sb-since">Since 2026</div>
-    <div class="sb-spacer"></div>
-    <div class="sb-quote">The archive is not a place.<br/>It's a memory of everything worth remembering.</div>
-  </div>
-
-  <div class="hall-main">
-
-    <div class="hall-topnav">
-      <a href="#">ABOUT</a>
-      <a href="#">MANIFESTO</a>
-      <a href="#">RESEARCH</a>
-      <button class="hall-observer-btn" onclick="alert('Observer Login — скоро')">OBSERVER LOG IN <span class="dot"></span></button>
+    <div class="hall-top">
+      <div class="hall-logo">THE ARCHIVE<span>// permanent record system</span></div>
+      <div class="observer-card">
+        <span class="ob-id">OBSERVER #271</span>
+        Artifacts: <b id="ob-artifacts">12,481</b><br/>
+        Status: <b>Active</b><br/>
+        Access Level: <b>II</b>
+      </div>
     </div>
 
+    <div class="hall-section-label">// WINGS</div>
     <div class="wings-grid">
 
       <a class="wing active-wing" href="cinema.html">
-        <div class="wing-text">
-          <div class="wing-index">01</div>
-          <div class="wing-name">Cultural Archive</div>
-          <div class="wing-desc">Films, books, music, games, art, architecture and other forms of culture.</div>
-          <div class="wing-count">154.882 objects</div>
+        <div class="wing-top">
+          <div class="wing-name">Cultural Wing</div>
+          <div class="wing-status open">OPEN</div>
         </div>
-        <div class="wing-visual"><div class="wing-visual-icon">▢</div></div>
-        <div class="wing-status open">OPEN</div>
+        <div class="wing-desc">Cinema Archive — математический анализ кино, сериалов и игр. Literature, Music и Games Archive в разработке.</div>
+        <div class="wing-arrow">→ войти в Cinema Archive</div>
       </a>
 
       <div class="wing locked">
-        <div class="wing-text">
-          <div class="wing-index">02</div>
-          <div class="wing-name">Personal Archive</div>
-          <div class="wing-desc">Notes, thoughts, dreams, memories, letters and personal documents.</div>
-          <div class="wing-count">89.113 entries</div>
+        <div class="wing-top">
+          <div class="wing-name">Personal Wing</div>
+          <div class="wing-status">SOON</div>
         </div>
-        <div class="wing-visual"><div class="wing-visual-icon">▢</div></div>
-        <div class="wing-status">SOON</div>
+        <div class="wing-desc">Notes, Memory и Dream Archive — личные записи наблюдателя.</div>
       </div>
 
       <div class="wing locked">
-        <div class="wing-text">
-          <div class="wing-index">03</div>
-          <div class="wing-name">Collections</div>
-          <div class="wing-desc">Your physical and digital collections organized as a personal museum.</div>
-          <div class="wing-count">47.221 items</div>
+        <div class="wing-top">
+          <div class="wing-name">Collections Wing</div>
+          <div class="wing-status">SOON</div>
         </div>
-        <div class="wing-visual"><div class="wing-visual-icon">▢</div></div>
-        <div class="wing-status">SOON</div>
+        <div class="wing-desc">Objects, Quotes, Letters — коллекции артефактов вне основных архивов.</div>
       </div>
 
       <div class="wing locked">
-        <div class="wing-text">
-          <div class="wing-index">04</div>
-          <div class="wing-name">Observations</div>
-          <div class="wing-desc">Places, people, moments and everything you've experienced.</div>
-          <div class="wing-count">23.994 observations</div>
+        <div class="wing-top">
+          <div class="wing-name">Research Wing</div>
+          <div class="wing-status">SOON</div>
         </div>
-        <div class="wing-visual"><div class="wing-visual-icon">▢</div></div>
-        <div class="wing-status">SOON</div>
-      </div>
-
-      <div class="wing locked">
-        <div class="wing-text">
-          <div class="wing-index">05</div>
-          <div class="wing-name">Research</div>
-          <div class="wing-desc">Annual reports, statistics, cultural analysis and observer behavior.</div>
-          <div class="wing-count">983 reports</div>
-        </div>
-        <div class="wing-visual"><div class="wing-visual-icon">▢</div></div>
-        <div class="wing-status">SOON</div>
-      </div>
-
-      <div class="wing locked">
-        <div class="wing-text">
-          <div class="wing-index">06</div>
-          <div class="wing-name">Sound &amp; Visual</div>
-          <div class="wing-desc">Audio recordings, sounds, photos, videos and captured fragments.</div>
-          <div class="wing-count">18.221 files</div>
-        </div>
-        <div class="wing-visual"><div class="wing-visual-icon">▢</div></div>
-        <div class="wing-status">SOON</div>
+        <div class="wing-desc">Reports, Statistics, Observer Profile — сводная аналитика по всей системе.</div>
       </div>
 
     </div>
 
-    <div class="hall-ticker">
-      <span class="tk-label">LATEST ENTRIES</span>
-      <span class="tk-item">Observer #271 archived a new memory<span class="tk-time">Just now</span></span>
-      <span class="tk-sep">|</span>
-      <span class="tk-item">Observer #142 added a new film<span class="tk-time">2m ago</span></span>
-      <span class="tk-sep">|</span>
-      <span class="tk-item">New research report is available<span class="tk-time">10m ago</span></span>
-      <a class="tk-view" href="#">VIEW TIMELINE →</a>
+    <div class="hall-section-label">// RECENT ARTIFACTS</div>
+    <div class="artifacts-list" id="recent-artifacts">
+      <!-- populated by JS, falls back to placeholder rows -->
+    </div>
+
+    <div class="hall-footer">
+      <span>THE ARCHIVE // система записи и вычисления культурного опыта</span>
+      <span>v0.1 — Cultural Wing online</span>
     </div>
 
   </div>
-
 </div>
 
 
@@ -331,6 +253,24 @@
     }, 500);
     setTimeout(() => { entrance.style.display = 'none'; }, 1500);
   });
+
+  // ── RECENT ARTIFACTS: pull from Cinema Archive's local data if present, else placeholder ──
+  function renderArtifacts(items) {
+    const wrap = document.getElementById('recent-artifacts');
+    wrap.innerHTML = items.map(it => `
+      <div class="artifact-row">
+        <span class="a-id">${it.id}</span>
+        <span class="a-title">${it.title}</span>
+        <span class="a-meta">${it.meta}</span>
+      </div>`).join('');
+  }
+
+  renderArtifacts([
+    { id: 'A-013482', title: 'Blade Runner 2049', meta: 'Σ = 9.41' },
+    { id: 'A-009217', title: 'Arrival',            meta: 'Σ = 8.92' },
+    { id: 'A-011355', title: 'Interstellar',       meta: 'Σ = 9.05' },
+    { id: 'A-002201', title: 'Her',                meta: 'Σ = 8.74' }
+  ]);
 
 </script>
 
