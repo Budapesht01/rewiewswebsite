@@ -211,8 +211,8 @@ body {
 /* ── HERO PARALLAX ── */
 .hero-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(80px, 12vw, 180px);
-  line-height: 0.9; letter-spacing: 0.02em;
+  font-size: clamp(64px, 9.5vw, 140px);
+  line-height: 0.92; letter-spacing: 0.02em;
   color: var(--white);
   will-change: transform;
 }
@@ -557,6 +557,15 @@ body {
 }
 .score-max { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--dim); }
 .score-sigma-label { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--dim); align-self: flex-end; margin-right: 6px; margin-bottom: 6px; letter-spacing: 0.05em; }
+.score-compute-status {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+  color: var(--dim); margin-top: -8px; margin-bottom: 16px; text-transform: uppercase;
+}
+.media-archive-id {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em;
+  color: var(--dim); margin-bottom: 14px;
+}
+.media-archive-id span { color: var(--mid); }
 .score-count { font-size: 12px; color: var(--dim); font-family: 'DM Mono', monospace; }
 
 /* ── REVIEW SECTION ── */
@@ -1010,6 +1019,7 @@ body {
   color: var(--dim); flex-shrink: 0;
 }
 .profile-name { font-family: 'Bebas Neue', sans-serif; font-size: 48px; letter-spacing: 0.03em; }
+.profile-observer-id { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: var(--dim); margin-top: 4px; }
 .profile-stats {
   display: flex; gap: 40px; margin-top: 10px;
 }
@@ -2473,7 +2483,7 @@ body {
 }
 .vhs-rec-text {
   font-family: 'DM Mono', monospace; font-size: 7px;
-  color: rgba(242,242,240,0.3); letter-spacing: 0.2em;
+  color: rgba(242,242,240,0.3); letter-spacing: 0.08em;
 }
 .vhs-date-text {
   font-family: 'DM Mono', monospace; font-size: 9px;
@@ -3001,7 +3011,7 @@ body.vhs-on {
   <div class="mob-menu-section" id="mob-nav-section">
     <div class="mob-menu-label">// навигация</div>
     <button class="mob-menu-btn" onclick="closeMobileMenu(); showPage('home')">Главная</button>
-    <button class="mob-menu-btn" onclick="closeMobileMenu(); showPage('profile')" id="mob-profile-btn" style="display:none">Профиль</button>
+    <button class="mob-menu-btn" onclick="closeMobileMenu(); showPage('profile')" id="mob-profile-btn" style="display:none">Досье</button>
   </div>
   <div class="mob-menu-section" id="mob-auth-section">
     <div class="mob-menu-label">// аккаунт</div>
@@ -3152,8 +3162,7 @@ body.vhs-on {
       <div class="hero-glitch-bars"></div>
       <div class="hero-label">// архив математического анализа кино</div>
       <h1 class="hero-title">
-        МЫ НЕ<br/>
-        СТАВИМ<br/>
+        МЫ НЕ СТАВИМ<br/>
         <em>ОЦЕНКИ</em><br/>
         МЫ ИХ ВЫЧИСЛЯЕМ
       </h1>
@@ -4160,6 +4169,21 @@ function animateCounters() {
     }
     requestAnimationFrame(tick);
   });
+
+  const statusEl = document.getElementById('score-compute-status');
+  if (statusEl && !statusEl.dataset.ran) {
+    statusEl.dataset.ran = '1';
+    const params = statusEl.dataset.params || '11';
+    const steps = [
+      '// инициализация модели…',
+      '// сбор факторов…',
+      '// нормализация весов…',
+      `// нормализация завершена · ${params} параметров`
+    ];
+    steps.forEach((text, i) => {
+      setTimeout(() => { statusEl.textContent = text; }, i * 180);
+    });
+  }
 }
 
 function slotMachineScore(el, target, isGold, onDone) {
@@ -5057,7 +5081,7 @@ function cardHTML(item, mediaType, siteScore, featured = false) {
       <div class="card card-featured" onclick="openMedia(${item.id}, '${mediaType}')">
         ${posterLg ? `<img src="${posterLg}" alt="${escHtml(title)}" loading="eager"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
         <div class="card-featured-overlay">
-          <div class="feat-badge">// #1 в тренде · ${typeLabel}</div>
+          <div class="feat-badge">// объект №1 · ${typeLabel}</div>
           <div class="feat-title">${escHtml(title)}</div>
           ${item.overview ? `<div class="feat-overview">${escHtml(item.overview)}</div>` : ''}
           <div class="feat-meta">${siteScoreFeat}</div>
@@ -5325,7 +5349,9 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
                 <div class="score-max">/110</div>
                 <div class="score-count" data-target="${reviews.length}" data-suffix=" ${plural(reviews.length, 'наблюдение','наблюдения','наблюдений')}">0</div>
               </div>
-            </div>` : '<div style="color:var(--dim);font-size:13px;margin-bottom:16px">// данных недостаточно — первое наблюдение запускает вычисление</div>'}
+            </div>
+            <div class="score-compute-status" id="score-compute-status" data-params="${criteriaList.length || 11}">// инициализация модели…</div>` : '<div style="color:var(--dim);font-size:13px;margin-bottom:16px">// данных недостаточно — первое наблюдение запускает вычисление</div>'}
+          <div class="media-archive-id">// ARCHIVE <span>A-${String(media.id).padStart(6,'0')}</span></div>
           ${media.overview ? `<p class="media-overview">${escHtml(media.overview)}</p>` : ''}
           <div class="genre-chips">${genres}</div>
           ${state.user ? `<button class="btn-watched ${myReview ? 'watched' : ''}" id="watched-btn" onclick="toggleWatched(${media.id},'${type}')" title="${myReview ? 'Уже в архиве' : 'Добавить в просмотренное'}">
@@ -5337,7 +5363,7 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
 
     <div class="review-section">
       <div class="reviews-list-wrap">
-        <div class="reviews-title">// отзывы (${reviews.length})</div>
+        <div class="reviews-title">// отчёты (${reviews.length})</div>
         <div id="reviews-list">${renderReviews(reviews, criteriaList)}</div>
         <div id="radar-block-mount"></div>
       </div>
@@ -5390,7 +5416,7 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
 }
 
 function renderReviews(reviews, criteriaList) {
-  if (!reviews.length) return `<div class="empty-state"><div class="empty-state-icon">◈</div><p>Пока нет отзывов</p></div>`;
+  if (!reviews.length) return `<div class="empty-state"><div class="empty-state-icon">◈</div><p>Пока нет отчётов</p></div>`;
   return reviews.map((r, idx) => {
     const isGold = r.totalScore > 100;
     // micro-histogram bars
@@ -5454,7 +5480,7 @@ function renderReviews(reviews, criteriaList) {
           <div class="vhs-label">
             <div class="vhs-rec">
               <div class="vhs-rec-dot"></div>
-              <span class="vhs-rec-text">REC</span>
+              <span class="vhs-rec-text">RP-${String(r._id || '').slice(-6).toUpperCase() || '000000'}</span>
             </div>
             <span class="vhs-date-text">${dateUpper}</span>
           </div>
@@ -5501,7 +5527,7 @@ function renderRatingForm(type, criteriaList, myReview) {
     </div>
     <textarea class="comment-input" id="review-comment" placeholder="Ваш комментарий (необязательно)…">${myReview ? escHtml(myReview.comment || '') : ''}</textarea>
     <div class="review-sig-wrap">
-      <div class="review-sig-label">// подпись · верификация отзыва</div>
+      <div class="review-sig-label">// подпись · верификация отчёта</div>
       <canvas class="review-sig-canvas" id="reviewSigCanvas"></canvas>
       <div class="review-sig-row-controls">
         <div class="review-sig-hint">// та же подпись что при регистрации</div>
@@ -6048,6 +6074,7 @@ function renderProfilePage(user, reviews) {
       <div class="avatar-circle">${(user.username || 'U')[0].toUpperCase()}</div>
       <div>
         <div class="profile-name">${escHtml(user.username)}</div>
+        <div class="profile-observer-id">// OBSERVER #${String(user._id || user.id || '0000').slice(-4).toUpperCase().padStart(4,'0')}</div>
         <div class="profile-stats">
           <div class="profile-stat">
             <div class="profile-stat-num" id="profile-odo-wrap">
@@ -6066,7 +6093,7 @@ function renderProfilePage(user, reviews) {
       </div>
     </div>
     ${reviews.length
-      ? `<div class="shelf-section-title">// фильмотека — ${reviews.length} ${reviews.length === 1 ? 'запись' : reviews.length < 5 ? 'записи' : 'записей'}</div>
+      ? `<div class="shelf-section-title">// архив наблюдений — ${reviews.length} ${reviews.length === 1 ? 'запись' : reviews.length < 5 ? 'записи' : 'записей'}</div>
          <div class="shelf-wrap" id="profile-shelf">
            <div class="shelf-row" id="profile-shelf-row"></div>
            <div class="shelf-plank"></div>
@@ -6667,10 +6694,10 @@ const VHSScrub = (function(){
     const name = snap.name;
     if(name === 'home'){
       ctx.fillStyle = '#888'; ctx.font = `${Math.round(H * 0.015)}px DM Mono, monospace`;
-      ctx.fillText('// ТВОИ ОЦЕНКИ ИМЕЮТ ВЕС', W * 0.04, H * 0.13);
+      ctx.fillText('// МЫ НЕ СТАВИМ ОЦЕНКИ — МЫ ИХ ВЫЧИСЛЯЕМ', W * 0.04, H * 0.13);
       ctx.fillStyle = '#f2f2f0';
       ctx.font = `bold ${Math.round(H * 0.09)}px Bebas Neue, sans-serif`;
-      ['TRENDING', 'THIS', 'WEEK'].forEach((l, i) => {
+      ['НАИБОЛЕЕ', 'ИССЛЕДУЕМЫЕ', 'ОБЪЕКТЫ'].forEach((l, i) => {
         ctx.fillStyle = i === 1 ? '#222' : '#f2f2f0';
         ctx.fillText(l, W * 0.04, H * 0.22 + i * H * 0.085);
       });
@@ -6687,9 +6714,9 @@ const VHSScrub = (function(){
       ctx.fillStyle = '#0f0f0f'; ctx.fillRect(0, 60, W, H * 0.35);
       ctx.fillStyle = '#f2f2f0';
       ctx.font = `bold ${Math.round(H * 0.08)}px Bebas Neue, sans-serif`;
-      ctx.fillText(snap.label.replace('ПРОФИЛЬ: ','') || 'ПРОФИЛЬ', W * 0.05, H * 0.3);
+      ctx.fillText(snap.label.replace('ДОСЬЕ: ','') || 'ДОСЬЕ', W * 0.05, H * 0.3);
       ctx.fillStyle = '#444'; ctx.font = `${Math.round(H * 0.025)}px DM Mono, monospace`;
-      ctx.fillText('// ФИЛЬМОТЕКА', W * 0.05, H * 0.42);
+      ctx.fillText('// АРХИВ НАБЛЮДЕНИЙ', W * 0.05, H * 0.42);
       for(let i = 0; i < 6; i++){
         ctx.fillStyle = '#111';
         ctx.fillRect(W * 0.05 + i * (W * 0.155), H * 0.5, W * 0.13, H * 0.38);
@@ -6701,13 +6728,13 @@ const VHSScrub = (function(){
       const title = (snap.payload && snap.payload.title) ? snap.payload.title.toUpperCase() : 'КИНО';
       ctx.fillText(title, W * 0.04, H * 0.28);
       ctx.fillStyle = '#555'; ctx.font = `${Math.round(H * 0.025)}px DM Mono, monospace`;
-      ctx.fillText('// ОЦЕНИТЬ ЭТОТ ФИЛЬМ', W * 0.04, H * 0.36);
+      ctx.fillText('// НОВОЕ НАБЛЮДЕНИЕ', W * 0.04, H * 0.36);
       ctx.fillStyle = '#f2f2f0';
       const sc = (snap.payload && snap.payload.score) ? snap.payload.score : '';
       ctx.font = `bold ${Math.round(H * 0.16)}px Bebas Neue, sans-serif`;
       if(sc) ctx.fillText(sc, W * 0.04, H * 0.78);
       ctx.fillStyle = '#333'; ctx.font = `${Math.round(H * 0.02)}px DM Mono, monospace`;
-      ctx.fillText('// средний балл', W * 0.04, H * 0.86);
+      ctx.fillText('// Σ среднее', W * 0.04, H * 0.86);
     } else if(name === 'catalogue'){
       ctx.fillStyle = '#f2f2f0';
       ctx.font = `bold ${Math.round(H * 0.07)}px Bebas Neue, sans-serif`;
@@ -7086,7 +7113,7 @@ const CinemaReveal = (function(){
   window.showPage = function(name){
     let label = name.toUpperCase();
     if(name === 'home') label = 'ГЛАВНАЯ';
-    else if(name === 'profile') label = 'ПРОФИЛЬ';
+    else if(name === 'profile') label = 'ДОСЬЕ';
     else if(name === 'catalogue') label = 'КАТАЛОГ';
     VHSScrub.addHistory(name, label, {});
     _origShowPage(name);
