@@ -78,22 +78,30 @@
   }
   #hall.active { opacity:1; visibility:visible; transition: opacity 0.7s ease 0.5s; }
 
-  .hall-wrap { max-width: 1100px; margin: 0 auto; padding: 64px 32px 80px; }
+  .hall-wrap { max-width: 1100px; margin: 0 auto; padding: 72px 32px 120px; }
 
-  .hall-top {
-    display:flex; justify-content:space-between; align-items:flex-start;
-    margin-bottom: 56px; flex-wrap:wrap; gap:24px;
+  /* Monument block */
+  .hall-monument {
+    margin-bottom: 80px;
   }
-  .hall-logo { font-family:'Bebas Neue',sans-serif; font-size: 30px; letter-spacing: 0.12em; }
-  .hall-logo span { display:block; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.25em; color:var(--dim); margin-top:2px; }
-
-  .observer-card {
-    font-family:'DM Mono',monospace; font-size: 11px; color: var(--dim);
-    border: 1px solid var(--line); padding: 14px 18px; min-width: 200px;
-    line-height: 2;
+  .hall-monument-logo {
+    font-family:'Bebas Neue',sans-serif;
+    font-size: clamp(56px, 8vw, 96px);
+    letter-spacing: 0.1em; line-height: 1;
+    margin-bottom: 20px;
   }
-  .observer-card b { color: var(--white); font-weight:500; }
-  .observer-card .ob-id { color: var(--white); letter-spacing:0.05em; display:block; margin-bottom:6px; }
+  .hall-monument-sub {
+    font-family:'DM Mono',monospace; font-size: 11px; letter-spacing:0.2em;
+    color: var(--dim); margin-bottom: 40px;
+  }
+  .hall-monument-divider {
+    border: none; border-top: 1px solid var(--line); margin-bottom: 28px;
+  }
+  .hall-monument-stats {
+    font-family:'DM Mono',monospace; font-size: 12px; letter-spacing:0.12em;
+    color: var(--dim); display:flex; gap: 48px; flex-wrap:wrap;
+  }
+  .hall-monument-stats span b { color: var(--white); font-weight:500; display:block; font-size:22px; margin-bottom:2px; }
 
   .hall-section-label {
     font-family:'DM Mono',monospace; font-size: 10px; letter-spacing:0.3em;
@@ -104,7 +112,7 @@
   .wings-grid {
     display:grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
     background: var(--line); border:1px solid var(--line);
-    margin-bottom: 64px;
+    margin-bottom: 72px;
   }
   @media (max-width: 720px){ .wings-grid { grid-template-columns: 1fr; } }
 
@@ -113,9 +121,13 @@
     min-height: 150px; display:flex; flex-direction:column; justify-content:space-between;
     text-decoration:none; color:inherit; cursor:pointer;
     transition: background 0.25s;
+    opacity: 0; transform: translateY(14px);
   }
+  .wing.revealed { opacity:1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease, background 0.25s; }
   .wing.active-wing:hover { background: #0d0d0d; }
-  .wing.locked { cursor:default; opacity: 0.5; }
+  .wing.locked { cursor:default; }
+  .wing.locked .wing-name { opacity: 0.45; }
+  .wing.locked .wing-desc { opacity: 0.4; }
 
   .wing-top { display:flex; justify-content:space-between; align-items:flex-start; }
   .wing-name { font-family:'Bebas Neue',sans-serif; font-size: 30px; letter-spacing:0.04em; }
@@ -123,7 +135,7 @@
     font-family:'DM Mono',monospace; font-size: 9px; letter-spacing:0.15em;
     border: 1px solid var(--line); padding: 4px 9px; color: var(--dim); white-space:nowrap;
   }
-  .wing-status.open { color: var(--white); border-color: var(--mid); }
+  .wing-status.active-status { color: var(--white); border-color: var(--mid); }
 
   .wing-desc {
     font-family:'DM Mono',monospace; font-size: 10.5px; color: var(--dim);
@@ -137,7 +149,20 @@
   }
   .wing.active-wing:hover .wing-arrow { opacity:1; transform: translateX(0); }
 
-  /* ─── RECENT ARTIFACTS (placeholder) ─── */
+  /* ─── OBSERVER ─── */
+  .observer-block {
+    display:flex; gap: 48px; margin-bottom: 64px; flex-wrap:wrap;
+    padding-top: 40px; border-top: 1px solid var(--line);
+  }
+  .observer-field { font-family:'DM Mono',monospace; font-size: 11px; color: var(--dim); }
+  .observer-field b { color: var(--white); font-weight:500; display:block; font-size: 18px; margin-bottom:2px; }
+  .observer-field-id { font-family:'DM Mono',monospace; font-size: 10px; letter-spacing:0.2em; color: var(--dim); margin-bottom: 28px; }
+
+  /* ─── LATEST ACQUISITIONS ─── */
+  .acq-title {
+    font-family:'DM Mono',monospace; font-size: 10px; letter-spacing:0.3em;
+    color: var(--dim); margin-bottom: 18px;
+  }
   .artifacts-list { display:flex; flex-direction:column; }
   .artifact-row {
     display:flex; justify-content:space-between; align-items:center;
@@ -148,11 +173,24 @@
   .artifact-row .a-title { flex:1; color: var(--white); font-family:'DM Sans',sans-serif; font-size: 13px; }
   .artifact-row .a-meta { text-align:right; }
 
+  /* ─── FOOTER ─── */
   .hall-footer {
-    margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line);
-    font-family:'DM Mono',monospace; font-size: 9px; color: var(--mid); letter-spacing:0.1em;
-    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:flex-start;
+    flex-wrap:wrap; gap: 24px;
   }
+  .hall-footer-left { font-family:'DM Mono',monospace; font-size: 9px; color: var(--mid); letter-spacing:0.1em; line-height:2; }
+  .hall-footer-live {
+    font-family:'DM Mono',monospace; font-size: 9px; color: var(--dim);
+    text-align:right; line-height:2;
+  }
+  .hall-footer-live .live-val { color: var(--white); }
+  .hall-footer-live .live-dot {
+    display:inline-block; width:5px; height:5px; border-radius:50%;
+    background: var(--white); margin-right: 5px; vertical-align: middle;
+    animation: pulseDot 2.5s ease infinite;
+  }
+  @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:0.2} }
 </style>
 </head>
 <body>
@@ -177,23 +215,26 @@
 <div id="hall">
   <div class="hall-wrap">
 
-    <div class="hall-top">
-      <div class="hall-logo">THE ARCHIVE<span>// permanent record system</span></div>
-      <div class="observer-card">
-        <span class="ob-id">OBSERVER #271</span>
-        Artifacts: <b id="ob-artifacts">12,481</b><br/>
-        Status: <b>Active</b><br/>
-        Access Level: <b>II</b>
+    <!-- 1. MONUMENT — Archive first, you second -->
+    <div class="hall-monument">
+      <div class="hall-monument-logo">THE ARCHIVE</div>
+      <div class="hall-monument-sub">// permanent record system</div>
+      <hr class="hall-monument-divider"/>
+      <div class="hall-monument-stats">
+        <div><b>4</b>Wings</div>
+        <div><b>1</b>Available</div>
+        <div><b>3</b>Closed</div>
       </div>
     </div>
 
+    <!-- 2. WINGS — place before observer -->
     <div class="hall-section-label">// WINGS</div>
     <div class="wings-grid">
 
       <a class="wing active-wing" href="cultural-wing.html">
         <div class="wing-top">
           <div class="wing-name">Cultural Wing</div>
-          <div class="wing-status open">OPEN</div>
+          <div class="wing-status active-status">Active</div>
         </div>
         <div class="wing-desc">Cinema Archive — математический анализ кино, сериалов и игр. Literature, Music и Games Archive в разработке.</div>
         <div class="wing-arrow">→ войти в Cultural Wing</div>
@@ -202,7 +243,7 @@
       <div class="wing locked">
         <div class="wing-top">
           <div class="wing-name">Personal Wing</div>
-          <div class="wing-status">SOON</div>
+          <div class="wing-status">Closed</div>
         </div>
         <div class="wing-desc">Notes, Memory и Dream Archive — личные записи наблюдателя.</div>
       </div>
@@ -210,7 +251,7 @@
       <div class="wing locked">
         <div class="wing-top">
           <div class="wing-name">Collections Wing</div>
-          <div class="wing-status">SOON</div>
+          <div class="wing-status">Closed</div>
         </div>
         <div class="wing-desc">Objects, Quotes, Letters — коллекции артефактов вне основных архивов.</div>
       </div>
@@ -218,21 +259,38 @@
       <div class="wing locked">
         <div class="wing-top">
           <div class="wing-name">Research Wing</div>
-          <div class="wing-status">SOON</div>
+          <div class="wing-status">Closed</div>
         </div>
         <div class="wing-desc">Reports, Statistics, Observer Profile — сводная аналитика по всей системе.</div>
       </div>
 
     </div>
 
-    <div class="hall-section-label">// RECENT ARTIFACTS</div>
-    <div class="artifacts-list" id="recent-artifacts">
-      <!-- populated by JS, falls back to placeholder rows -->
+    <!-- 3. OBSERVER — after the place -->
+    <div class="observer-field-id">// CURRENT SESSION</div>
+    <div class="observer-block">
+      <div class="observer-field"><b>OBSERVER #271</b>Identity</div>
+      <div class="observer-field"><b id="ob-artifacts">12,481</b>Artifacts Stored</div>
+      <div class="observer-field"><b>Active</b>Status</div>
+      <div class="observer-field"><b>II</b>Access Level</div>
     </div>
 
+    <!-- 4. LATEST ACQUISITIONS -->
+    <div class="acq-title">// LATEST ACQUISITIONS</div>
+    <div class="artifacts-list" id="recent-artifacts"></div>
+
+    <!-- 5. FOOTER -->
     <div class="hall-footer">
-      <span>THE ARCHIVE // система записи и вычисления культурного опыта</span>
-      <span>v0.1 — Cultural Wing online</span>
+      <div class="hall-footer-left">
+        THE ARCHIVE<br/>
+        Archive Status: Operational<br/>
+        Cultural Wing: Online
+      </div>
+      <div class="hall-footer-live">
+        <span class="live-dot"></span>Archive is live<br/>
+        Artifacts Stored: <span class="live-val" id="live-count">4,281,492</span><br/>
+        Last Entry: <span class="live-val" id="live-last">18 seconds ago</span>
+      </div>
     </div>
 
   </div>
@@ -251,26 +309,45 @@
       unfold.classList.add('active');
       hall.classList.add('active');
     }, 500);
-    setTimeout(() => { entrance.style.display = 'none'; }, 1500);
+    setTimeout(() => {
+      entrance.style.display = 'none';
+      revealWings();
+    }, 1500);
   });
 
-  // ── RECENT ARTIFACTS: pull from Cinema Archive's local data if present, else placeholder ──
-  function renderArtifacts(items) {
-    const wrap = document.getElementById('recent-artifacts');
-    wrap.innerHTML = items.map(it => `
-      <div class="artifact-row">
-        <span class="a-id">${it.id}</span>
-        <span class="a-title">${it.title}</span>
-        <span class="a-meta">${it.meta}</span>
-      </div>`).join('');
+  // ── WINGS appear one by one after entering ──
+  function revealWings() {
+    const wings = document.querySelectorAll('.wing');
+    wings.forEach((w, i) => {
+      setTimeout(() => w.classList.add('revealed'), 200 + i * 280);
+    });
   }
 
-  renderArtifacts([
+  // ── LATEST ACQUISITIONS ──
+  const wrap = document.getElementById('recent-artifacts');
+  wrap.innerHTML = [
     { id: 'A-013482', title: 'Blade Runner 2049', meta: 'Σ = 9.41' },
     { id: 'A-009217', title: 'Arrival',            meta: 'Σ = 8.92' },
     { id: 'A-011355', title: 'Interstellar',       meta: 'Σ = 9.05' },
     { id: 'A-002201', title: 'Her',                meta: 'Σ = 8.74' }
-  ]);
+  ].map(it => `<div class="artifact-row">
+    <span class="a-id">${it.id}</span>
+    <span class="a-title">${it.title}</span>
+    <span class="a-meta">${it.meta}</span>
+  </div>`).join('');
+
+  // ── LIVE COUNTER ──
+  let liveCount = 4281492;
+  let lastSec = 18;
+  function updateLive() {
+    liveCount += Math.floor(Math.random() * 3);
+    lastSec = Math.max(1, lastSec + Math.floor(Math.random() * 7) - 3);
+    const el = document.getElementById('live-count');
+    const el2 = document.getElementById('live-last');
+    if (el) el.textContent = liveCount.toLocaleString('ru-RU');
+    if (el2) el2.textContent = lastSec + ' seconds ago';
+  }
+  setInterval(updateLive, 3800);
 
 </script>
 
