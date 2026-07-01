@@ -101,10 +101,10 @@ body {
 }
 #username-btn:hover { border-color: var(--white); }
 #logout-btn {
-  background: none; border: none; color: var(--dim); font-family: 'DM Mono', monospace;
-  font-size: 10px; cursor: pointer; transition: color 0.2s;
+  background: none; border: 1px solid var(--line); color: var(--dim); font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.08em; padding: 6px 14px; cursor: pointer; transition: border-color 0.2s, color 0.2s;
 }
-#logout-btn:hover { color: var(--white); }
+#logout-btn:hover { color: var(--white); border-color: var(--white); }
 
 /* Search */
 .search-wrap { position: relative; }
@@ -226,13 +226,13 @@ body {
   background: var(--grey); cursor: pointer;
   transition: transform 0.25s ease;
 }
-.card:hover { transform: scale(1.02); z-index: 2; }
+.card:hover { transform: scale(1.04); z-index: 3; box-shadow: 0 0 0 1px var(--mid); }
 .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .card-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(to top, rgba(8,8,8,0.92) 0%, transparent 55%);
   display: flex; flex-direction: column; justify-content: flex-end; padding: 12px;
-  opacity: 0; transition: opacity 0.25s;
+  opacity: 0; transition: opacity 0.25s; z-index: 2;
 }
 .card:hover .card-overlay { opacity: 1; }
 .card-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; line-height: 1.4; }
@@ -254,10 +254,10 @@ body {
 .card::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='rgba(0,0,0,0.3)'/%3E%3C/svg%3E");
-  background-size: 4px 4px; opacity: 0.4; mix-blend-mode: multiply;
+  background-size: 4px 4px; opacity: 0.4; mix-blend-mode: multiply; z-index: 1;
 }
 .card-featured {
-  aspect-ratio: unset; grid-column: span 2;
+  aspect-ratio: unset; grid-column: span 3;
   min-height: 320px; position: relative; overflow: hidden; cursor: pointer;
 }
 .card-featured img { width: 100%; height: 100%; object-fit: cover; }
@@ -826,6 +826,65 @@ body {
   .screenshots-strip { padding: 16px 16px; }
   .search-wrap { display: none; }
 }
+
+/* ── DISC VISUAL ── */
+.disc-visual { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.disc-outer {
+  width: 220px; height: 220px; border-radius: 50%; position: relative;
+  background: radial-gradient(circle at 35% 35%, #2a2a2a 0%, #111 40%, #080808 100%);
+  border: 1px solid #2a2a2a;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 0 0 1px #1c1c1c;
+  overflow: hidden;
+}
+.disc-ring-1 { position:absolute; inset:12px; border-radius:50%; border:1px solid #222; }
+.disc-ring-2 { position:absolute; inset:32px; border-radius:50%; border:1px solid #1c1c1c; }
+.disc-ring-3 { position:absolute; inset:58px; border-radius:50%; border:1px solid #1a1a1a; }
+/* iridescent strip */
+.disc-outer::before {
+  content:''; position:absolute; inset:0; border-radius:50%;
+  background: conic-gradient(
+    from 200deg,
+    transparent 0deg, rgba(138,171,138,0.04) 30deg,
+    transparent 60deg, rgba(200,169,110,0.03) 90deg,
+    transparent 140deg, rgba(138,171,138,0.04) 180deg,
+    transparent 220deg
+  );
+}
+.disc-center {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+}
+.disc-hole {
+  width:28px; height:28px; border-radius:50%;
+  background: var(--black); border:1px solid #333;
+}
+.disc-label {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:4px; pointer-events:none;
+}
+.disc-label-title {
+  font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:0.2em;
+  color:rgba(242,242,240,0.15);
+}
+.disc-label-sub {
+  font-family:'DM Mono',monospace; font-size:7px; letter-spacing:0.15em;
+  color:rgba(242,242,240,0.08);
+}
+.disc-meta { width:220px; }
+.disc-meta-row {
+  display:flex; justify-content:space-between;
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.1em;
+  color:var(--dim); padding:5px 0; border-bottom:1px solid var(--line);
+}
+.disc-meta-row:last-child { border-bottom:none; }
+
+
+@media (max-width: 768px) {
+  .disc-visual { transform: scale(0.75); transform-origin: center top; }
+  .cards-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .card-featured { grid-column: span 2; min-height: 200px; }
+  .genre-reel-frame { flex: 0 0 100px; }
+  .modal-box { padding: 24px; }
+}
 </style>
 </head>
 <body>
@@ -838,8 +897,10 @@ body {
 
 <!-- ── TOPBAR ── -->
 <nav id="topbar">
-  <div style="display:flex;align-items:center;gap:0;cursor:pointer;" onclick="window.location='cultural-wing.html'">
-    <span class="logo" onclick="event.stopPropagation();showPage('home')">GAMES ARCHIVE</span>
+  <div style="display:flex;align-items:center;gap:0;cursor:pointer;">
+    <span class="logo" onclick="showPage('home')">GAMES ARCHIVE</span>
+    <span class="logo-sep">·</span>
+    <a href="cultural-wing.html" style="text-decoration:none"><span class="logo-wing">CULTURAL WING</span></a>
   </div>
   <div class="nav-right">
     <div class="search-wrap">
@@ -889,20 +950,24 @@ body {
       </div>
     </div>
     <div class="hero-right">
-      <div class="hero-circles">
-        <div class="hero-circle" style="width:72px;height:72px">
-          <div class="hero-circle-inner" style="font-size:22px">1.3×</div>
+      <div class="disc-visual">
+        <div class="disc-outer">
+          <div class="disc-ring-1"></div>
+          <div class="disc-ring-2"></div>
+          <div class="disc-ring-3"></div>
+          <div class="disc-center">
+            <div class="disc-hole"></div>
+          </div>
+          <div class="disc-label">
+            <div class="disc-label-title">GAMES ARCHIVE</div>
+            <div class="disc-label-sub">// ARCHIVE OBJECT</div>
+          </div>
         </div>
-        <div class="hero-circle" style="width:52px;height:52px">
-          <div class="hero-circle-inner" style="font-size:16px">1.2×</div>
+        <div class="disc-meta">
+          <div class="disc-meta-row"><span>Format</span><span>BD-ROM</span></div>
+          <div class="disc-meta-row"><span>Capacity</span><span>110 pts</span></div>
+          <div class="disc-meta-row"><span>Criteria</span><span>11 params</span></div>
         </div>
-        <div class="hero-circle" style="width:40px;height:40px">
-          <div class="hero-circle-inner" style="font-size:13px">1.1×</div>
-        </div>
-        <div class="hero-circle" style="width:32px;height:32px">
-          <div class="hero-circle-inner" style="font-size:11px">1×</div>
-        </div>
-        <div class="hero-circle-label">Множители весов</div>
       </div>
     </div>
   </div>
@@ -1071,25 +1136,38 @@ function doTransition(cb) {
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
+  const CX = W / 2, CY = H / 2;
   canvas.style.opacity = '1';
   const START = performance.now();
-  const TOTAL = 280;
+  const TOTAL = 480;
   function frame(now) {
     const t = now - START;
     ctx.clearRect(0, 0, W, H);
-    if (t < 140) {
-      // pixel dissolve — archive data corruption feel
+    if (t < 240) {
+      // disc expand — spinning circle wipes screen
       ctx.fillStyle = '#080808'; ctx.fillRect(0, 0, W, H);
-      const density = t / 140;
-      for (let i = 0; i < W * H * 0.003 * density; i++) {
-        const x = Math.random() * W, y = Math.random() * H;
-        const s = Math.random() * 3 + 1;
-        ctx.fillStyle = `rgba(138,171,138,${Math.random() * 0.15})`;
-        ctx.fillRect(x, y, s, s);
+      const radius = (t / 240) * Math.hypot(CX, CY) * 1.1;
+      const angle  = (t / 240) * Math.PI * 4; // spin as it expands
+      ctx.save();
+      ctx.translate(CX, CY);
+      ctx.rotate(angle);
+      // disc rings
+      for (let r = radius; r > 0; r -= radius * 0.15) {
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(34,34,34,${0.3 * (1 - r/radius)})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
-      if (t > 100 && !frame._cbCalled) { frame._cbCalled = true; cb(); }
+      ctx.restore();
+      // black disc expanding
+      ctx.beginPath();
+      ctx.arc(CX, CY, radius * 0.85, 0, Math.PI * 2);
+      ctx.fillStyle = '#080808';
+      ctx.fill();
+      if (t > 160 && !frame._cbCalled) { frame._cbCalled = true; cb(); }
     } else if (t < TOTAL) {
-      const p = (t - 140) / 140;
+      const p = (t - 240) / 240;
       ctx.fillStyle = `rgba(8,8,8,${1 - p})`;
       ctx.fillRect(0, 0, W, H);
     } else {
@@ -1833,10 +1911,12 @@ function renderProfilePage(user, reviews) {
   const observerNum = String(user._id || user.id || '0').slice(-4).toUpperCase().padStart(4,'0');
 
   const cards = reviews.map(r => {
-    const img = r.poster ? `https://image.tmdb.org/t/p/w342${r.poster}` : '';
+    // Games store background_image (RAWG), not TMDB poster
+    const img = r.background_image || r.poster || '';
+    const archiveId = `GA-${String(r.tmdbId).padStart(6,'0')}`;
     return `
       <div class="profile-game-card" onclick="openGame(${r.tmdbId})">
-        ${img ? `<img src="${img}" alt="" loading="lazy"/>` : `<div style="background:var(--grey);width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)">GA-${String(r.tmdbId).padStart(6,'0')}</div>`}
+        ${img ? `<img src="${img}" alt="" loading="lazy"/>` : `<div style="background:var(--grey);width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)">${archiveId}</div>`}
         <div class="profile-game-info">
           <div class="profile-game-score${r.totalScore > 100 ? ' gold' : ''}">${r.totalScore}<span>/110</span></div>
           ${r.title ? `<div class="profile-game-title">${escHtml(r.title)}</div>` : ''}
