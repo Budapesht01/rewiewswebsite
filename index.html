@@ -14,16 +14,15 @@
     --mid:   #333;
     --dim:   #888;
     --line:  #222;
-    --red:   #ff3333;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { background: var(--black); color: var(--white); font-family:'DM Sans',sans-serif; overflow:hidden; height:100%; }
   ::selection { background: var(--white); color: var(--black); }
 
-  /* ─── NOISE OVERLAY (very subtle, per spec) ─── */
+  /* ─── NOISE ─── */
   #noise {
     position: fixed; inset:0; pointer-events:none; z-index: 5;
-    opacity: 0.045; mix-blend-mode: overlay;
+    opacity: 0.04; mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
@@ -32,19 +31,17 @@
     position: fixed; inset:0; z-index: 10;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap: 28px; text-align:center;
-    transition: opacity 0.9s ease, transform 0.9s ease;
+    transition: opacity 0.8s ease;
   }
-  #entrance.leaving { opacity:0; transform: scale(1.04); pointer-events:none; }
-
+  #entrance.leaving { opacity:0; pointer-events:none; }
   .entrance-logo {
     font-family:'Bebas Neue',sans-serif;
-    font-size: clamp(56px, 9vw, 110px);
-    letter-spacing: 0.14em;
+    font-size: clamp(56px, 9vw, 110px); letter-spacing: 0.14em;
     opacity:0; animation: feIn 1.8s ease forwards; animation-delay: 0.2s;
   }
   .entrance-tag {
     font-family:'DM Mono',monospace; font-size: 12px; letter-spacing: 0.08em;
-    color: var(--dim); max-width: 420px; line-height:1.6;
+    color: var(--dim); max-width: 420px; line-height:1.7;
     opacity:0; animation: feIn 1.8s ease forwards; animation-delay: 0.9s;
   }
   .entrance-enter {
@@ -56,16 +53,31 @@
     transition: border-color 0.3s, background 0.3s;
   }
   .entrance-enter:hover { border-color: var(--white); background: rgba(255,255,255,0.04); }
-
   @keyframes feIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
 
-  /* ─── DOOR / UNFOLD TRANSITION ─── */
+  /* ─── ACCESS SEQUENCE ─── */
+  #access-seq {
+    position: fixed; inset:0; z-index: 15;
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    gap: 10px; text-align:left;
+  }
+  #access-seq.active { display:flex; }
+  .seq-line {
+    font-family:'DM Mono',monospace; font-size: 13px; letter-spacing: 0.15em;
+    color: var(--dim); width: 280px;
+    opacity:0; transform: translateY(4px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .seq-line.visible { opacity:1; transform: translateY(0); }
+  .seq-line.granted { color: var(--white); }
+
+  /* ─── UNFOLD ─── */
   #unfold {
     position: fixed; inset:0; z-index: 20; pointer-events:none;
-    display:flex; opacity: 0; transition: opacity 0s;
+    display:flex; opacity:0;
   }
-  #unfold.active { opacity: 1; }
-  #unfold .leaf { flex:1; background: var(--black); transform-origin: center; }
+  #unfold.active { opacity:1; }
+  #unfold .leaf { flex:1; background: var(--black); }
   #unfold.active .leaf-l { animation: unfoldL 0.9s cubic-bezier(0.76,0,0.24,1) forwards; }
   #unfold.active .leaf-r { animation: unfoldR 0.9s cubic-bezier(0.76,0,0.24,1) forwards; }
   @keyframes unfoldL { to { transform: translateX(-100%); } }
@@ -78,116 +90,125 @@
   }
   #hall.active { opacity:1; visibility:visible; transition: opacity 0.7s ease 0.5s; }
 
-  .hall-wrap { max-width: 1100px; margin: 0 auto; padding: 72px 32px 120px; }
+  .hall-wrap { max-width: 1100px; margin: 0 auto; padding: 80px 32px 120px; }
 
-  /* Monument block */
-  .hall-monument {
-    margin-bottom: 80px;
-  }
+  /* ── MONUMENT ── */
+  .hall-monument { margin-bottom: 100px; }
   .hall-monument-logo {
     font-family:'Bebas Neue',sans-serif;
-    font-size: clamp(56px, 8vw, 96px);
-    letter-spacing: 0.1em; line-height: 1;
-    margin-bottom: 20px;
+    font-size: clamp(96px, 14vw, 160px);
+    letter-spacing: 0.06em; line-height: 0.9;
+    margin-bottom: 32px;
   }
   .hall-monument-sub {
-    font-family:'DM Mono',monospace; font-size: 11px; letter-spacing:0.2em;
-    color: var(--dim); margin-bottom: 40px;
+    font-family:'DM Mono',monospace; font-size: 11px; letter-spacing: 0.2em;
+    color: var(--dim); margin-bottom: 56px;
   }
-  .hall-monument-divider {
-    border: none; border-top: 1px solid var(--line); margin-bottom: 28px;
-  }
+  .hall-monument-divider { border:none; border-top: 1px solid var(--line); margin-bottom: 36px; }
   .hall-monument-stats {
-    font-family:'DM Mono',monospace; font-size: 12px; letter-spacing:0.12em;
-    color: var(--dim); display:flex; gap: 48px; flex-wrap:wrap;
+    font-family:'DM Mono',monospace; font-size: 11px; letter-spacing: 0.1em;
+    color: var(--dim); display:flex; gap: 56px; flex-wrap:wrap;
   }
-  .hall-monument-stats span b { color: var(--white); font-weight:500; display:block; font-size:22px; margin-bottom:2px; }
+  .hall-monument-stats .stat-num {
+    font-family:'Bebas Neue',sans-serif; font-size: 36px; letter-spacing: 0.04em;
+    color: var(--white); display:block; margin-bottom: 4px;
+  }
 
+  /* ── SECTION LABEL ── */
   .hall-section-label {
-    font-family:'DM Mono',monospace; font-size: 10px; letter-spacing:0.3em;
-    color: var(--dim); margin-bottom: 18px;
+    font-family:'DM Mono',monospace; font-size: 10px; letter-spacing: 0.3em;
+    color: var(--dim); margin-bottom: 0;
   }
 
-  /* ─── WINGS GRID ─── */
-  .wings-grid {
-    display:grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
-    background: var(--line); border:1px solid var(--line);
-    margin-bottom: 72px;
-  }
-  @media (max-width: 720px){ .wings-grid { grid-template-columns: 1fr; } }
+  /* ── WINGS AS ROWS ── */
+  .wings-list { margin-bottom: 80px; }
 
   .wing {
-    background: var(--black); padding: 32px 28px; position:relative;
-    min-height: 150px; display:flex; flex-direction:column; justify-content:space-between;
-    text-decoration:none; color:inherit; cursor:pointer;
-    transition: background 0.25s;
-    opacity: 0; transform: translateY(14px);
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding: 28px 0; border-bottom: 1px solid var(--line);
+    text-decoration:none; color:inherit;
+    opacity:0; transform: translateY(10px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    position: relative;
   }
-  .wing.revealed { opacity:1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease, background 0.25s; }
-  .wing.active-wing:hover { background: #0d0d0d; }
+  .wing:first-child { border-top: 1px solid var(--line); }
+  .wing.revealed { opacity:1; transform: translateY(0); }
+  .wing.active-wing { cursor:pointer; }
+  .wing.active-wing:hover .wing-name { opacity: 0.7; }
   .wing.locked { cursor:default; }
-  .wing.locked .wing-name { opacity: 0.45; }
-  .wing.locked .wing-desc { opacity: 0.4; }
 
-  .wing-top { display:flex; justify-content:space-between; align-items:flex-start; }
-  .wing-name { font-family:'Bebas Neue',sans-serif; font-size: 30px; letter-spacing:0.04em; }
-  .wing-status {
-    font-family:'DM Mono',monospace; font-size: 9px; letter-spacing:0.15em;
-    border: 1px solid var(--line); padding: 4px 9px; color: var(--dim); white-space:nowrap;
+  .wing-left { flex:1; }
+  .wing-name {
+    font-family:'Bebas Neue',sans-serif; font-size: clamp(28px, 4vw, 42px);
+    letter-spacing: 0.04em; transition: opacity 0.2s;
   }
-  .wing-status.active-status { color: var(--white); border-color: var(--mid); }
-
+  .wing.locked .wing-name { opacity: 0.3; }
   .wing-desc {
     font-family:'DM Mono',monospace; font-size: 10.5px; color: var(--dim);
-    line-height: 1.6; margin-top: 14px; max-width: 320px;
+    line-height: 1.6; margin-top: 8px; max-width: 480px;
   }
-
+  .wing.locked .wing-desc { opacity: 0.35; }
   .wing-arrow {
     font-family:'DM Mono',monospace; font-size: 11px; color: var(--white);
-    margin-top: 18px; opacity:0; transform: translateX(-6px);
+    margin-top: 14px; display:inline-flex; align-items:center; gap: 8px;
+    opacity:0; transform: translateX(-6px);
     transition: opacity 0.25s, transform 0.25s;
   }
   .wing.active-wing:hover .wing-arrow { opacity:1; transform: translateX(0); }
 
-  /* ─── OBSERVER ─── */
-  .observer-block {
-    display:flex; gap: 48px; margin-bottom: 64px; flex-wrap:wrap;
-    padding-top: 40px; border-top: 1px solid var(--line);
+  .wing-right { text-align:right; padding-left: 32px; padding-top: 4px; flex-shrink:0; }
+  .wing-status {
+    font-family:'DM Mono',monospace; font-size: 9px; letter-spacing: 0.15em;
+    border: 1px solid var(--line); padding: 4px 9px; color: var(--dim);
   }
-  .observer-field { font-family:'DM Mono',monospace; font-size: 11px; color: var(--dim); }
-  .observer-field b { color: var(--white); font-weight:500; display:block; font-size: 18px; margin-bottom:2px; }
-  .observer-field-id { font-family:'DM Mono',monospace; font-size: 10px; letter-spacing:0.2em; color: var(--dim); margin-bottom: 28px; }
+  .wing-status.active-status { color: var(--white); border-color: var(--mid); }
 
-  /* ─── LATEST ACQUISITIONS ─── */
-  .acq-title {
-    font-family:'DM Mono',monospace; font-size: 10px; letter-spacing:0.3em;
-    color: var(--dim); margin-bottom: 18px;
+  /* ── OBSERVER / DOSSIER ── */
+  .observer-label {
+    font-family:'DM Mono',monospace; font-size: 10px; letter-spacing: 0.3em;
+    color: var(--dim); margin-bottom: 20px;
   }
-  .artifacts-list { display:flex; flex-direction:column; }
+  .observer-dossier {
+    display:grid; grid-template-columns: repeat(4,1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line);
+    margin-bottom: 72px;
+  }
+  @media(max-width:680px){ .observer-dossier { grid-template-columns: repeat(2,1fr); } }
+  .dossier-field {
+    background: var(--black); padding: 22px 20px;
+    font-family:'DM Mono',monospace;
+  }
+  .dossier-field-label { font-size: 9px; letter-spacing: 0.2em; color: var(--dim); margin-bottom: 8px; }
+  .dossier-field-val { font-family:'Bebas Neue',sans-serif; font-size: 28px; letter-spacing: 0.04em; color: var(--white); }
+
+  /* ── LATEST ACQUISITIONS ── */
+  .acq-title {
+    font-family:'DM Mono',monospace; font-size: 10px; letter-spacing: 0.3em;
+    color: var(--dim); margin-bottom: 0;
+  }
+  .artifacts-list { display:flex; flex-direction:column; margin-bottom: 0; }
   .artifact-row {
     display:flex; justify-content:space-between; align-items:center;
-    padding: 14px 0; border-bottom: 1px dashed var(--line);
+    padding: 14px 0; border-bottom: 1px solid var(--line);
     font-family:'DM Mono',monospace; font-size: 12px; color: var(--dim);
   }
+  .artifact-row:first-child { border-top: 1px solid var(--line); }
   .artifact-row .a-id { color: var(--white); width: 110px; }
   .artifact-row .a-title { flex:1; color: var(--white); font-family:'DM Sans',sans-serif; font-size: 13px; }
   .artifact-row .a-meta { text-align:right; }
 
-  /* ─── FOOTER ─── */
+  /* ── FOOTER ── */
   .hall-footer {
     margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--line);
     display:flex; justify-content:space-between; align-items:flex-start;
     flex-wrap:wrap; gap: 24px;
   }
-  .hall-footer-left { font-family:'DM Mono',monospace; font-size: 9px; color: var(--mid); letter-spacing:0.1em; line-height:2; }
-  .hall-footer-live {
-    font-family:'DM Mono',monospace; font-size: 9px; color: var(--dim);
-    text-align:right; line-height:2;
-  }
+  .hall-footer-left { font-family:'DM Mono',monospace; font-size: 9px; color: var(--mid); letter-spacing: 0.1em; line-height: 2; }
+  .hall-footer-live { font-family:'DM Mono',monospace; font-size: 9px; color: var(--dim); text-align:right; line-height: 2; }
   .hall-footer-live .live-val { color: var(--white); }
-  .hall-footer-live .live-dot {
+  .live-dot {
     display:inline-block; width:5px; height:5px; border-radius:50%;
-    background: var(--white); margin-right: 5px; vertical-align: middle;
+    background: var(--white); margin-right: 5px; vertical-align:middle;
     animation: pulseDot 2.5s ease infinite;
   }
   @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:0.2} }
@@ -200,79 +221,106 @@
 <!-- ═══ ENTRANCE ═══ -->
 <div id="entrance">
   <div class="entrance-logo">THE ARCHIVE</div>
-  <div class="entrance-tag">A permanent record of<br/>human culture and experience</div>
+  <div class="entrance-tag">Archive of Human Experience</div>
   <button class="entrance-enter" id="enter-btn">ENTER</button>
 </div>
 
-<!-- ═══ UNFOLD TRANSITION ═══ -->
+<!-- ═══ ACCESS SEQUENCE ═══ -->
+<div id="access-seq">
+  <div class="seq-line" id="seq-1">Initializing Archive...</div>
+  <div class="seq-line" id="seq-2">Loading Wings...</div>
+  <div class="seq-line" id="seq-3">Checking Access...</div>
+  <div class="seq-line granted" id="seq-4">Access Granted.</div>
+</div>
+
+<!-- ═══ UNFOLD ═══ -->
 <div id="unfold">
   <div class="leaf leaf-l"></div>
   <div class="leaf leaf-r"></div>
 </div>
 
-
 <!-- ═══ HALL ═══ -->
 <div id="hall">
   <div class="hall-wrap">
 
-    <!-- 1. MONUMENT — Archive first, you second -->
+    <!-- 1. MONUMENT -->
     <div class="hall-monument">
       <div class="hall-monument-logo">THE ARCHIVE</div>
-      <div class="hall-monument-sub">// permanent record system</div>
+      <div class="hall-monument-sub">// archive of human experience</div>
       <hr class="hall-monument-divider"/>
       <div class="hall-monument-stats">
-        <div><b>4</b>Wings</div>
-        <div><b>1</b>Available</div>
-        <div><b>3</b>Closed</div>
+        <div><span class="stat-num">4</span>Wings</div>
+        <div><span class="stat-num">1</span>Available</div>
+        <div><span class="stat-num">3</span>Closed</div>
       </div>
     </div>
 
-    <!-- 2. WINGS — place before observer -->
+    <!-- 2. WINGS AS ROWS -->
     <div class="hall-section-label">// WINGS</div>
-    <div class="wings-grid">
+    <div class="wings-list">
 
       <a class="wing active-wing" href="cultural-wing.html">
-        <div class="wing-top">
+        <div class="wing-left">
           <div class="wing-name">Cultural Wing</div>
+          <div class="wing-desc">Cinema, Literature, Music, Games — formal works of culture processed by the system.</div>
+          <div class="wing-arrow">→ Enter Wing</div>
+        </div>
+        <div class="wing-right">
           <div class="wing-status active-status">Active</div>
         </div>
-        <div class="wing-desc">Cinema Archive — математический анализ кино, сериалов и игр. Literature, Music и Games Archive в разработке.</div>
-        <div class="wing-arrow">→ войти в Cultural Wing</div>
       </a>
 
       <div class="wing locked">
-        <div class="wing-top">
+        <div class="wing-left">
           <div class="wing-name">Personal Wing</div>
+          <div class="wing-desc">Notes, Memory и Dream Archive — личные записи наблюдателя.</div>
+        </div>
+        <div class="wing-right">
           <div class="wing-status">Closed</div>
         </div>
-        <div class="wing-desc">Notes, Memory и Dream Archive — личные записи наблюдателя.</div>
       </div>
 
       <div class="wing locked">
-        <div class="wing-top">
+        <div class="wing-left">
           <div class="wing-name">Collections Wing</div>
+          <div class="wing-desc">Objects, Quotes, Letters — коллекции артефактов вне основных архивов.</div>
+        </div>
+        <div class="wing-right">
           <div class="wing-status">Closed</div>
         </div>
-        <div class="wing-desc">Objects, Quotes, Letters — коллекции артефактов вне основных архивов.</div>
       </div>
 
       <div class="wing locked">
-        <div class="wing-top">
+        <div class="wing-left">
           <div class="wing-name">Research Wing</div>
+          <div class="wing-desc">Reports, Statistics, Observer Profile — сводная аналитика по всей системе.</div>
+        </div>
+        <div class="wing-right">
           <div class="wing-status">Closed</div>
         </div>
-        <div class="wing-desc">Reports, Statistics, Observer Profile — сводная аналитика по всей системе.</div>
       </div>
 
     </div>
 
-    <!-- 3. OBSERVER — after the place -->
-    <div class="observer-field-id">// CURRENT SESSION</div>
-    <div class="observer-block">
-      <div class="observer-field"><b>OBSERVER #271</b>Identity</div>
-      <div class="observer-field"><b id="ob-artifacts">12,481</b>Artifacts Stored</div>
-      <div class="observer-field"><b>Active</b>Status</div>
-      <div class="observer-field"><b>II</b>Access Level</div>
+    <!-- 3. OBSERVER DOSSIER -->
+    <div class="observer-label">// CURRENT OBSERVER DOSSIER</div>
+    <div class="observer-dossier">
+      <div class="dossier-field">
+        <div class="dossier-field-label">Observer ID</div>
+        <div class="dossier-field-val">271</div>
+      </div>
+      <div class="dossier-field">
+        <div class="dossier-field-label">Registered</div>
+        <div class="dossier-field-val">2026</div>
+      </div>
+      <div class="dossier-field">
+        <div class="dossier-field-label">Archive Entries</div>
+        <div class="dossier-field-val">12 481</div>
+      </div>
+      <div class="dossier-field">
+        <div class="dossier-field-label">Classification</div>
+        <div class="dossier-field-val">Level II</div>
+      </div>
     </div>
 
     <!-- 4. LATEST ACQUISITIONS -->
@@ -288,44 +336,55 @@
       </div>
       <div class="hall-footer-live">
         <span class="live-dot"></span>Archive is live<br/>
-        Artifacts Stored: <span class="live-val" id="live-count">4,281,492</span><br/>
-        Last Entry: <span class="live-val" id="live-last">18 seconds ago</span>
+        Artifacts Stored: <span class="live-val">4 281 492</span><br/>
+        Last Entry: <span class="live-val">moments ago</span>
       </div>
     </div>
 
   </div>
 </div>
 
-
 <script>
   const enterBtn = document.getElementById('enter-btn');
   const entrance = document.getElementById('entrance');
+  const accessSeq = document.getElementById('access-seq');
   const unfold = document.getElementById('unfold');
   const hall = document.getElementById('hall');
 
   enterBtn.addEventListener('click', () => {
+    // 1. fade entrance
     entrance.classList.add('leaving');
+
+    // 2. show access sequence
     setTimeout(() => {
+      accessSeq.classList.add('active');
+      entrance.style.display = 'none';
+
+      const lines = ['seq-1','seq-2','seq-3','seq-4'];
+      lines.forEach((id, i) => {
+        setTimeout(() => {
+          document.getElementById(id).classList.add('visible');
+        }, i * 340);
+      });
+    }, 700);
+
+    // 3. after sequence, unfold into Hall
+    setTimeout(() => {
+      accessSeq.classList.remove('active');
       unfold.classList.add('active');
       hall.classList.add('active');
-    }, 500);
+    }, 700 + 340 * 4 + 400);
+
+    // 4. stagger wings
     setTimeout(() => {
-      entrance.style.display = 'none';
-      revealWings();
-    }, 1500);
+      document.querySelectorAll('.wing').forEach((w, i) => {
+        setTimeout(() => w.classList.add('revealed'), 300 + i * 260);
+      });
+    }, 700 + 340 * 4 + 400 + 800);
   });
 
-  // ── WINGS appear one by one after entering ──
-  function revealWings() {
-    const wings = document.querySelectorAll('.wing');
-    wings.forEach((w, i) => {
-      setTimeout(() => w.classList.add('revealed'), 200 + i * 280);
-    });
-  }
-
-  // ── LATEST ACQUISITIONS ──
-  const wrap = document.getElementById('recent-artifacts');
-  wrap.innerHTML = [
+  // LATEST ACQUISITIONS
+  document.getElementById('recent-artifacts').innerHTML = [
     { id: 'A-013482', title: 'Blade Runner 2049', meta: 'Σ = 9.41' },
     { id: 'A-009217', title: 'Arrival',            meta: 'Σ = 8.92' },
     { id: 'A-011355', title: 'Interstellar',       meta: 'Σ = 9.05' },
@@ -335,20 +394,6 @@
     <span class="a-title">${it.title}</span>
     <span class="a-meta">${it.meta}</span>
   </div>`).join('');
-
-  // ── LIVE COUNTER ──
-  let liveCount = 4281492;
-  let lastSec = 18;
-  function updateLive() {
-    liveCount += Math.floor(Math.random() * 3);
-    lastSec = Math.max(1, lastSec + Math.floor(Math.random() * 7) - 3);
-    const el = document.getElementById('live-count');
-    const el2 = document.getElementById('live-last');
-    if (el) el.textContent = liveCount.toLocaleString('ru-RU');
-    if (el2) el2.textContent = lastSec + ' seconds ago';
-  }
-  setInterval(updateLive, 3800);
-
 </script>
 
 </body>
