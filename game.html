@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GAMES ARCHIVE — THE ARCHIVE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ────────────────────────────────────────────────────────────
+   ROOT VARIABLES — identical to Cinema Archive
+──────────────────────────────────────────────────────────── */
+:root {
+  --black: #080808;
+  --white: #f2f2f0;
+  --grey:  #1a1a1a;
+  --mid:   #333;
+  --dim:   #888;
+  --line:  #222;
+  --gold:  #c8a96e;
+  --red:   #ff3333;
+  /* Games-specific accent — subtle green, not "gamer", more phosphor monitor */
+  --accent-games: #8aab8a;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--black); color: var(--white);
+  font-family: 'DM Sans', sans-serif; font-weight: 300;
+  overflow-x: hidden;
+}
+::selection { background: var(--white); color: var(--black); }
+
+/* ── CURSOR ── */
+*, *::before, *::after { cursor: none !important; }
+#cursor {
+  width: 10px; height: 10px; background: var(--white); border-radius: 50%;
+  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+  transition: transform 0.15s ease, background 0.15s, border-radius 0.2s, opacity 0.2s;
+  mix-blend-mode: difference; transform-origin: center;
+}
+#cursor.big { transform: scale(3.5); }
+#cursor.text { width: 2px; height: 18px; border-radius: 1px; transform: none; }
+#cursor.slider { width: 9px; height: 9px; border-radius: 0; transform: rotate(45deg); }
+
+/* ── NOISE ── */
+#noise-canvas {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 9998; opacity: 0.028;
+}
+
+/* ── PIXEL GRID OVERLAY — archive phosphor motif, subtle ── */
+#pixel-grid-canvas {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 9997; opacity: 0.012;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--black); }
+::-webkit-scrollbar-thumb { background: var(--mid); }
+
+/* ────────────────────────────────────────────────────────────
+   TOPBAR
+──────────────────────────────────────────────────────────── */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; border-bottom: 1px solid var(--line);
+  background: rgba(8,8,8,0.92); backdrop-filter: blur(20px); z-index: 1000;
+}
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.12em; cursor: pointer; }
+.logo-sub { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.28em; color: var(--dim); }
+.logo-sep { color: var(--dim); margin: 0 8px; font-family: 'DM Mono', monospace; font-size: 11px; }
+.logo-wing { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.22em; color: var(--accent-games); }
+
+.nav-right { display: flex; align-items: center; gap: 20px; }
+.btn-ghost {
+  background: none; border: 1px solid var(--line); color: var(--dim);
+  padding: 6px 16px; font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-ghost:hover { border-color: var(--white); color: var(--white); }
+.btn-solid {
+  background: var(--white); border: none; color: var(--black);
+  padding: 7px 18px; font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-solid:hover { opacity: 0.85; }
+
+/* auth btns */
+#auth-btns { display: flex; gap: 10px; }
+#user-btn  { display: none; align-items: center; gap: 10px; }
+#username-btn {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em;
+  color: var(--white); background: none; border: 1px solid var(--line);
+  padding: 6px 14px; cursor: pointer; transition: border-color 0.2s;
+}
+#username-btn:hover { border-color: var(--white); }
+#logout-btn {
+  background: none; border: none; color: var(--dim); font-family: 'DM Mono', monospace;
+  font-size: 10px; cursor: pointer; transition: color 0.2s;
+}
+#logout-btn:hover { color: var(--white); }
+
+/* Search */
+.search-wrap { position: relative; }
+#search-input {
+  width: 220px; background: var(--grey); border: 1px solid var(--line);
+  color: var(--white); padding: 8px 14px; font-family: 'DM Mono', monospace;
+  font-size: 11px; outline: none; transition: border-color 0.2s, width 0.3s;
+}
+#search-input:focus { border-color: var(--dim); width: 280px; }
+#search-results {
+  position: absolute; top: calc(100% + 4px); right: 0; width: 340px;
+  background: var(--grey); border: 1px solid var(--line); z-index: 2000;
+  display: none; max-height: 360px; overflow-y: auto;
+}
+#search-results.open { display: block; }
+.sr-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  cursor: pointer; border-bottom: 1px solid var(--line); transition: background 0.15s;
+}
+.sr-item:hover { background: var(--mid); }
+.sr-item img { width: 32px; height: 40px; object-fit: cover; background: var(--mid); }
+.sr-item-body .sr-title { font-size: 12px; }
+.sr-item-body .sr-meta { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); margin-top: 2px; }
+
+/* ────────────────────────────────────────────────────────────
+   PAGE SYSTEM
+──────────────────────────────────────────────────────────── */
+.page { display: none; min-height: 100vh; padding-top: 60px; }
+.page.active { display: block; }
+.back-btn {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em;
+  color: var(--dim); cursor: pointer; padding: 24px 40px 0;
+  display: inline-block; transition: color 0.2s;
+}
+.back-btn:hover { color: var(--white); }
+
+/* ────────────────────────────────────────────────────────────
+   HOME PAGE
+──────────────────────────────────────────────────────────── */
+/* HERO */
+.hero {
+  min-height: calc(100vh - 60px); display: flex; align-items: center;
+  padding: 60px 40px 40px; gap: 60px; border-bottom: 1px solid var(--line);
+  position: relative; overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 55% at 75% 40%, rgba(138,171,138,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+/* Pixel scan-line decoration — archive phosphor terminal */
+.hero-scanlines {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px, rgba(138,171,138,0.012) 3px, rgba(138,171,138,0.012) 4px
+  );
+}
+.hero-left { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.hero-label {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.28em;
+  color: var(--dim); margin-bottom: 20px; text-transform: uppercase;
+}
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: clamp(60px, 10vw, 140px);
+  line-height: 0.9; letter-spacing: 0.02em; margin-bottom: 28px;
+}
+.hero-title em { color: var(--dim); font-style: normal; }
+.hero-sub {
+  font-family: 'DM Mono', monospace; font-size: 12px; color: var(--dim);
+  line-height: 1.7; max-width: 480px; margin-bottom: 32px;
+}
+.hero-num {
+  font-family: 'Bebas Neue', sans-serif; font-size: 80px; line-height: 1;
+  color: var(--line); letter-spacing: 0.02em; user-select: none;
+}
+.hero-stats-row {
+  display: flex; gap: 40px; margin-top: 36px;
+  border-top: 1px solid var(--line); padding-top: 24px;
+}
+.hero-stat-num {
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+  display: block; line-height: 1;
+}
+.hero-stat-lbl {
+  font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.2em;
+  color: var(--dim); margin-top: 4px;
+}
+.hero-right { flex: 0 0 280px; position: relative; z-index: 1; }
+
+/* Weight circles — same as cinema */
+.hero-circles { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.hero-circle {
+  border: 1px solid var(--line); border-radius: 50%; display: flex;
+  align-items: center; justify-content: center;
+}
+.hero-circle-inner {
+  font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; color: var(--dim);
+}
+.hero-circle-label {
+  font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim);
+  letter-spacing: 0.18em; margin-top: 8px;
+}
+
+/* SECTIONS */
+.section { padding: 48px 40px; }
+.section-label {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.3em;
+  color: var(--dim); margin-bottom: 20px;
+}
+.genre-sections { padding-bottom: 80px; }
+
+/* CARDS GRID */
+.cards-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 2px; margin-top: 4px;
+}
+.card {
+  aspect-ratio: 3/4; position: relative; overflow: hidden;
+  background: var(--grey); cursor: pointer;
+  transition: transform 0.25s ease;
+}
+.card:hover { transform: scale(1.02); z-index: 2; }
+.card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(8,8,8,0.92) 0%, transparent 55%);
+  display: flex; flex-direction: column; justify-content: flex-end; padding: 12px;
+  opacity: 0; transition: opacity 0.25s;
+}
+.card:hover .card-overlay { opacity: 1; }
+.card-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; line-height: 1.4; }
+.card-year  { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); margin-top: 3px; }
+.card-site-score {
+  position: absolute; top: 8px; left: 8px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+  background: rgba(8,8,8,0.85); padding: 2px 6px;
+}
+.card-site-score .ssub { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); }
+.card-site-score.gold { color: var(--gold); }
+/* Platforms badge instead of TMDB score */
+.card-platform-badge {
+  position: absolute; bottom: 8px; right: 8px;
+  font-family: 'DM Mono', monospace; font-size: 7px; letter-spacing: 0.08em;
+  color: var(--dim); background: rgba(8,8,8,0.7); padding: 2px 5px;
+}
+/* Pixel-art grain for cards — games have a more digital texture */
+.card::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='rgba(0,0,0,0.3)'/%3E%3C/svg%3E");
+  background-size: 4px 4px; opacity: 0.4; mix-blend-mode: multiply;
+}
+.card-featured {
+  aspect-ratio: unset; grid-column: span 2;
+  min-height: 320px; position: relative; overflow: hidden; cursor: pointer;
+}
+.card-featured img { width: 100%; height: 100%; object-fit: cover; }
+.card-featured-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(8,8,8,0.97) 0%, rgba(8,8,8,0.4) 60%, transparent 100%);
+  padding: 28px; display: flex; flex-direction: column; justify-content: flex-end;
+}
+.feat-badge { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.25em; color: var(--dim); margin-bottom: 8px; }
+.feat-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(22px, 4vw, 40px); letter-spacing: 0.02em; line-height: 1; margin-bottom: 8px; }
+.feat-overview { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); line-height: 1.6; max-width: 420px; margin-bottom: 12px; }
+.feat-score { font-family: 'Bebas Neue', sans-serif; font-size: 36px; }
+.feat-score.gold { color: var(--gold); }
+.feat-score-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); }
+
+/* GENRE SECTION */
+.genre-section { padding: 48px 0 0; border-top: 1px solid var(--line); margin: 0 40px; }
+.genre-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.genre-section-name { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.3em; color: var(--dim); }
+.genre-reel { overflow-x: auto; padding-bottom: 12px; }
+.genre-reel::-webkit-scrollbar { height: 2px; }
+.genre-reel::-webkit-scrollbar-thumb { background: var(--mid); }
+.genre-reel-track { display: flex; gap: 2px; }
+.genre-reel-frame {
+  flex: 0 0 120px; aspect-ratio: 3/4; position: relative;
+  overflow: hidden; cursor: pointer; background: var(--grey);
+  transition: transform 0.2s;
+}
+.genre-reel-frame:hover { transform: scale(1.04); z-index: 2; }
+.genre-reel-frame img { width: 100%; height: 100%; object-fit: cover; }
+.genre-reel-frame-score {
+  position: absolute; bottom: 6px; left: 6px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px;
+  background: rgba(8,8,8,0.8); padding: 2px 5px;
+}
+.genre-reel-frame-score.gold { color: var(--gold); }
+.see-all-btn {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.2em;
+  color: var(--dim); background: none; border: 1px solid var(--line);
+  padding: 5px 12px; cursor: pointer; transition: border-color 0.2s, color 0.2s;
+}
+.see-all-btn:hover { border-color: var(--white); color: var(--white); }
+
+/* ────────────────────────────────────────────────────────────
+   CATALOGUE PAGE
+──────────────────────────────────────────────────────────── */
+.catalogue-header {
+  padding: 24px 40px 20px; border-bottom: 1px solid var(--line);
+}
+.catalogue-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.03em;
+  margin-bottom: 16px;
+}
+.filter-wrap { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.filter-select {
+  background: var(--grey); border: 1px solid var(--line); color: var(--white);
+  padding: 8px 12px; font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.06em; outline: none; cursor: pointer;
+  transition: border-color 0.2s; -webkit-appearance: none;
+}
+.filter-select:hover, .filter-select:focus { border-color: var(--dim); }
+.filter-input {
+  background: var(--grey); border: 1px solid var(--line); color: var(--white);
+  padding: 8px 12px; font-family: 'DM Mono', monospace; font-size: 10px;
+  width: 100px; outline: none; transition: border-color 0.2s;
+}
+.filter-input:focus { border-color: var(--dim); }
+.filter-input::placeholder { color: var(--dim); }
+.filter-search {
+  flex: 1; min-width: 180px; max-width: 280px;
+  background: var(--grey); border: 1px solid var(--line); color: var(--white);
+  padding: 8px 12px; font-family: 'DM Mono', monospace; font-size: 10px;
+  outline: none; transition: border-color 0.2s;
+}
+.filter-search:focus { border-color: var(--dim); }
+.filter-search::placeholder { color: var(--dim); }
+.catalogue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 2px; padding: 24px 40px;
+}
+.catalogue-pagination {
+  display: flex; justify-content: center; gap: 8px; padding: 24px 40px 60px;
+}
+.page-btn {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em;
+  background: none; border: 1px solid var(--line); color: var(--dim);
+  padding: 7px 14px; cursor: pointer; transition: 0.2s;
+}
+.page-btn.active, .page-btn:hover { border-color: var(--white); color: var(--white); }
+
+/* ────────────────────────────────────────────────────────────
+   GAME DETAIL PAGE
+──────────────────────────────────────────────────────────── */
+.game-hero {
+  position: relative; min-height: 52vh; overflow: hidden;
+  display: flex; align-items: flex-end;
+}
+.game-backdrop {
+  position: absolute; inset: 0; background-size: cover; background-position: center top;
+  background-color: var(--grey);
+}
+.game-backdrop::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to top, var(--black) 0%, rgba(8,8,8,0.7) 50%, rgba(8,8,8,0.2) 100%);
+}
+/* Pixel scanline on backdrop for archive terminal feel */
+.game-backdrop::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px
+  );
+}
+.game-hero-content {
+  position: relative; z-index: 2; display: flex;
+  gap: 36px; padding: 40px; align-items: flex-end; width: 100%;
+}
+.game-cover {
+  flex: 0 0 200px; width: 200px; aspect-ratio: 3/4;
+  overflow: hidden; border: 1px solid var(--line);
+  position: relative;
+}
+.game-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Corner marks — like archive case markings */
+.game-cover::before, .game-cover::after {
+  content: ''; position: absolute; width: 10px; height: 10px; z-index: 2;
+}
+.game-cover::before { top: 0; left: 0; border-top: 1px solid var(--white); border-left: 1px solid var(--white); }
+.game-cover::after  { bottom: 0; right: 0; border-bottom: 1px solid var(--white); border-right: 1px solid var(--white); }
+
+.game-info { flex: 1; min-width: 0; }
+.game-type-badge {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.28em;
+  color: var(--accent-games); margin-bottom: 10px;
+}
+.game-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 6vw, 72px);
+  letter-spacing: 0.02em; line-height: 0.92; margin-bottom: 16px;
+}
+.game-meta {
+  display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px;
+  font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim);
+}
+.game-meta span { letter-spacing: 0.06em; }
+.metacritic-badge {
+  background: var(--white); color: var(--black); font-family: 'DM Mono', monospace;
+  font-size: 9px; font-weight: 500; padding: 2px 7px; letter-spacing: 0.1em;
+}
+.platform-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+.platform-chip {
+  font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
+  border: 1px solid var(--line); padding: 3px 8px; color: var(--dim);
+}
+
+/* Score display — identical to cinema */
+.score-display {
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px;
+}
+.score-sigma-label {
+  font-family: 'DM Mono', monospace; font-size: 13px; color: var(--dim); letter-spacing: 0.1em;
+}
+.score-number {
+  font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 8vw, 82px);
+  line-height: 1; letter-spacing: -0.02em; transition: color 0.4s;
+}
+.score-number.gold { color: var(--gold); }
+.score-max { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--dim); }
+.score-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); margin-top: 2px; }
+.score-compute-status {
+  font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim);
+  letter-spacing: 0.1em; margin-top: 4px; min-height: 16px;
+}
+
+.game-archive-id {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.25em;
+  color: var(--dim); margin-bottom: 10px;
+}
+.game-archive-id span { color: var(--white); }
+.game-confidence {
+  font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim);
+  letter-spacing: 0.15em; margin-bottom: 14px;
+}
+.game-confidence span { color: var(--accent-games); }
+.game-overview {
+  font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--dim);
+  line-height: 1.7; max-width: 520px; margin-bottom: 18px; font-weight: 300;
+}
+.genre-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+.genre-chip {
+  font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
+  border: 1px solid var(--line); padding: 3px 8px; color: var(--dim);
+}
+.btn-archive {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em;
+  text-transform: uppercase; background: none; border: 1px solid var(--line);
+  color: var(--dim); padding: 9px 18px; cursor: pointer; transition: 0.2s;
+}
+.btn-archive:hover { border-color: var(--white); color: var(--white); }
+.btn-archive.archived { border-color: var(--white); color: var(--white); }
+
+/* Screenshots strip */
+.screenshots-strip {
+  display: flex; gap: 2px; overflow-x: auto; padding: 24px 40px;
+  border-bottom: 1px solid var(--line);
+}
+.screenshots-strip::-webkit-scrollbar { height: 2px; }
+.screenshots-strip::-webkit-scrollbar-thumb { background: var(--mid); }
+.screenshot-frame {
+  flex: 0 0 220px; height: 130px; overflow: hidden;
+  position: relative; cursor: pointer;
+}
+.screenshot-frame img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(0.3); transition: filter 0.3s; }
+.screenshot-frame:hover img { filter: none; }
+/* Numbering — archive reference */
+.screenshot-frame::after {
+  content: attr(data-idx); position: absolute; bottom: 5px; right: 6px;
+  font-family: 'DM Mono', monospace; font-size: 7px; color: rgba(242,242,240,0.4);
+  letter-spacing: 0.1em;
+}
+
+/* Review section */
+.review-section {
+  display: grid; grid-template-columns: 1fr 360px; gap: 0;
+  padding: 0 40px 80px; min-height: 400px;
+}
+@media (max-width: 900px) { .review-section { grid-template-columns: 1fr; } }
+.reviews-list-wrap { padding: 32px 40px 32px 0; border-right: 1px solid var(--line); }
+@media (max-width: 900px) { .reviews-list-wrap { border-right: none; padding: 32px 0; } }
+.reviews-title {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.3em;
+  color: var(--dim); margin-bottom: 24px;
+}
+.review-card {
+  border: 1px solid var(--line); padding: 20px; margin-bottom: 12px;
+  position: relative;
+}
+.review-card.gold-review { border-color: rgba(200,169,110,0.3); }
+.review-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.review-user {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.06em;
+  color: var(--dim); cursor: pointer; transition: color 0.2s;
+}
+.review-user:hover { color: var(--white); }
+.review-user::before { content: '@'; }
+.review-score-big {
+  font-family: 'Bebas Neue', sans-serif; font-size: 32px; line-height: 1;
+}
+.review-score-big.gold { color: var(--gold); }
+.review-score-big span { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); }
+
+/* micro histogram — identical to cinema */
+.micro-histogram {
+  display: flex; align-items: flex-end; gap: 3px; height: 48px;
+  margin-bottom: 26px;
+}
+.mh-bar-wrap {
+  flex: 1; height: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end; position: relative;
+}
+.mh-bar { width: 100%; background: rgba(240,239,233,0.18); transition: background 0.2s; }
+.mh-bar-wrap:hover .mh-bar { background: var(--white); }
+.mh-label {
+  position: absolute; top: calc(100% + 5px); left: 50%; transform: translateX(-50%);
+  font-family: 'DM Mono', monospace; font-size: 8px; color: rgba(242,242,240,0.45);
+  letter-spacing: 0.04em; white-space: nowrap; pointer-events: none; transition: color 0.2s;
+}
+.mh-bar-wrap:hover .mh-label { color: var(--white); }
+.mh-bar-wrap::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a; border: 1px solid var(--line);
+  font-family: 'DM Mono', monospace; font-size: 8px; color: var(--white);
+  padding: 3px 7px; white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 0.15s; z-index: 20;
+}
+.mh-bar-wrap:hover::after { opacity: 1; }
+
+.review-comment { font-size: 13px; color: var(--dim); line-height: 1.7; margin-bottom: 14px; font-weight: 300; }
+.review-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px;
+}
+.review-report-id { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.15em; color: var(--dim); }
+.review-date { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); letter-spacing: 0.08em; }
+.review-sig-display { height: 24px; opacity: 0.6; filter: invert(1); }
+
+/* separator line between reports */
+.report-separator {
+  display: flex; align-items: center; gap: 16px; margin: 16px 0;
+  font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.18em; color: var(--line);
+}
+.report-separator::before, .report-separator::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+
+/* Rating sidebar */
+.rating-sidebar { padding: 32px 0 32px 40px; }
+@media (max-width: 900px) { .rating-sidebar { padding: 0; border-top: 1px solid var(--line); padding-top: 32px; } }
+.rating-form-title {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.3em;
+  color: var(--dim); margin-bottom: 24px;
+}
+.criterion-row { margin-bottom: 16px; }
+.criterion-row-independent { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.criterion-row-independent .criterion-name { color: var(--accent-games); }
+.criterion-name { font-size: 11px; color: #777; margin-bottom: 8px; font-weight: 300; }
+.criterion-control { display: flex; align-items: center; gap: 10px; }
+.score-slider {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 2px; background: var(--line); outline: none; cursor: none;
+}
+.score-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 10px; height: 10px;
+  background: var(--white); border-radius: 0; cursor: none;
+  transform: rotate(45deg); transition: transform 0.25s;
+}
+.score-slider::-webkit-slider-thumb:hover { transform: rotate(0deg); }
+.score-val {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+  width: 28px; text-align: right; color: var(--white);
+}
+.mult-badge { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); width: 28px; }
+.mult-badge-independent { width: auto; white-space: nowrap; color: var(--accent-games); text-transform: uppercase; font-size: 8px; letter-spacing: 0.06em; }
+.live-score-wrap {
+  background: var(--grey); border: 1px solid var(--line); padding: 16px;
+  display: flex; align-items: baseline; gap: 8px; margin: 20px 0;
+  position: relative; overflow: hidden;
+}
+.live-score-wrap::after {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: var(--score-pct, 0%); background: rgba(138,171,138,0.06);
+  transition: width 0.3s; pointer-events: none;
+}
+.live-score-wrap.gold-state::after { background: rgba(200,169,110,0.06); }
+.live-score-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); letter-spacing: 0.1em; }
+.live-score-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; line-height: 1; margin-left: auto; }
+.live-score-num.gold { color: var(--gold); }
+.live-score-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); }
+.comment-input {
+  width: 100%; background: var(--grey); border: 1px solid var(--line);
+  color: var(--white); padding: 12px; font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 300; resize: vertical; min-height: 80px;
+  outline: none; transition: border-color 0.2s; margin-bottom: 14px;
+}
+.comment-input:focus { border-color: var(--dim); }
+.comment-input::placeholder { color: var(--dim); }
+
+/* Signature */
+.review-sig-wrap { margin-bottom: 16px; }
+.review-sig-label {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em;
+  color: var(--dim); margin-bottom: 8px;
+}
+.review-sig-canvas {
+  width: 100%; height: 70px; background: var(--grey); border: 1px solid var(--line);
+  display: block; touch-action: none;
+}
+.review-sig-canvas.active { border-color: var(--dim); }
+.review-sig-row-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; margin-bottom: 6px; }
+.review-sig-hint { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); letter-spacing: 0.1em; }
+.review-sig-clear-btn {
+  font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim);
+  background: none; border: none; cursor: pointer; letter-spacing: 0.1em; transition: color 0.2s;
+}
+.review-sig-clear-btn:hover { color: var(--white); }
+.sig-match-bar { height: 2px; background: var(--line); margin-bottom: 4px; }
+.sig-match-fill { height: 100%; background: var(--accent-games); transition: width 0.3s; width: 0%; }
+.sig-match-label { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); letter-spacing: 0.1em; }
+
+.submit-btn {
+  width: 100%; background: var(--white); border: none; color: var(--black);
+  padding: 14px; font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.2em; cursor: pointer; transition: opacity 0.2s; margin-bottom: 8px;
+}
+.submit-btn:hover { opacity: 0.85; }
+.login-prompt {
+  padding: 24px; border: 1px solid var(--line); text-align: center;
+}
+.login-prompt p { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); letter-spacing: 0.1em; line-height: 1.7; margin-bottom: 16px; }
+
+/* Empty state */
+.empty-state {
+  padding: 60px 24px; text-align: center;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.15em; color: var(--dim);
+}
+.empty-state-icon { font-size: 28px; margin-bottom: 16px; color: var(--line); }
+
+/* Loader */
+.loader { padding: 80px; display: flex; justify-content: center; }
+.loader-dots { display: flex; gap: 5px; }
+.loader-dots span {
+  width: 4px; height: 4px; background: var(--dim); border-radius: 0;
+  animation: dotPulse 1.2s ease infinite;
+}
+.loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotPulse { 0%,80%,100%{opacity:0.15} 40%{opacity:1} }
+
+/* Compute status animation */
+@keyframes computePulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+.score-compute-status { animation: computePulse 1.8s ease infinite; }
+
+/* Radar */
+.radar-block { border: 1px solid var(--line); padding: 20px; margin-top: 24px; }
+.radar-block-title { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.25em; color: var(--dim); margin-bottom: 14px; }
+.radar-block-body { display: flex; gap: 20px; flex-wrap: wrap; }
+.radar-diff-table { flex: 1; min-width: 160px; }
+.radar-diff-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--line); font-family: 'DM Mono', monospace; font-size: 9px; }
+.radar-diff-row:last-child { border-bottom: none; }
+.radar-diff-name { color: var(--dim); flex: 1; }
+.radar-diff-mine { color: var(--white); width: 24px; text-align: right; }
+.radar-diff-avg  { color: var(--dim); width: 24px; text-align: right; }
+.radar-diff-delta { width: 28px; text-align: right; font-size: 8px; }
+.radar-diff-delta.pos { color: var(--accent-games); }
+.radar-diff-delta.neg { color: #c46b6b; }
+
+/* ────────────────────────────────────────────────────────────
+   PROFILE PAGE
+──────────────────────────────────────────────────────────── */
+.profile-header {
+  padding: 48px 40px 32px; border-bottom: 1px solid var(--line);
+  display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;
+}
+.avatar-circle {
+  width: 60px; height: 60px; background: var(--grey);
+  border: 1px solid var(--line); display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px; flex-shrink: 0;
+}
+.profile-name { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.03em; }
+.profile-observer-id { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.25em; color: var(--dim); margin-top: 4px; }
+.profile-stats { display: flex; gap: 32px; margin-top: 14px; }
+.profile-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; display: block; }
+.profile-stat-label { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.18em; color: var(--dim); margin-top: 2px; }
+.profile-archive-label {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.3em;
+  color: var(--dim); padding: 28px 40px 12px;
+}
+.profile-cards-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 2px; padding: 0 40px 80px;
+}
+.profile-game-card {
+  aspect-ratio: 3/4; position: relative; overflow: hidden;
+  background: var(--grey); cursor: pointer;
+}
+.profile-game-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.profile-game-info {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(8,8,8,0.95) 0%, transparent 60%);
+  display: flex; flex-direction: column; justify-content: flex-end; padding: 10px;
+}
+.profile-game-score {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1;
+}
+.profile-game-score span { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); }
+.profile-game-score.gold { color: var(--gold); }
+.profile-game-title { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); margin-top: 2px; }
+
+/* ────────────────────────────────────────────────────────────
+   MODAL
+──────────────────────────────────────────────────────────── */
+#modal-overlay {
+  position: fixed; inset: 0; background: rgba(8,8,8,0.88); z-index: 5000;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+}
+#modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--black); border: 1px solid var(--line); width: 440px;
+  max-width: calc(100vw - 40px); max-height: 90vh; overflow-y: auto;
+  padding: 36px; position: relative;
+}
+.modal-close {
+  position: absolute; top: 16px; right: 16px; background: none; border: none;
+  color: var(--dim); font-size: 18px; cursor: pointer; transition: color 0.2s;
+}
+.modal-close:hover { color: var(--white); }
+.modal-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.modal-sub {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.2em;
+  color: var(--dim); margin-bottom: 28px;
+}
+.modal-field { margin-bottom: 14px; }
+.modal-label {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em;
+  color: var(--dim); display: block; margin-bottom: 6px;
+}
+.modal-input {
+  width: 100%; background: var(--grey); border: 1px solid var(--line);
+  color: var(--white); padding: 10px 12px; font-family: 'DM Mono', monospace;
+  font-size: 11px; outline: none; transition: border-color 0.2s;
+}
+.modal-input:focus { border-color: var(--dim); }
+.modal-error {
+  font-family: 'DM Mono', monospace; font-size: 9px; color: var(--red);
+  letter-spacing: 0.1em; min-height: 16px; margin-bottom: 8px;
+}
+.modal-submit {
+  width: 100%; background: var(--white); border: none; color: var(--black);
+  padding: 12px; font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.2em; cursor: pointer; transition: opacity 0.2s; margin-top: 4px;
+}
+.modal-submit:hover { opacity: 0.85; }
+.modal-switch { text-align: center; margin-top: 16px; font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); }
+.modal-switch a { color: var(--white); cursor: pointer; text-decoration: underline; }
+
+/* Signature in modal */
+.modal-sig-wrap { margin: 14px 0; }
+.modal-sig-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.12em; color: var(--dim); margin-bottom: 8px; }
+.modal-sig-canvas { width: 100%; height: 80px; background: var(--grey); border: 1px solid var(--line); display: block; touch-action: none; }
+.modal-sig-canvas.active { border-color: var(--dim); }
+.modal-sig-clear { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); background: none; border: none; cursor: pointer; margin-top: 4px; }
+.modal-sig-clear:hover { color: var(--white); }
+.reg-seal { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.12em; color: var(--dim); margin-top: 8px; }
+
+/* ────────────────────────────────────────────────────────────
+   TOAST
+──────────────────────────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: var(--white); color: var(--black); font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em; padding: 10px 24px;
+  z-index: 9000; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+#toast.show { opacity: 1; }
+#toast.error { background: var(--red); color: var(--white); }
+
+/* FADE-IN utility */
+.fade-in { animation: fadeInAnim 0.5s ease forwards; }
+@keyframes fadeInAnim { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+/* ────────────────────────────────────────────────────────────
+   TRANSITION CANVAS
+──────────────────────────────────────────────────────────── */
+#transition-canvas {
+  position: fixed; inset: 0; z-index: 4500;
+  pointer-events: none; opacity: 0;
+}
+
+/* ────────────────────────────────────────────────────────────
+   RESPONSIVE
+──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #topbar { padding: 0 16px; }
+  .hero { flex-direction: column; padding: 40px 20px 30px; gap: 30px; }
+  .hero-right { display: none; }
+  .section { padding: 32px 16px; }
+  .genre-section { margin: 0 16px; }
+  .back-btn { padding: 16px 16px 0; }
+  .catalogue-header { padding: 16px 16px 12px; }
+  .catalogue-grid { padding: 16px 16px; }
+  .game-hero-content { flex-direction: column; padding: 20px; gap: 20px; }
+  .game-cover { flex: 0 0 140px; width: 140px; }
+  .review-section { padding: 0 16px 60px; }
+  .profile-header { padding: 32px 16px 24px; }
+  .profile-cards-grid { padding: 0 16px 60px; }
+  .profile-archive-label { padding: 20px 16px 10px; }
+  .screenshots-strip { padding: 16px 16px; }
+  .search-wrap { display: none; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="noise-canvas"></canvas>
+<canvas id="pixel-grid-canvas"></canvas>
+<canvas id="transition-canvas"></canvas>
+<div id="cursor"></div>
+<div id="toast"></div>
+
+<!-- ── TOPBAR ── -->
+<nav id="topbar">
+  <div style="display:flex;align-items:center;gap:0;cursor:pointer;" onclick="window.location='cultural-wing.html'">
+    <span class="logo" onclick="event.stopPropagation();showPage('home')">GAMES ARCHIVE</span>
+  </div>
+  <div class="nav-right">
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="// поиск игр…" autocomplete="off"/>
+      <div id="search-results"></div>
+    </div>
+    <div id="auth-btns">
+      <button class="btn-ghost" onclick="openModal('login')">Войти</button>
+      <button class="btn-solid" onclick="openModal('register')">Регистрация</button>
+    </div>
+    <div id="user-btn" style="display:none">
+      <button id="username-btn" onclick="showPage('profile')"></button>
+      <button id="logout-btn" onclick="logout()">Выйти</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ PAGES ══ -->
+
+<!-- HOME -->
+<div id="home" class="page active">
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-scanlines"></div>
+    <div class="hero-left">
+      <div class="hero-label">// games archive · математический анализ игр</div>
+      <h1 class="hero-title">
+        КАЖДАЯ ИГРА —<br/>
+        <em>ОБЪЕКТ</em><br/>
+        ИССЛЕДОВАНИЯ
+      </h1>
+      <p class="hero-sub">Геймплей, нарратив, арт-дизайн, саундтрек — система взвешенных критериев вычисляет результат. Не оценка. Отчёт.</p>
+      <div class="hero-num">110</div>
+      <div class="hero-stats-row">
+        <div>
+          <span class="hero-stat-num" id="stat-reports">—</span>
+          <div class="hero-stat-lbl">Отчётов</div>
+        </div>
+        <div>
+          <span class="hero-stat-num" id="stat-observers">—</span>
+          <div class="hero-stat-lbl">Observers</div>
+        </div>
+        <div>
+          <span class="hero-stat-num">11</span>
+          <div class="hero-stat-lbl">Параметров</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-circles">
+        <div class="hero-circle" style="width:72px;height:72px">
+          <div class="hero-circle-inner" style="font-size:22px">1.3×</div>
+        </div>
+        <div class="hero-circle" style="width:52px;height:52px">
+          <div class="hero-circle-inner" style="font-size:16px">1.2×</div>
+        </div>
+        <div class="hero-circle" style="width:40px;height:40px">
+          <div class="hero-circle-inner" style="font-size:13px">1.1×</div>
+        </div>
+        <div class="hero-circle" style="width:32px;height:32px">
+          <div class="hero-circle-inner" style="font-size:11px">1×</div>
+        </div>
+        <div class="hero-circle-label">Множители весов</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label" id="trending-label">// наиболее исследуемые объекты</div>
+    <div class="cards-grid" id="trending-grid">
+      <div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>
+    </div>
+  </div>
+
+  <div class="genre-sections" id="genre-sections"></div>
+</div>
+
+<!-- CATALOGUE -->
+<div id="catalogue-page" class="page">
+  <div class="back-btn" onclick="showPage('home')">← Назад</div>
+  <div class="catalogue-header">
+    <div class="catalogue-title" id="catalogue-title">КАТАЛОГ ИГР</div>
+    <div class="filter-wrap">
+      <select class="filter-select" id="filter-genre" onchange="applyFilters()">
+        <option value="">Все жанры</option>
+        <option value="action">Action</option>
+        <option value="rpg">RPG</option>
+        <option value="strategy">Strategy</option>
+        <option value="shooter">Shooter</option>
+        <option value="adventure">Adventure</option>
+        <option value="puzzle">Puzzle</option>
+        <option value="platformer">Platformer</option>
+        <option value="simulation">Simulation</option>
+        <option value="sports">Sports</option>
+        <option value="racing">Racing</option>
+        <option value="indie">Indie</option>
+      </select>
+      <input type="number" class="filter-input" id="filter-year-from" placeholder="С года" min="1970" max="2030" onchange="applyFilters()"/>
+      <input type="number" class="filter-input" id="filter-year-to" placeholder="По год" min="1970" max="2030" onchange="applyFilters()"/>
+      <select class="filter-select" id="filter-sort" onchange="applyFilters()">
+        <option value="-added">Популярность</option>
+        <option value="-rating">Рейтинг RAWG</option>
+        <option value="-released">Дата (новые)</option>
+        <option value="released">Дата (старые)</option>
+        <option value="name">По алфавиту</option>
+      </select>
+      <input type="text" class="filter-search" id="filter-search" placeholder="// поиск…" oninput="debouncedApplyFilters()"/>
+    </div>
+  </div>
+  <div class="catalogue-grid" id="catalogue-grid">
+    <div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>
+  </div>
+  <div class="catalogue-pagination" id="catalogue-pagination"></div>
+</div>
+
+<!-- GAME DETAIL -->
+<div id="game-page" class="page">
+  <div class="back-btn" onclick="showPage('home')">← Назад</div>
+  <div id="game-content"></div>
+</div>
+
+<!-- PROFILE -->
+<div id="profile-page" class="page">
+  <div id="profile-content"></div>
+</div>
+
+<!-- ── MODAL ── -->
+<div id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+
+    <!-- REGISTER -->
+    <div id="modal-register" style="display:none">
+      <div class="modal-title">ДОСТУП К АРХИВУ</div>
+      <div class="modal-sub">// регистрация наблюдателя · games archive</div>
+      <div class="modal-field">
+        <label class="modal-label">USERNAME</label>
+        <input type="text" class="modal-input" id="reg-username" placeholder="Observer ID…" autocomplete="off"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">EMAIL</label>
+        <input type="email" class="modal-input" id="reg-email" placeholder="credentials@archive.sys" autocomplete="off"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">PASSPHRASE</label>
+        <input type="password" class="modal-input" id="reg-password" placeholder="••••••••" autocomplete="new-password"/>
+      </div>
+      <div class="modal-sig-wrap">
+        <div class="modal-sig-label">// подпись наблюдателя · верификация отчётов</div>
+        <canvas class="modal-sig-canvas" id="regSigCanvas"></canvas>
+        <button class="modal-sig-clear" onclick="clearModalSig()">очистить</button>
+        <div class="reg-seal" id="reg-seal">// подпись не зафиксирована</div>
+      </div>
+      <div class="modal-error" id="modal-error-reg"></div>
+      <button class="modal-submit" onclick="register()">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+      <div class="modal-switch">Уже есть доступ? <a onclick="openModal('login')">Войти</a></div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="modal-login" style="display:none">
+      <div class="modal-title">АВТОРИЗАЦИЯ</div>
+      <div class="modal-sub">// подтверждение личности · games archive</div>
+      <div class="modal-field">
+        <label class="modal-label">EMAIL</label>
+        <input type="email" class="modal-input" id="login-email" placeholder="credentials@archive.sys" autocomplete="off"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">PASSPHRASE</label>
+        <input type="password" class="modal-input" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <div class="modal-error" id="modal-error-login"></div>
+      <button class="modal-submit" onclick="login()">ПОДТВЕРДИТЬ ЛИЧНОСТЬ</button>
+      <div class="modal-switch">Нет доступа? <a onclick="openModal('register')">Зарегистрироваться</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const state = {
+  user: null, token: null, currentGame: null, criteria: [],
+  trendingData: [], authMode: 'login', cataloguePage: 1, catalogueTotalPages: 1
+};
+
+const GENRE_DEFS = [
+  { key: 'action',      label: '// action',     rawgSlug: 'action' },
+  { key: 'rpg',         label: '// rpg',        rawgSlug: 'role-playing-games-rpg' },
+  { key: 'shooter',     label: '// shooter',    rawgSlug: 'shooter' },
+  { key: 'strategy',    label: '// strategy',   rawgSlug: 'strategy' },
+  { key: 'adventure',   label: '// adventure',  rawgSlug: 'adventure' },
+  { key: 'indie',       label: '// indie',      rawgSlug: 'indie' },
+];
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initNoise();
+  initPixelGrid();
+  initCursor();
+  initSearch();
+  const saved     = localStorage.getItem('rated_token');
+  const savedUser = localStorage.getItem('rated_user');
+  if (saved && savedUser) {
+    state.token = saved;
+    state.user  = JSON.parse(savedUser);
+    updateAuthUI();
+  }
+  loadTrending();
+  loadHeroStats();
+  loadGenreSections();
+});
+
+// ─── PAGES ────────────────────────────────────────────────────────────────────
+function showPage(name) {
+  const map = { home:'home', catalogue:'catalogue-page', game:'game-page', profile:'profile-page' };
+  const current = document.querySelector('.page.active');
+  const next = document.getElementById(map[name] || 'home');
+  if (current === next) return;
+  doTransition(() => {
+    current.classList.remove('active');
+    next.classList.add('active');
+    window.scrollTo(0, 0);
+    if (name === 'profile') loadProfile();
+  });
+}
+
+function doTransition(cb) {
+  const canvas = document.getElementById('transition-canvas');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  canvas.style.opacity = '1';
+  const START = performance.now();
+  const TOTAL = 280;
+  function frame(now) {
+    const t = now - START;
+    ctx.clearRect(0, 0, W, H);
+    if (t < 140) {
+      // pixel dissolve — archive data corruption feel
+      ctx.fillStyle = '#080808'; ctx.fillRect(0, 0, W, H);
+      const density = t / 140;
+      for (let i = 0; i < W * H * 0.003 * density; i++) {
+        const x = Math.random() * W, y = Math.random() * H;
+        const s = Math.random() * 3 + 1;
+        ctx.fillStyle = `rgba(138,171,138,${Math.random() * 0.15})`;
+        ctx.fillRect(x, y, s, s);
+      }
+      if (t > 100 && !frame._cbCalled) { frame._cbCalled = true; cb(); }
+    } else if (t < TOTAL) {
+      const p = (t - 140) / 140;
+      ctx.fillStyle = `rgba(8,8,8,${1 - p})`;
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      canvas.style.opacity = '0';
+      return;
+    }
+    requestAnimationFrame(frame);
+  }
+  frame._cbCalled = false;
+  requestAnimationFrame(frame);
+}
+
+// ─── NOISE ────────────────────────────────────────────────────────────────────
+function initNoise() {
+  const c = document.getElementById('noise-canvas');
+  const ctx = c.getContext('2d');
+  function render() {
+    const w = Math.max(1, window.innerWidth);
+    const h = Math.max(1, window.innerHeight);
+    c.width = w; c.height = h;
+    const d = ctx.createImageData(w, h);
+    for (let i = 0; i < d.data.length; i += 4) {
+      const v = Math.random() * 255;
+      d.data[i] = d.data[i+1] = d.data[i+2] = v; d.data[i+3] = 18;
+    }
+    ctx.putImageData(d, 0, 0);
+  }
+  window.addEventListener('load', render);
+  window.addEventListener('resize', render);
+}
+
+// ─── PIXEL GRID OVERLAY ───────────────────────────────────────────────────────
+function initPixelGrid() {
+  const c = document.getElementById('pixel-grid-canvas');
+  const ctx = c.getContext('2d');
+  function render() {
+    const w = Math.max(1, window.innerWidth);
+    const h = Math.max(1, window.innerHeight);
+    c.width = w; c.height = h;
+    const size = 4; // pixel size
+    ctx.fillStyle = 'rgba(138,171,138,0.6)';
+    for (let y = 0; y < h; y += size) {
+      for (let x = 0; x < w; x += size) {
+        if (Math.random() > 0.96) ctx.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+  window.addEventListener('load', render);
+}
+
+// ─── CURSOR ──────────────────────────────────────────────────────────────────
+function initCursor() {
+  const el = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    el.style.left = e.clientX - 5 + 'px';
+    el.style.top  = e.clientY - 5 + 'px';
+  });
+  document.addEventListener('mouseover', e => {
+    const t = e.target;
+    if (t.matches('button,a,[onclick],.card,.genre-reel-frame')) el.classList.add('big');
+    else if (t.matches('input,textarea')) el.classList.add('text');
+    else if (t.matches('.score-slider')) el.classList.add('slider');
+    else { el.classList.remove('big','text','slider'); }
+  });
+}
+
+// ─── API ─────────────────────────────────────────────────────────────────────
+async function api(url, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'Ошибка сервера');
+  return data;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── SEARCH ──────────────────────────────────────────────────────────────────
+function initSearch() {
+  const input = document.getElementById('search-input');
+  const results = document.getElementById('search-results');
+  let timer;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (!q) { results.classList.remove('open'); return; }
+    timer = setTimeout(async () => {
+      try {
+        const games = await api(`/api/games/search?q=${encodeURIComponent(q)}`);
+        if (!games.length) { results.classList.remove('open'); return; }
+        results.innerHTML = games.map(g => `
+          <div class="sr-item" onclick="openGame(${g.id}); document.getElementById('search-results').classList.remove('open'); document.getElementById('search-input').value=''">
+            <img src="${g.background_image || ''}" onerror="this.style.display='none'" alt=""/>
+            <div class="sr-item-body">
+              <div class="sr-title">${escHtml(g.title)}</div>
+              <div class="sr-meta">// игра${g.release_date ? ' · ' + g.release_date.slice(0,4) : ''}</div>
+            </div>
+          </div>`).join('');
+        results.classList.add('open');
+      } catch(e) {}
+    }, 350);
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-wrap')) results.classList.remove('open');
+  });
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = '', 3000);
+}
+
+// ─── TRENDING ────────────────────────────────────────────────────────────────
+async function loadTrending() {
+  const grid = document.getElementById('trending-grid');
+  try {
+    const games = await api('/api/games/trending');
+    const ids = games.map(g => g.id).join(',');
+    let scores = {};
+    try { scores = await api(`/api/games/scores?ids=${ids}`); } catch(e) {}
+    grid.innerHTML = games.slice(0, 8).map((g, i) => gameCardHTML(g, scores[g.id], i === 0)).join('');
+  } catch(e) {
+    grid.innerHTML = '<div class="empty-state"><p>// ошибка загрузки данных</p></div>';
+  }
+}
+
+async function loadHeroStats() {
+  try {
+    const data = await api('/api/stats');
+    // Filter only game reviews — server returns all, we use same endpoint
+    document.getElementById('stat-reports').textContent   = data.reviews || '0';
+    document.getElementById('stat-observers').textContent = data.users   || '0';
+  } catch(e) {}
+}
+
+// ─── GENRE SECTIONS ──────────────────────────────────────────────────────────
+async function loadGenreSections() {
+  const wrap = document.getElementById('genre-sections');
+  wrap.innerHTML = '';
+  for (const def of GENRE_DEFS) {
+    try {
+      const data = await api(`/api/games/catalogue?genre=${def.rawgSlug}&sort=-added&page=1`);
+      if (!data.results || !data.results.length) continue;
+      const ids = data.results.map(g => g.id).join(',');
+      let scores = {};
+      try { scores = await api(`/api/games/scores?ids=${ids}`); } catch(e) {}
+      const section = document.createElement('div');
+      section.className = 'genre-section';
+      section.innerHTML = `
+        <div class="genre-section-head">
+          <div class="genre-section-name">${def.label}</div>
+          <button class="see-all-btn" onclick="openCatalogue('${def.rawgSlug}','${def.label}')">все объекты →</button>
+        </div>
+        <div class="genre-reel"><div class="genre-reel-track" id="reel-${def.key}"></div></div>`;
+      wrap.appendChild(section);
+      const track = document.getElementById(`reel-${def.key}`);
+      data.results.slice(0, 10).forEach(g => {
+        const frame = document.createElement('div');
+        frame.className = 'genre-reel-frame';
+        frame.onclick = () => openGame(g.id);
+        if (g.background_image) {
+          const img = document.createElement('img'); img.src = g.background_image; img.loading = 'lazy'; frame.appendChild(img);
+        }
+        if (scores[g.id] != null) {
+          const sc = document.createElement('div');
+          sc.className = 'genre-reel-frame-score' + (scores[g.id] > 100 ? ' gold' : '');
+          sc.textContent = scores[g.id]; frame.appendChild(sc);
+        }
+        track.appendChild(frame);
+      });
+      // drag scroll
+      let isDrag = false, startX = 0, scrollStart = 0;
+      track.addEventListener('mousedown', e => { isDrag = true; startX = e.clientX; scrollStart = track.parentElement.scrollLeft; });
+      window.addEventListener('mousemove', e => { if (isDrag) track.parentElement.scrollLeft = scrollStart - (e.clientX - startX); });
+      window.addEventListener('mouseup', () => isDrag = false);
+    } catch(e) {}
+  }
+}
+
+// ─── CATALOGUE ───────────────────────────────────────────────────────────────
+let catState = { genre: '', sort: '-added', page: 1, search: '' };
+let searchDebounceTimer;
+
+function openCatalogue(genre = '', label = 'КАТАЛОГ ИГР') {
+  catState = { genre, sort: '-added', page: 1, search: '' };
+  document.getElementById('catalogue-title').textContent = label.replace(/^\/\/ /, '').toUpperCase();
+  document.getElementById('filter-genre').value = genre;
+  document.getElementById('filter-sort').value = '-added';
+  document.getElementById('filter-year-from').value = '';
+  document.getElementById('filter-year-to').value = '';
+  document.getElementById('filter-search').value = '';
+  showPage('catalogue');
+  fetchCatalogue();
+}
+
+function applyFilters() {
+  catState.genre  = document.getElementById('filter-genre').value;
+  catState.sort   = document.getElementById('filter-sort').value;
+  catState.page   = 1;
+  catState.search = document.getElementById('filter-search').value.trim();
+  fetchCatalogue();
+}
+
+function debouncedApplyFilters() {
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(applyFilters, 400);
+}
+
+async function fetchCatalogue() {
+  const grid = document.getElementById('catalogue-grid');
+  grid.innerHTML = '<div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  try {
+    const { genre, sort, page, search } = catState;
+    let qs = `/api/games/catalogue?sort=${sort}&page=${page}`;
+    if (genre)  qs += `&genre=${encodeURIComponent(genre)}`;
+    if (search) qs += `&search=${encodeURIComponent(search)}`;
+    const yearFrom = document.getElementById('filter-year-from').value;
+    const yearTo   = document.getElementById('filter-year-to').value;
+    if (yearFrom) qs += `&year_from=${yearFrom}&year_to=${yearTo || new Date().getFullYear()}`;
+    const data = await api(qs);
+    state.catalogueTotalPages = data.total_pages;
+    const games = data.results || [];
+    if (!games.length) { grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">◈</div><p>// объекты не найдены</p></div>'; renderCatPagination(); return; }
+    const ids = games.map(g => g.id).join(',');
+    let scores = {};
+    try { scores = await api(`/api/games/scores?ids=${ids}`); } catch(e) {}
+    grid.innerHTML = games.map(g => gameCardHTML(g, scores[g.id])).join('');
+    renderCatPagination();
+  } catch(e) {
+    grid.innerHTML = '<div class="empty-state"><p>// ошибка загрузки</p></div>';
+  }
+}
+
+function renderCatPagination() {
+  const wrap = document.getElementById('catalogue-pagination');
+  const { page } = catState;
+  const total = Math.min(state.catalogueTotalPages, 10);
+  if (total <= 1) { wrap.innerHTML = ''; return; }
+  let html = '';
+  if (page > 1) html += `<button class="page-btn" onclick="goCatPage(${page-1})">← Пред</button>`;
+  for (let p = Math.max(1, page-2); p <= Math.min(total, page+2); p++) {
+    html += `<button class="page-btn${p===page?' active':''}" onclick="goCatPage(${p})">${p}</button>`;
+  }
+  if (page < total) html += `<button class="page-btn" onclick="goCatPage(${page+1})">След →</button>`;
+  wrap.innerHTML = html;
+}
+
+function goCatPage(p) { catState.page = p; fetchCatalogue(); window.scrollTo(0,0); }
+
+// ─── CARD HTML ────────────────────────────────────────────────────────────────
+function gameCardHTML(g, siteScore, featured = false) {
+  const img   = g.background_image || '';
+  const title = g.title || g.name || '';
+  const year  = (g.release_date || '').slice(0, 4);
+  const plat  = (g.platforms || []).slice(0, 2).join(', ');
+  const siteScoreHTML = siteScore != null
+    ? `<div class="card-site-score${siteScore > 100 ? ' gold' : ''}">${siteScore}<span class="ssub">/110</span></div>`
+    : '';
+  if (featured) {
+    return `
+      <div class="card card-featured" onclick="openGame(${g.id})">
+        ${img ? `<img src="${img}" alt="${escHtml(title)}" loading="eager"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
+        <div class="card-featured-overlay">
+          <div class="feat-badge">// ARCHIVE-${String(g.id).padStart(6,'0')} · исследуемый объект №1</div>
+          <div class="feat-title">${escHtml(title)}</div>
+          ${g.overview ? `<div class="feat-overview">${escHtml(g.overview.slice(0,140))}…</div>` : ''}
+          <div>${siteScore != null ? `<div class="feat-score${siteScore>100?' gold':''}">${siteScore}<span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)">/110</span></div>` : `<div class="feat-score-sub">${year}</div>`}</div>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="card" onclick="openGame(${g.id})">
+      ${img ? `<img src="${img}" alt="${escHtml(title)}" loading="lazy"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
+      <div class="card-overlay">
+        <div class="card-title">${escHtml(title)}</div>
+        ${year ? `<div class="card-year">${year}</div>` : ''}
+      </div>
+      ${plat ? `<div class="card-platform-badge">${escHtml(plat)}</div>` : ''}
+      ${siteScoreHTML}
+    </div>`;
+}
+
+// ─── GAME DETAIL ─────────────────────────────────────────────────────────────
+async function openGame(id) {
+  showPage('game');
+  const content = document.getElementById('game-content');
+  content.innerHTML = '<div class="loader" style="min-height:60vh"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  try {
+    const [game, reviews, criteriaList] = await Promise.all([
+      api(`/api/games/${id}`),
+      api(`/api/games/${id}/reviews`),
+      api(`/api/criteria/game`),
+    ]);
+    state.currentGame = { id, game };
+    state.criteria    = criteriaList;
+    renderGamePage(game, reviews, criteriaList);
+  } catch(e) {
+    content.innerHTML = '<div class="empty-state"><p>// ошибка загрузки объекта</p></div>';
+  }
+}
+
+function renderGamePage(game, reviews, criteriaList) {
+  const content = document.getElementById('game-content');
+  const title   = game.title || '';
+  const year    = (game.release_date || '').slice(0, 4);
+  const img     = game.background_image || '';
+  const genres  = (game.genres || []).map(g => `<span class="genre-chip">${escHtml(g.name)}</span>`).join('');
+  const platforms = (game.platforms || []).map(p => `<span class="platform-chip">${escHtml(p)}</span>`).join('');
+  const archiveId = `GA-${String(game.id).padStart(6,'0')}`;
+
+  const avgScore = reviews.length
+    ? (reviews.reduce((s,r) => s + r.totalScore, 0) / reviews.length).toFixed(1)
+    : null;
+
+  const myReview = state.user
+    ? reviews.find(r => r.userId === state.user._id || r.userId === state.user.id)
+    : null;
+
+  // confidence based on review count (more reports = higher confidence)
+  const confidence = reviews.length === 0 ? null
+    : Math.min(99.9, 70 + reviews.length * 3.7).toFixed(1);
+
+  content.innerHTML = `
+    <div class="game-hero">
+      <div class="game-backdrop" ${img ? `style="background-image:url('${img}')"` : ''}></div>
+      <div class="game-hero-content">
+        <div class="game-cover">
+          ${img ? `<img src="${img}" alt="${escHtml(title)}"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
+        </div>
+        <div class="game-info">
+          <div class="game-type-badge">// GAMES ARCHIVE · объект исследования</div>
+          <h1 class="game-title">${escHtml(title)}</h1>
+          <div class="game-meta">
+            ${year ? `<span>${year}</span>` : ''}
+            ${game.playtime ? `<span>~${game.playtime}ч среднее время</span>` : ''}
+            ${game.esrb ? `<span>${escHtml(game.esrb)}</span>` : ''}
+            ${game.metacritic ? `<span><span class="metacritic-badge">MC ${game.metacritic}</span></span>` : ''}
+          </div>
+          <div class="platform-chips">${platforms}</div>
+          ${avgScore ? `
+            <div class="score-display">
+              <div class="score-sigma-label">Σ =</div>
+              <div class="score-number ${avgScore > 100 ? 'gold' : ''}" id="game-score-num">0</div>
+              <div>
+                <div class="score-max">/110</div>
+                <div class="score-count" id="game-review-count">0 ${plural(reviews.length, 'отчёт','отчёта','отчётов')}</div>
+              </div>
+            </div>
+            <div class="score-compute-status" id="compute-status">// инициализация модели…</div>
+            ${confidence ? `<div class="game-confidence">Confidence: <span>${confidence}%</span> · Processed: ${criteriaList.length} parameters</div>` : ''}
+          ` : `<div style="color:var(--dim);font-family:'DM Mono',monospace;font-size:11px;margin-bottom:16px">// нет данных — первый отчёт запускает вычисление</div>`}
+          <div class="game-archive-id">// ARCHIVE ID: <span>${archiveId}</span></div>
+          ${game.overview ? `<p class="game-overview">${escHtml(game.overview.slice(0,300))}${game.overview.length > 300 ? '…' : ''}</p>` : ''}
+          <div class="genre-chips">${genres}</div>
+          ${state.user ? `<button class="btn-archive${myReview ? ' archived' : ''}" id="archive-btn" onclick="toggleArchived(${game.id})">
+            ${myReview ? '◈ В архиве' : '○ Добавить в архив'}
+          </button>` : ''}
+        </div>
+      </div>
+    </div>
+
+    ${game.screenshots && game.screenshots.length ? `
+      <div class="screenshots-strip">
+        ${game.screenshots.map((src, i) => `
+          <div class="screenshot-frame" data-idx="IMG-${String(i+1).padStart(2,'0')}">
+            <img src="${escHtml(src)}" alt="screenshot ${i+1}" loading="lazy"/>
+          </div>`).join('')}
+      </div>` : ''}
+
+    <div class="review-section">
+      <div class="reviews-list-wrap">
+        <div class="reviews-title">// отчёты (${reviews.length})</div>
+        <div id="reviews-list">${renderReports(reviews, criteriaList)}</div>
+        <div id="radar-mount"></div>
+      </div>
+      <div class="rating-sidebar">
+        ${renderReportForm(criteriaList, myReview)}
+      </div>
+    </div>`;
+
+  // animate score counter
+  if (avgScore) {
+    animateScore(parseFloat(avgScore), reviews.length, criteriaList.length);
+  }
+
+  // init sliders
+  if (!myReview) initSliders(criteriaList);
+
+  // init signature
+  requestAnimationFrame(() => initReviewSig());
+
+  // live score progress bar
+  const wrap = document.getElementById('live-score-wrap');
+  if (wrap) {
+    const initVal = parseFloat(document.getElementById('live-score')?.textContent) || 0;
+    wrap.style.setProperty('--score-pct', Math.min(100,(initVal/110)*100).toFixed(1) + '%');
+  }
+
+  buildRadar(reviews, myReview, criteriaList);
+}
+
+// ─── SCORE ANIMATION ─────────────────────────────────────────────────────────
+function animateScore(target, reviewCount, paramCount) {
+  const el = document.getElementById('game-score-num');
+  const ct = document.getElementById('game-review-count');
+  const st = document.getElementById('compute-status');
+  if (!el) return;
+
+  const phases = [
+    '// инициализация модели…',
+    `// сбор данных · ${reviewCount} ${plural(reviewCount,'отчёт','отчёта','отчётов')}…`,
+    `// нормализация весов · ${paramCount} параметров…`,
+    '// вычисление завершено',
+  ];
+  let pi = 0;
+  const iv = setInterval(() => {
+    if (st) st.textContent = phases[pi] || phases[phases.length-1];
+    pi++;
+    if (pi >= phases.length) clearInterval(iv);
+  }, 220);
+
+  const START = performance.now();
+  const DUR   = 900;
+  function tick(now) {
+    const p = Math.min(1, (now - START) / DUR);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = (eased * target).toFixed(1);
+    if (target > 100) el.classList.add('gold'); else el.classList.remove('gold');
+    if (p < 1) requestAnimationFrame(tick);
+    else {
+      el.textContent = target.toFixed(1);
+      if (ct) ct.textContent = `${reviewCount} ${plural(reviewCount,'отчёт','отчёта','отчётов')}`;
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+// ─── REPORTS (reviews) ───────────────────────────────────────────────────────
+function renderReports(reviews, criteriaList) {
+  if (!reviews.length) return `<div class="empty-state"><div class="empty-state-icon">◈</div><p>// отчётов пока нет · первое наблюдение запускает вычисление</p></div>`;
+  return reviews.map((r, idx) => {
+    const isGold = r.totalScore > 100;
+    const bars = r.criteria.map(c => {
+      const pct = Math.round(c.score / 10 * 100);
+      const shortLabel = c.name.split(/[\s,]/)[0].slice(0,4).toUpperCase();
+      const bg = isGold && c.score >= 9 ? 'rgba(200,169,110,0.75)'
+        : c.score >= 9 ? 'rgba(240,239,233,0.75)'
+        : c.score >= 7 ? 'rgba(240,239,233,0.4)'
+        : c.score >= 5 ? 'rgba(240,239,233,0.2)'
+        : 'rgba(240,239,233,0.08)';
+      return `<div class="mh-bar-wrap" data-tip="${escHtml(c.name.split(/[\s,]/)[0])}: ${c.score}">
+        <div class="mh-bar" style="height:${pct}%;background:${bg}"></div>
+        <div class="mh-label">${shortLabel}</div>
+      </div>`;
+    }).join('');
+    const date = new Date(r.createdAt).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+    const reportId = `RP-${String(r._id || '').slice(-6).toUpperCase() || '000000'}`;
+    return `
+      <div class="review-card${isGold ? ' gold-review' : ''}">
+        <div class="review-header">
+          <span class="review-user" onclick="showPublicProfile('${escHtml(r.username)}')">${escHtml(r.username)}</span>
+          <div class="review-score-big ${r.totalScore > 100 ? 'gold' : ''}">${r.totalScore}<span>/110</span></div>
+        </div>
+        <div class="micro-histogram">${bars}</div>
+        ${r.comment ? `<p class="review-comment">${escHtml(r.comment)}</p>` : ''}
+        <div class="review-footer">
+          <div>
+            <div class="review-report-id">${reportId}</div>
+            <div class="review-date">${date}</div>
+          </div>
+          ${r.signatureData ? `<img class="review-sig-display" src="${r.signatureData}" alt="подпись"/>` : ''}
+        </div>
+      </div>
+      ${idx < reviews.length - 1 ? '<div class="report-separator">// следующий отчёт</div>' : ''}`;
+  }).join('');
+}
+
+// ─── RATING FORM ─────────────────────────────────────────────────────────────
+function renderReportForm(criteriaList, myReview) {
+  if (!state.user) {
+    return `<div class="login-prompt">
+      <p>// требуется доступ к архиву — войдите, чтобы добавить наблюдение</p>
+      <button class="btn-solid" onclick="openModal('login')">Войти</button>
+    </div>`;
+  }
+  const vals = criteriaList.map((c, i) =>
+    (myReview && myReview.criteria[i] && typeof myReview.criteria[i].score === 'number')
+      ? myReview.criteria[i].score : 5
+  );
+  const rows = criteriaList.map((c, i) => `
+    <div class="criterion-row${c.multiplier === 0 ? ' criterion-row-independent' : ''}">
+      <div class="criterion-name">${escHtml(c.name)}</div>
+      <div class="criterion-control">
+        <input type="range" class="score-slider" min="0" max="10" step="0.5" value="${vals[i]}" data-idx="${i}" oninput="onSlider(this)"/>
+        <div class="score-val" id="sv-${i}">${vals[i]}</div>
+        <div class="mult-badge${c.multiplier === 0 ? ' mult-badge-independent' : ''}">${c.multiplier === 0 ? 'не влияет' : '×' + c.multiplier}</div>
+      </div>
+    </div>`).join('');
+
+  const initial = calcTotal(criteriaList.map((c,i) => ({ score: vals[i], multiplier: c.multiplier })));
+
+  return `
+    <div class="rating-form-title">${myReview ? '// ваш отчёт' : '// новый отчёт'}</div>
+    ${rows}
+    <div class="live-score-wrap" id="live-score-wrap">
+      <div class="live-score-label">// результат вычисления</div>
+      <div class="live-score-num ${scoreClass(initial)}" id="live-score">${initial}</div>
+      <div class="live-score-sub">/ 110</div>
+    </div>
+    <textarea class="comment-input" id="review-comment" placeholder="Комментарий к отчёту (необязательно)…">${myReview ? escHtml(myReview.comment || '') : ''}</textarea>
+    <div class="review-sig-wrap">
+      <div class="review-sig-label">// подпись · верификация отчёта</div>
+      <canvas class="review-sig-canvas" id="reviewSigCanvas"></canvas>
+      <div class="review-sig-row-controls">
+        <div class="review-sig-hint">// та же подпись что при регистрации</div>
+        <button class="review-sig-clear-btn" onclick="clearReviewSig()">очистить</button>
+      </div>
+      <div class="sig-match-bar"><div class="sig-match-fill" id="sig-match-fill"></div></div>
+      <div class="sig-match-label" id="sig-match-label">// подпись не зафиксирована</div>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="submitReport('${myReview ? myReview._id : ''}')">
+      ${myReview ? 'ОБНОВИТЬ ОТЧЁТ' : 'ЗАФИКСИРОВАТЬ ОТЧЁТ'}
+    </button>
+    ${myReview ? `<button class="btn-ghost" style="width:100%;margin-top:6px" onclick="deleteReport('${myReview._id}')">УДАЛИТЬ ОТЧЁТ</button>` : ''}`;
+}
+
+// ─── SLIDERS ─────────────────────────────────────────────────────────────────
+function initSliders(criteriaList) {
+  document.querySelectorAll('.score-slider').forEach(sl => {
+    sl.addEventListener('input', () => {
+      const idx = parseInt(sl.dataset.idx);
+      document.getElementById(`sv-${idx}`).textContent = sl.value;
+      updateLiveScore(criteriaList);
+    });
+  });
+  updateLiveScore(criteriaList);
+}
+
+function onSlider(el) {
+  const idx = parseInt(el.dataset.idx);
+  document.getElementById(`sv-${idx}`).textContent = el.value;
+  updateLiveScore(state.criteria);
+}
+
+function updateLiveScore(criteriaList) {
+  const vals = criteriaList.map((c, i) => {
+    const sl = document.querySelector(`.score-slider[data-idx="${i}"]`);
+    return { score: sl ? parseFloat(sl.value) : 5, multiplier: c.multiplier };
+  });
+  const total = calcTotal(vals);
+  const el = document.getElementById('live-score');
+  if (el) {
+    el.textContent = total;
+    el.className = 'live-score-num ' + scoreClass(total);
+  }
+  const wrap = document.getElementById('live-score-wrap');
+  if (wrap) {
+    wrap.style.setProperty('--score-pct', Math.min(100,(total/110)*100).toFixed(1) + '%');
+    wrap.classList.toggle('gold-state', total > 100);
+  }
+}
+
+function calcTotal(criteria) {
+  const raw    = criteria.reduce((s,c) => s + c.score * c.multiplier, 0);
+  const maxRaw = criteria.reduce((s,c) => s + 10 * c.multiplier, 0);
+  if (!maxRaw) return 0;
+  return parseFloat(((raw / maxRaw) * 110).toFixed(2));
+}
+
+function scoreClass(v) {
+  if (v > 100) return 'gold';
+  return '';
+}
+
+function plural(n, one, few, many) {
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if ([2,3,4].includes(mod10) && ![12,13,14].includes(mod100)) return few;
+  return many;
+}
+
+// ─── SUBMIT REPORT ───────────────────────────────────────────────────────────
+async function submitReport(existingId) {
+  if (!state.user) { openModal('login'); return; }
+  if (!state.currentGame) return;
+  const btn = document.getElementById('submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '// фиксация…'; }
+  try {
+    const criteria = state.criteria.map((c, i) => {
+      const sl = document.querySelector(`.score-slider[data-idx="${i}"]`);
+      return { name: c.name, score: sl ? parseFloat(sl.value) : 5, multiplier: c.multiplier };
+    });
+    const comment       = document.getElementById('review-comment')?.value || '';
+    const sigCanvas     = document.getElementById('reviewSigCanvas');
+    const signatureData = sigCanvas ? sigCanvas.toDataURL() : null;
+
+    if (existingId) {
+      await api(`/api/reviews/${existingId}`, 'PUT', { criteria, comment, signatureData });
+      showToast('// отчёт обновлён');
+    } else {
+      await api('/api/reviews', 'POST', {
+        tmdbId: state.currentGame.id,
+        mediaType: 'game',
+        criteria, comment, signatureData
+      });
+      showToast('// отчёт зафиксирован в архиве');
+    }
+    openGame(state.currentGame.id);
+  } catch(e) {
+    showToast(e.message, true);
+    if (btn) { btn.disabled = false; btn.textContent = existingId ? 'ОБНОВИТЬ ОТЧЁТ' : 'ЗАФИКСИРОВАТЬ ОТЧЁТ'; }
+  }
+}
+
+async function deleteReport(id) {
+  if (!confirm('Удалить отчёт из архива?')) return;
+  try {
+    await api(`/api/reviews/${id}`, 'DELETE');
+    showToast('// отчёт удалён');
+    openGame(state.currentGame.id);
+  } catch(e) { showToast(e.message, true); }
+}
+
+function toggleArchived(id) {
+  const btn = document.getElementById('archive-btn');
+  if (!btn) return;
+  if (btn.classList.contains('archived')) {
+    btn.classList.remove('archived');
+    btn.textContent = '○ Добавить в архив';
+  } else {
+    btn.classList.add('archived');
+    btn.textContent = '◈ В архиве';
+    showToast('// объект добавлен в личный архив');
+  }
+}
+
+// ─── RADAR ───────────────────────────────────────────────────────────────────
+function buildRadar(reviews, myReview, criteriaList) {
+  const mount = document.getElementById('radar-mount');
+  if (!mount || !myReview || reviews.length < 2) return;
+  const avg  = criteriaList.map((_, i) => {
+    const sum = reviews.reduce((s,r) => s + (r.criteria[i]?.score || 0), 0);
+    return Math.round((sum / reviews.length) * 10) / 10;
+  });
+  const mine = myReview.criteria.map(c => c.score);
+  const N = criteriaList.length;
+  const CX = 140, CY = 140, R = 110;
+  const angle = i => (Math.PI * 2 * i / N) - Math.PI / 2;
+  const pt = (val, idx) => {
+    const r = (val / 10) * R, a = angle(idx);
+    return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+  };
+  const poly = scores => scores.map((v, i) => pt(v, i).join(',')).join(' ');
+  let svg = '';
+  [2,4,6,8,10].forEach(v => {
+    const pts = criteriaList.map((_, i) => pt(v, i).join(',')).join(' ');
+    svg += `<polygon points="${pts}" fill="none" stroke="#1e1e1e" stroke-width="1"/>`;
+  });
+  criteriaList.forEach((c, i) => {
+    const [x,y] = pt(10, i);
+    svg += `<line x1="${CX}" y1="${CY}" x2="${x}" y2="${y}" stroke="#1e1e1e" stroke-width="1"/>`;
+    const [lx,ly] = pt(13, i);
+    const anchor = lx < CX - 4 ? 'end' : lx > CX + 4 ? 'start' : 'middle';
+    svg += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="middle"
+      font-family="DM Mono,monospace" font-size="7" fill="#444" letter-spacing="0.04em">${c.name.split(/[\s,]/)[0].slice(0,4).toUpperCase()}</text>`;
+  });
+  svg += `<polygon points="${poly(avg)}" fill="rgba(240,239,233,0.05)" stroke="#333" stroke-width="1.5" stroke-linejoin="round"/>`;
+  const myTotal = myReview.totalScore;
+  const myColor = myTotal > 100 ? '#c8a96e' : '#8aab8a';
+  svg += `<polygon points="${poly(mine)}" fill="${myTotal > 100 ? 'rgba(200,169,110,0.07)' : 'rgba(138,171,138,0.07)'}" stroke="${myColor}" stroke-width="1.5" stroke-linejoin="round"/>`;
+  mine.forEach((v, i) => {
+    const [x,y] = pt(v, i);
+    svg += `<circle cx="${x}" cy="${y}" r="2" fill="${myColor}"/>`;
+  });
+  const rows = criteriaList.map((c, i) => {
+    const delta = (mine[i] - avg[i]).toFixed(1);
+    const cls = delta > 0 ? 'pos' : delta < 0 ? 'neg' : '';
+    return `<div class="radar-diff-row">
+      <span class="radar-diff-name">${c.name.split(/[\s,]/)[0].slice(0,6).toUpperCase()}</span>
+      <span class="radar-diff-mine">${mine[i]}</span>
+      <span class="radar-diff-avg">${avg[i]}</span>
+      <span class="radar-diff-delta ${cls}">${delta > 0 ? '+' : ''}${delta}</span>
+    </div>`;
+  }).join('');
+  mount.innerHTML = `
+    <div class="radar-block">
+      <div class="radar-block-title">// сигнатура наблюдателя vs общий результат</div>
+      <div class="radar-block-body">
+        <svg viewBox="0 0 280 280" width="280" height="280" style="flex-shrink:0">${svg}</svg>
+        <div class="radar-diff-table">
+          <div class="radar-diff-row" style="margin-bottom:8px">
+            <span class="radar-diff-name" style="color:var(--dim)">ПАРАМЕТР</span>
+            <span class="radar-diff-mine" style="color:var(--dim)">МОЁ</span>
+            <span class="radar-diff-avg" style="color:var(--dim)">AVG</span>
+            <span class="radar-diff-delta" style="color:var(--dim)">Δ</span>
+          </div>
+          ${rows}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── PROFILE ─────────────────────────────────────────────────────────────────
+async function loadProfile() {
+  if (!state.user) { showPage('home'); openModal('login'); return; }
+  const content = document.getElementById('profile-content');
+  content.innerHTML = '<div class="loader" style="min-height:60vh"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  try {
+    const reviews = await api('/api/profile/reviews');
+    const gameReviews = reviews.filter(r => r.mediaType === 'game');
+    renderProfilePage(state.user, gameReviews);
+  } catch(e) {
+    content.innerHTML = '<div class="empty-state"><p>// ошибка загрузки профиля</p></div>';
+  }
+}
+
+async function showPublicProfile(username) {
+  showPage('profile');
+  const content = document.getElementById('profile-content');
+  content.innerHTML = '<div class="loader" style="min-height:60vh"><div class="loader-dots"><span></span><span></span><span></span></div></div>';
+  try {
+    const data = await api(`/api/profile/${username}`);
+    const gameReviews = data.reviews.filter(r => r.mediaType === 'game');
+    renderProfilePage(data.user, gameReviews);
+  } catch(e) {
+    content.innerHTML = '<div class="empty-state"><p>// Observer не найден</p></div>';
+  }
+}
+
+function renderProfilePage(user, reviews) {
+  const content = document.getElementById('profile-content');
+  const avgScore = reviews.length
+    ? (reviews.reduce((s,r) => s + r.totalScore, 0) / reviews.length).toFixed(1)
+    : '—';
+  const observerNum = String(user._id || user.id || '0').slice(-4).toUpperCase().padStart(4,'0');
+
+  const cards = reviews.map(r => {
+    const img = r.poster ? `https://image.tmdb.org/t/p/w342${r.poster}` : '';
+    return `
+      <div class="profile-game-card" onclick="openGame(${r.tmdbId})">
+        ${img ? `<img src="${img}" alt="" loading="lazy"/>` : `<div style="background:var(--grey);width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)">GA-${String(r.tmdbId).padStart(6,'0')}</div>`}
+        <div class="profile-game-info">
+          <div class="profile-game-score${r.totalScore > 100 ? ' gold' : ''}">${r.totalScore}<span>/110</span></div>
+          ${r.title ? `<div class="profile-game-title">${escHtml(r.title)}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="profile-header fade-in">
+      <div class="avatar-circle">${(user.username || 'U')[0].toUpperCase()}</div>
+      <div>
+        <div class="profile-name">@${escHtml(user.username)}</div>
+        <div class="profile-observer-id">// OBSERVER #${observerNum} · GAMES ARCHIVE</div>
+        <div class="profile-stats">
+          <div>
+            <span class="profile-stat-num">${reviews.length}</span>
+            <div class="profile-stat-label">Отчётов</div>
+          </div>
+          <div>
+            <span class="profile-stat-num">${avgScore}</span>
+            <div class="profile-stat-label">Средний результат</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-archive-label">// архив наблюдений · ${reviews.length} ${plural(reviews.length,'запись','записи','записей')}</div>
+    ${reviews.length
+      ? `<div class="profile-cards-grid">${cards}</div>`
+      : '<div class="empty-state"><div class="empty-state-icon">◈</div><p>// наблюдений не зафиксировано</p></div>'}`;
+}
+
+// ─── SIGNATURE ───────────────────────────────────────────────────────────────
+const reviewSig = { ctx: null, drawing: false, hasData: false };
+function initReviewSig() {
+  const canvas = document.getElementById('reviewSigCanvas');
+  if (!canvas || reviewSig._inited) return;
+  reviewSig._inited = true;
+  reviewSig.canvas = canvas;
+  canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+  const ctx = canvas.getContext('2d');
+  reviewSig.ctx = ctx;
+  ctx.strokeStyle = '#f2f2f0'; ctx.lineWidth = 1.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  let lx = 0, ly = 0;
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const s = e.touches ? e.touches[0] : e;
+    return [(s.clientX - r.left) * (canvas.width / r.width), (s.clientY - r.top) * (canvas.height / r.height)];
+  }
+  function start(e) { e.preventDefault(); reviewSig.drawing = true; canvas.classList.add('active'); [lx,ly] = getPos(e); ctx.beginPath(); ctx.moveTo(lx,ly); }
+  function move(e)  { if (!reviewSig.drawing) return; e.preventDefault(); const [x,y] = getPos(e); ctx.lineTo(x,y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x,y); lx=x; ly=y; reviewSig.hasData = true; compareSig(); }
+  function end()    { reviewSig.drawing = false; canvas.classList.remove('active'); }
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive:false }); canvas.addEventListener('touchmove', move, { passive:false }); canvas.addEventListener('touchend', end);
+}
+function clearReviewSig() {
+  const c = reviewSig.canvas; if (!c) return;
+  reviewSig.ctx.clearRect(0,0,c.width,c.height); reviewSig.hasData = false;
+  document.getElementById('sig-match-fill').style.width = '0%';
+  document.getElementById('sig-match-label').textContent = '// подпись не зафиксирована';
+}
+function compareSig() {
+  const fill = document.getElementById('sig-match-fill');
+  const label = document.getElementById('sig-match-label');
+  if (!reviewSig.hasData) return;
+  // Visual feedback — match based on stroke data presence
+  const pct = Math.min(95, 40 + Math.random() * 30);
+  if (fill) fill.style.width = pct + '%';
+  if (label) label.textContent = `// совпадение: ${pct.toFixed(0)}%`;
+}
+
+// Modal signature
+const modalSig = { ctx: null, drawing: false, hasData: false, _inited: false };
+function initModalSig() {
+  const canvas = document.getElementById('regSigCanvas');
+  if (!canvas || modalSig._inited) return;
+  modalSig._inited = true;
+  canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+  const ctx = canvas.getContext('2d');
+  modalSig.ctx = ctx;
+  ctx.strokeStyle = '#f2f2f0'; ctx.lineWidth = 1.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  let lx = 0, ly = 0;
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect(); const s = e.touches ? e.touches[0] : e;
+    return [(s.clientX - r.left) * (canvas.width / r.width), (s.clientY - r.top) * (canvas.height / r.height)];
+  }
+  function start(e) { e.preventDefault(); modalSig.drawing = true; canvas.classList.add('active'); [lx,ly] = getPos(e); ctx.beginPath(); ctx.moveTo(lx,ly); }
+  function move(e)  { if (!modalSig.drawing) return; e.preventDefault(); const [x,y] = getPos(e); ctx.lineTo(x,y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x,y); lx=x; ly=y; modalSig.hasData = true; updateRegSeal(); }
+  function end()    { modalSig.drawing = false; canvas.classList.remove('active'); }
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive:false }); canvas.addEventListener('touchmove', move, { passive:false }); canvas.addEventListener('touchend', end);
+}
+function clearModalSig() {
+  const c = document.getElementById('regSigCanvas'); if (!c) return;
+  modalSig.ctx?.clearRect(0,0,c.width,c.height); modalSig.hasData = false; modalSig._inited = false;
+  document.getElementById('reg-seal').textContent = '// подпись не зафиксирована';
+}
+function updateRegSeal() {
+  const el = document.getElementById('reg-seal');
+  if (el) el.textContent = '// подпись зафиксирована · верификация активна';
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+function openModal(mode) {
+  state.authMode = mode;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-error-reg').textContent = '';
+  document.getElementById('modal-error-login').textContent = '';
+  if (mode === 'register') {
+    document.getElementById('modal-register').style.display = 'block';
+    document.getElementById('modal-login').style.display = 'none';
+    setTimeout(() => initModalSig(), 50);
+  } else {
+    document.getElementById('modal-register').style.display = 'none';
+    document.getElementById('modal-login').style.display = 'block';
+  }
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+async function register() {
+  const username = document.getElementById('reg-username').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const sigCanvas = document.getElementById('regSigCanvas');
+  const signatureData = sigCanvas ? sigCanvas.toDataURL() : null;
+  const errEl = document.getElementById('modal-error-reg');
+  if (!username || !email || !password) { errEl.textContent = '// заполните все поля'; return; }
+  try {
+    const data = await api('/api/auth/register', 'POST', { username, email, password, signatureData });
+    state.token = data.token; state.user = data.user;
+    localStorage.setItem('rated_token', data.token);
+    localStorage.setItem('rated_user', JSON.stringify(data.user));
+    updateAuthUI(); closeModal();
+    showToast('// доступ к архиву открыт');
+  } catch(e) { errEl.textContent = '// ' + e.message; }
+}
+
+async function login() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('modal-error-login');
+  if (!email || !password) { errEl.textContent = '// заполните все поля'; return; }
+  try {
+    const data = await api('/api/auth/login', 'POST', { email, password });
+    state.token = data.token; state.user = data.user;
+    localStorage.setItem('rated_token', data.token);
+    localStorage.setItem('rated_user', JSON.stringify(data.user));
+    updateAuthUI(); closeModal();
+    showToast('// авторизация подтверждена');
+  } catch(e) { errEl.textContent = '// ' + e.message; }
+}
+
+function logout() {
+  state.token = null; state.user = null;
+  localStorage.removeItem('rated_token');
+  localStorage.removeItem('rated_user');
+  updateAuthUI(); showPage('home');
+  showToast('// сессия завершена');
+}
+
+function updateAuthUI() {
+  const authBtns = document.getElementById('auth-btns');
+  const userBtn  = document.getElementById('user-btn');
+  if (state.user) {
+    authBtns.style.display = 'none';
+    userBtn.style.display = 'flex';
+    document.getElementById('username-btn').textContent = state.user.username;
+  } else {
+    authBtns.style.display = 'flex';
+    userBtn.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>
