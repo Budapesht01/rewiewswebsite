@@ -10,439 +10,430 @@
 :root {
   --black: #080808;
   --white: #f2f2f0;
-  --mid:   #333;
-  --dim:   #555;
-  --line:  #1e1e1e;
+  --dim:   #484848;
+  --line:  #1c1c1c;
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html, body {
+html { background:var(--black); }
+body {
   background: var(--black); color: var(--white);
   font-family: 'DM Mono', monospace;
   overflow: hidden; height: 100%;
 }
-::selection { background: var(--white); color: var(--black); }
+::selection { background:var(--white); color:var(--black); }
 
-/* ── NOISE ── */
+/* noise */
 body::after {
   content:''; position:fixed; inset:0; pointer-events:none; z-index:999;
-  opacity:0.035; mix-blend-mode:overlay;
+  opacity:0.032; mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ══════════════════════════════════════════
+/* ══════════════════════
    ENTRANCE
-══════════════════════════════════════════ */
+══════════════════════ */
 #entrance {
   position:fixed; inset:0; z-index:10;
   display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  gap:32px;
+  align-items:center; justify-content:center; gap:30px;
   transition: opacity 1s ease;
 }
 #entrance.leaving { opacity:0; pointer-events:none; }
 
 .e-logo {
   font-family:'Bebas Neue',sans-serif;
-  font-size: clamp(72px, 11vw, 130px);
-  letter-spacing: 0.14em;
+  font-size:clamp(72px,11vw,130px); letter-spacing:0.14em;
   opacity:0; animation: rise 2s ease forwards 0.3s;
 }
 .e-tag {
-  font-size:10px; letter-spacing:0.25em; color:var(--dim);
+  font-size:9px; letter-spacing:0.28em; color:var(--dim);
   opacity:0; animation: rise 2s ease forwards 1.1s;
 }
 .e-btn {
-  margin-top:12px; font-size:10px; letter-spacing:0.35em;
-  color:var(--white); background:none; border:1px solid #2a2a2a;
-  padding:13px 38px; cursor:pointer;
+  margin-top:10px; font-size:9px; letter-spacing:0.38em;
+  color:var(--white); background:none; border:1px solid #222;
+  padding:13px 40px; cursor:pointer;
   opacity:0; animation: rise 2s ease forwards 2s;
   transition: border-color 0.4s, background 0.4s;
 }
-.e-btn:hover { border-color: var(--white); background: rgba(242,242,240,0.03); }
-
+.e-btn:hover { border-color:var(--white); background:rgba(242,242,240,0.03); }
 @keyframes rise {
   from { opacity:0; transform:translateY(10px); }
   to   { opacity:1; transform:translateY(0); }
 }
 
-/* ══════════════════════════════════════════
+/* ══════════════════════
    ACCESS SEQUENCE
-══════════════════════════════════════════ */
+══════════════════════ */
 #access-seq {
   position:fixed; inset:0; z-index:15;
-  display:none; align-items:center; justify-content:center;
-  flex-direction:column; gap:14px;
+  display:none; align-items:flex-start; justify-content:center;
+  flex-direction:column; padding:0 0 0 15vw;
+  gap:6px;
 }
 #access-seq.active { display:flex; }
 .seq-line {
-  font-size:12px; letter-spacing:0.18em; color:#444;
-  width:300px;
-  opacity:0; transform:translateY(5px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  font-size:11px; letter-spacing:0.2em; color:#383838;
+  opacity:0; transform:translateY(4px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
 }
 .seq-line.on { opacity:1; transform:translateY(0); }
-.seq-line.final { color:var(--white); }
+.seq-line.final { color:var(--white); font-size:13px; margin-top:8px; }
 
-/* ══════════════════════════════════════════
-   UNFOLD DOORS
-══════════════════════════════════════════ */
+/* ══════════════════════
+   UNFOLD
+══════════════════════ */
 #unfold {
   position:fixed; inset:0; z-index:20;
   display:flex; pointer-events:none; opacity:0;
 }
 #unfold.go { opacity:1; }
-#unfold.go .door-l { animation: doorL 1.1s cubic-bezier(0.77,0,0.18,1) forwards; }
-#unfold.go .door-r { animation: doorR 1.1s cubic-bezier(0.77,0,0.18,1) forwards; }
-.door-l, .door-r { flex:1; background:var(--black); }
+#unfold.go .door-l { animation:doorL 1.2s cubic-bezier(0.77,0,0.18,1) forwards; }
+#unfold.go .door-r { animation:doorR 1.2s cubic-bezier(0.77,0,0.18,1) forwards; }
+.door-l,.door-r { flex:1; background:var(--black); }
 @keyframes doorL { to { transform:translateX(-100%); } }
 @keyframes doorR { to { transform:translateX(100%); } }
 
-/* ══════════════════════════════════════════
-   HALL
-══════════════════════════════════════════ */
+/* ══════════════════════
+   HALL — scroll-snap container
+══════════════════════ */
 #hall {
-  position:fixed; inset:0; overflow-y:auto; z-index:1;
+  position:fixed; inset:0; z-index:1;
+  overflow-y:scroll;
+  scroll-snap-type: y mandatory;
   opacity:0; visibility:hidden;
 }
 #hall.open {
   opacity:1; visibility:visible;
-  transition: opacity 0.9s ease 0.7s;
+  transition: opacity 1s ease 0.8s;
+}
+/* hide scrollbar */
+#hall::-webkit-scrollbar { display:none; }
+#hall { scrollbar-width:none; }
+
+/* ── SECTIONS — each fills the screen ── */
+.sec {
+  min-height:100vh;
+  scroll-snap-align:start;
+  display:flex; flex-direction:column; justify-content:center;
+  padding: 0 60px;
+  position:relative;
+  /* reveal animation */
+  opacity:0;
+  transition: opacity 0.9s ease;
+}
+.sec.visible { opacity:1; }
+
+/* horizontal offsets — not one flat column */
+.sec-monument  { max-width:none; padding-left:60px; padding-right:60px; }
+.sec-wings     { max-width:960px; padding-left:90px; }
+.sec-acq       { max-width:860px; padding-left:60px; }
+.sec-dossier   { max-width:1060px; padding-left:60px; }
+
+/* scroll hint arrow */
+.scroll-hint {
+  position:absolute; bottom:44px; left:60px;
+  font-size:8px; letter-spacing:0.3em; color:var(--dim);
+  display:flex; align-items:center; gap:12px;
+  opacity:0; transition:opacity 0.6s ease 1.2s;
+}
+.sec.visible .scroll-hint { opacity:1; }
+.scroll-hint::before {
+  content:''; display:block; width:1px; height:28px;
+  background:var(--dim); animation:tickDown 2s ease infinite;
+}
+@keyframes tickDown {
+  0%,100% { transform:scaleY(1); opacity:0.5; }
+  50% { transform:scaleY(1.4); opacity:1; }
 }
 
-.hall-inner {
-  max-width:1060px; margin:0 auto;
-  padding: 88px 40px 160px;
-}
-
-/* ── MONUMENT ─────────────────────────────*/
+/* ── MONUMENT ── */
 .mon-logo {
   font-family:'Bebas Neue',sans-serif;
-  font-size: clamp(110px, 16vw, 200px);
-  letter-spacing: 0.04em; line-height: 0.88;
-  /* intentionally bleeds a little — monumental */
+  font-size:clamp(120px,17vw,210px);
+  letter-spacing:0.04em; line-height:0.88;
+  /* monumental — allowed to be huge */
 }
 .mon-sub {
-  font-size:9px; letter-spacing:0.3em; color:var(--dim);
-  margin-top:28px;
-  padding-left: 4px;     /* subtle offset — not centred */
+  font-size:8px; letter-spacing:0.32em; color:var(--dim);
+  margin-top:36px; /* float below with air */
 }
-/* air shaft — the breathing room */
-.air-xl  { height:120px; }
-.air-lg  { height:80px; }
-.air-md  { height:56px; }
-.air-sm  { height:32px; }
-
 .mon-rule {
   border:none; border-top:1px solid var(--line);
+  margin-top:80px; margin-bottom:52px;
 }
 .mon-stats {
-  display:flex; gap:64px; flex-wrap:wrap;
-  padding-top:0;
+  display:flex; gap:72px; flex-wrap:wrap;
 }
-.mon-stat-num {
+.stat-num {
   font-family:'Bebas Neue',sans-serif;
-  font-size:48px; letter-spacing:0.04em;
-  color:var(--white); display:block; line-height:1;
-  margin-bottom:4px;
+  font-size:52px; letter-spacing:0.04em;
+  display:block; line-height:1; margin-bottom:5px;
 }
-.mon-stat-label {
-  font-size:8px; letter-spacing:0.22em; color:var(--dim);
-  text-transform:uppercase;
+.stat-lbl {
+  font-size:8px; letter-spacing:0.24em; color:var(--dim);
 }
 
-/* ── SECTION RULE (architectural) ─────── */
+/* ── SECTION RULE ── */
 .sec-rule {
-  display:flex; align-items:center; gap:18px;
+  display:flex; align-items:center; gap:20px;
   font-size:8px; letter-spacing:0.3em; color:var(--dim);
+  margin-bottom:40px;
 }
 .sec-rule::after {
   content:''; flex:1; border-top:1px solid var(--line);
 }
 
-/* ── WINGS ────────────────────────────── */
-.wings-list { margin-top:0; }
-
+/* ── WINGS ── */
 .wing {
   display:flex; justify-content:space-between; align-items:flex-start;
-  padding:32px 0; border-bottom:1px solid var(--line);
+  padding:28px 0; border-bottom:1px solid var(--line);
   text-decoration:none; color:inherit;
-  opacity:0; transform:translateY(12px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  /* active gets left accent */
-  border-left: 2px solid transparent;
-  padding-left: 0;
-  margin-left: 0;
+  border-left:2px solid transparent;
 }
 .wing:first-child { border-top:1px solid var(--line); }
-.wing.show { opacity:1; transform:translateY(0); }
-
-/* active wing — distinguished by form, not colour */
 .wing.is-active {
-  border-left-color: var(--white);
-  padding-left: 20px;
-  cursor:pointer;
+  border-left-color:var(--white);
+  padding-left:22px; cursor:pointer;
 }
-.wing.is-locked {
-  cursor:default;
-  opacity:0; /* starts hidden, stays dim when shown */
-}
-.wing.is-locked.show { opacity:0.52; }
+.wing.is-locked { cursor:default; opacity:0.2; }
 
 .wing-name {
   font-family:'Bebas Neue',sans-serif;
-  font-size: clamp(32px, 4.5vw, 52px);
+  font-size:clamp(30px,4.2vw,50px);
   letter-spacing:0.03em; line-height:1;
-  transition: opacity 0.2s;
+  transition:opacity 0.2s;
 }
-.wing.is-active:hover .wing-name { opacity:0.65; }
+.wing.is-active:hover .wing-name { opacity:0.6; }
 .wing-desc {
   font-size:10px; letter-spacing:0.06em; color:var(--dim);
   line-height:1.7; margin-top:10px; max-width:500px;
 }
 .wing-arrow {
   font-size:10px; letter-spacing:0.15em; color:var(--white);
-  margin-top:16px;
+  margin-top:14px; display:inline-block;
   opacity:0; transform:translateX(-8px);
   transition: opacity 0.25s, transform 0.25s;
-  display:inline-block;
 }
 .wing.is-active:hover .wing-arrow { opacity:1; transform:translateX(0); }
-
 .wing-badge {
   font-size:8px; letter-spacing:0.2em; color:var(--dim);
   border:1px solid var(--line); padding:4px 10px;
   flex-shrink:0; margin-left:32px; margin-top:6px;
+  align-self:flex-start;
 }
-.wing.is-active .wing-badge { color:var(--white); border-color:#3a3a3a; }
+.wing.is-active .wing-badge { color:var(--white); border-color:#333; }
 
-/* ── LATEST ACQUISITIONS ─────────────── */
-.acq-list { margin-top:0; }
+/* ── ACQ LIST ── */
 .acq-row {
   display:flex; justify-content:space-between; align-items:baseline;
   padding:13px 0; border-bottom:1px solid var(--line);
   font-size:11px; color:var(--dim);
 }
 .acq-row:first-child { border-top:1px solid var(--line); }
-.acq-id   { color:var(--white); width:110px; flex-shrink:0; letter-spacing:0.05em; }
+.acq-id    { color:var(--white); width:110px; flex-shrink:0; letter-spacing:0.05em; }
 .acq-title { flex:1; color:var(--white); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:300; }
 .acq-meta  { letter-spacing:0.06em; }
 
-/* ── OBSERVER DOSSIER ────────────────── */
+/* ── DOSSIER ── */
 .dossier-grid {
   display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
   background:var(--line); border:1px solid var(--line);
 }
 @media(max-width:680px){ .dossier-grid { grid-template-columns:repeat(2,1fr); } }
-.dossier-cell {
-  background:var(--black); padding:22px 20px;
-}
-.dossier-label { font-size:8px; letter-spacing:0.22em; color:var(--dim); margin-bottom:10px; }
-.dossier-val {
+.dossier-cell { background:var(--black); padding:24px 22px; }
+.dossier-lbl  { font-size:8px; letter-spacing:0.22em; color:var(--dim); margin-bottom:12px; }
+.dossier-val  {
   font-family:'Bebas Neue',sans-serif;
-  font-size:32px; letter-spacing:0.04em; color:var(--white);
+  font-size:34px; letter-spacing:0.04em;
 }
 
-/* ── FOOTER ──────────────────────────── */
-.hall-footer {
-  display:flex; justify-content:space-between; align-items:flex-end;
-  flex-wrap:wrap; gap:24px;
-  padding-top:24px; border-top:1px solid var(--line);
+/* ── FOOTER (inside last section) ── */
+.foot {
+  margin-top:80px;
+  display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px;
+  padding-top:20px; border-top:1px solid var(--line);
 }
-.foot-l { font-size:8px; letter-spacing:0.15em; color:#333; line-height:2.2; }
-.foot-r { font-size:8px; letter-spacing:0.12em; color:#333; text-align:right; line-height:2.2; }
-.foot-r .fval { color:#555; }
+.foot-l,.foot-r { font-size:8px; letter-spacing:0.14em; color:#333; line-height:2.4; }
+.foot-r { text-align:right; }
+.fval { color:#484848; }
 .live-dot {
   display:inline-block; width:4px; height:4px; border-radius:50%;
   background:var(--white); margin-right:6px; vertical-align:middle;
-  animation: pulse 3s ease infinite;
+  animation:pulse 3s ease infinite;
 }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.15} }
-
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.12} }
 </style>
 </head>
 <body>
 
-<!-- ═══ ENTRANCE ═══ -->
+<!-- ══ ENTRANCE ══ -->
 <div id="entrance">
   <div class="e-logo">THE ARCHIVE</div>
   <div class="e-tag">Archive of Human Experience</div>
   <button class="e-btn" id="enter-btn">ENTER</button>
 </div>
 
-<!-- ═══ ACCESS SEQUENCE ═══ -->
+<!-- ══ ACCESS SEQUENCE ══ -->
 <div id="access-seq">
-  <div class="seq-line" id="s1">Unlocking Main Hall...</div>
-  <div class="seq-line" id="s2">Opening Cultural Wing...</div>
-  <div class="seq-line" id="s3">Entering The Archive...</div>
-  <div class="seq-line final" id="s4">Welcome, Observer.</div>
+  <div class="seq-line" id="s1">ARCHIVE CORE ONLINE</div>
+  <div class="seq-line" id="s2">MOUNTING CULTURAL WING</div>
+  <div class="seq-line" id="s3">VERIFYING OBSERVER</div>
+  <div class="seq-line" id="s4">ACCESS LEVEL II CONFIRMED</div>
+  <div class="seq-line final" id="s5">WELCOME</div>
 </div>
 
-<!-- ═══ UNFOLD ═══ -->
+<!-- ══ UNFOLD ══ -->
 <div id="unfold">
   <div class="door-l"></div>
   <div class="door-r"></div>
 </div>
 
-<!-- ═══ HALL ═══ -->
+<!-- ══ HALL ══ -->
 <div id="hall">
-<div class="hall-inner">
 
-  <!-- ── MONUMENT ── -->
-  <div class="mon-logo">THE ARCHIVE</div>
-  <div class="mon-sub">// archive of human experience</div>
+  <!-- SCREEN 1: MONUMENT -->
+  <section class="sec sec-monument" id="screen-monument">
+    <div class="mon-logo">THE ARCHIVE</div>
+    <div class="mon-sub">// archive of human experience</div>
+    <hr class="mon-rule"/>
+    <div class="mon-stats">
+      <div><span class="stat-num">4</span><span class="stat-lbl">Wings</span></div>
+      <div><span class="stat-num">1</span><span class="stat-lbl">Available</span></div>
+      <div><span class="stat-num">3</span><span class="stat-lbl">Unavailable</span></div>
+    </div>
+    <div class="scroll-hint">scroll</div>
+  </section>
 
-  <div class="air-xl"></div>
-
-  <hr class="mon-rule"/>
-
-  <div class="air-lg"></div>
-
-  <div class="mon-stats">
+  <!-- SCREEN 2: WINGS -->
+  <section class="sec sec-wings" id="screen-wings">
+    <div class="sec-rule">WINGS</div>
     <div>
-      <span class="mon-stat-num">4</span>
-      <span class="mon-stat-label">Wings</span>
-    </div>
-    <div>
-      <span class="mon-stat-num">1</span>
-      <span class="mon-stat-label">Available</span>
-    </div>
-    <div>
-      <span class="mon-stat-num">3</span>
-      <span class="mon-stat-label">Unavailable</span>
-    </div>
-  </div>
 
-  <div class="air-xl"></div>
+      <a class="wing is-active" href="cultural-wing.html">
+        <div>
+          <div class="wing-name">Cultural Wing</div>
+          <div class="wing-desc">Cinema, Literature, Music, Games — formal works of culture processed by the system.</div>
+          <div class="wing-arrow">→ Enter Wing</div>
+        </div>
+        <div class="wing-badge">Active</div>
+      </a>
 
-  <!-- ── WINGS ── -->
-  <div class="sec-rule">WINGS</div>
-  <div class="air-sm"></div>
-
-  <div class="wings-list">
-
-    <a class="wing is-active" href="cultural-wing.html">
-      <div>
-        <div class="wing-name">Cultural Wing</div>
-        <div class="wing-desc">Cinema, Literature, Music, Games — formal works of culture processed by the system.</div>
-        <div class="wing-arrow">→ Enter Wing</div>
+      <div class="wing is-locked">
+        <div>
+          <div class="wing-name">Personal Wing</div>
+          <div class="wing-desc">Notes, Memory, Dream Archive — личные записи наблюдателя.</div>
+        </div>
+        <div class="wing-badge">Unavailable</div>
       </div>
-      <div class="wing-badge">Active</div>
-    </a>
 
-    <div class="wing is-locked">
-      <div>
-        <div class="wing-name">Personal Wing</div>
-        <div class="wing-desc">Notes, Memory, Dream Archive — личные записи наблюдателя.</div>
+      <div class="wing is-locked">
+        <div>
+          <div class="wing-name">Collections Wing</div>
+          <div class="wing-desc">Objects, Quotes, Letters — коллекции артефактов.</div>
+        </div>
+        <div class="wing-badge">Unavailable</div>
       </div>
-      <div class="wing-badge">Unavailable</div>
-    </div>
 
-    <div class="wing is-locked">
-      <div>
-        <div class="wing-name">Collections Wing</div>
-        <div class="wing-desc">Objects, Quotes, Letters — коллекции артефактов вне основных архивов.</div>
+      <div class="wing is-locked">
+        <div>
+          <div class="wing-name">Research Wing</div>
+          <div class="wing-desc">Reports, Statistics, Observer Profile — аналитика по всей системе.</div>
+        </div>
+        <div class="wing-badge">Unavailable</div>
       </div>
-      <div class="wing-badge">Unavailable</div>
-    </div>
 
-    <div class="wing is-locked">
-      <div>
-        <div class="wing-name">Research Wing</div>
-        <div class="wing-desc">Reports, Statistics, Observer Profile — сводная аналитика по всей системе.</div>
+    </div>
+    <div class="scroll-hint">scroll</div>
+  </section>
+
+  <!-- SCREEN 3: LATEST ACQUISITIONS -->
+  <section class="sec sec-acq" id="screen-acq">
+    <div class="sec-rule">LATEST ACQUISITIONS</div>
+    <div id="acq-list"></div>
+    <div class="scroll-hint">scroll</div>
+  </section>
+
+  <!-- SCREEN 4: DOSSIER + FOOTER -->
+  <section class="sec sec-dossier" id="screen-dossier">
+    <div class="sec-rule">CURRENT OBSERVER DOSSIER</div>
+    <div class="dossier-grid">
+      <div class="dossier-cell">
+        <div class="dossier-lbl">Observer ID</div>
+        <div class="dossier-val">271</div>
       </div>
-      <div class="wing-badge">Unavailable</div>
+      <div class="dossier-cell">
+        <div class="dossier-lbl">Registered</div>
+        <div class="dossier-val">2026</div>
+      </div>
+      <div class="dossier-cell">
+        <div class="dossier-lbl">Archive Entries</div>
+        <div class="dossier-val">12 481</div>
+      </div>
+      <div class="dossier-cell">
+        <div class="dossier-lbl">Classification</div>
+        <div class="dossier-val">Level II</div>
+      </div>
     </div>
 
-  </div>
-
-  <div class="air-xl"></div>
-
-  <!-- ── LATEST ACQUISITIONS ── -->
-  <div class="sec-rule">LATEST ACQUISITIONS</div>
-  <div class="air-sm"></div>
-
-  <div class="acq-list" id="acq-list"></div>
-
-  <div class="air-xl"></div>
-
-  <!-- ── OBSERVER DOSSIER ── -->
-  <div class="sec-rule">CURRENT OBSERVER DOSSIER</div>
-  <div class="air-sm"></div>
-
-  <div class="dossier-grid">
-    <div class="dossier-cell">
-      <div class="dossier-label">Observer ID</div>
-      <div class="dossier-val">271</div>
+    <div class="foot">
+      <div class="foot-l">
+        THE ARCHIVE<br/>
+        Archive Status: Operational<br/>
+        Cultural Wing: Online
+      </div>
+      <div class="foot-r">
+        <span class="live-dot"></span>Archive is live<br/>
+        Artifacts Stored: <span class="fval">4 281 492</span><br/>
+        Last Entry: <span class="fval">moments ago</span>
+      </div>
     </div>
-    <div class="dossier-cell">
-      <div class="dossier-label">Registered</div>
-      <div class="dossier-val">2026</div>
-    </div>
-    <div class="dossier-cell">
-      <div class="dossier-label">Archive Entries</div>
-      <div class="dossier-val">12 481</div>
-    </div>
-    <div class="dossier-cell">
-      <div class="dossier-label">Classification</div>
-      <div class="dossier-val">Level II</div>
-    </div>
-  </div>
+  </section>
 
-  <div class="air-xl"></div>
-
-  <!-- ── FOOTER ── -->
-  <div class="hall-footer">
-    <div class="foot-l">
-      THE ARCHIVE<br/>
-      Archive Status: Operational<br/>
-      Cultural Wing: Online
-    </div>
-    <div class="foot-r">
-      <span class="live-dot"></span>Archive is live<br/>
-      Artifacts Stored: <span class="fval">4 281 492</span><br/>
-      Last Entry: <span class="fval">moments ago</span>
-    </div>
-  </div>
-
-</div>
-</div>
+</div><!-- /#hall -->
 
 <script>
 const enterBtn = document.getElementById('enter-btn');
-const entrance  = document.getElementById('entrance');
-const seq       = document.getElementById('access-seq');
-const unfold    = document.getElementById('unfold');
-const hall      = document.getElementById('hall');
+const entrance = document.getElementById('entrance');
+const seqEl    = document.getElementById('access-seq');
+const unfold   = document.getElementById('unfold');
+const hall     = document.getElementById('hall');
 
 enterBtn.addEventListener('click', () => {
-  // 1. fade entrance out slowly
   entrance.classList.add('leaving');
 
-  // 2. show access sequence with real pauses between lines
-  const T = 900; // ms per line — slow, deliberate
+  const PACE = 1000; // ms between each seq line — deliberate pauses
+
   setTimeout(() => {
     entrance.style.display = 'none';
-    seq.classList.add('active');
-    ['s1','s2','s3','s4'].forEach((id, i) => {
-      setTimeout(() => document.getElementById(id).classList.add('on'), i * T);
+    seqEl.classList.add('active');
+    ['s1','s2','s3','s4','s5'].forEach((id, i) => {
+      setTimeout(() => document.getElementById(id).classList.add('on'), i * PACE);
     });
-  }, 800);
+  }, 900);
 
-  // 3. pause after "Welcome" — then doors open
-  const seqDone = 800 + T * 4 + 600;
+  // After full sequence + pause → doors open
+  const seqDone = 900 + PACE * 5 + 800;
   setTimeout(() => {
-    seq.classList.remove('active');
+    seqEl.classList.remove('active');
     unfold.classList.add('go');
     hall.classList.add('open');
   }, seqDone);
 
-  // 4. Wings appear one by one — staggered, after Hall fades in
+  // First screen fades in with hall
   setTimeout(() => {
-    document.querySelectorAll('.wing').forEach((w, i) => {
-      setTimeout(() => w.classList.add('show'), i * 320);
-    });
-  }, seqDone + 1100);
+    document.getElementById('screen-monument').classList.add('visible');
+  }, seqDone + 900);
 });
+
+// Intersection Observer — reveal each screen as it enters viewport
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.sec').forEach(s => io.observe(s));
 
 // Latest Acquisitions
 document.getElementById('acq-list').innerHTML = [
@@ -456,6 +447,5 @@ document.getElementById('acq-list').innerHTML = [
   <span class="acq-meta">${r.meta}</span>
 </div>`).join('');
 </script>
-
 </body>
 </html>
