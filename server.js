@@ -728,7 +728,153 @@ app.delete('/api/rooms/:code', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── RAWG API (GAMES) ─────────────────────────────────────────────────────────
+
+const RAWG_BASE = 'https://api.rawg.io/api';
+const RAWG_KEY  = process.env.RAWG_KEY || '';
+
+async function rawg(path, params = {}) {
+  const url = new URL(RAWG_BASE + path);
+  url.searchParams.set('key', RAWG_KEY);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`RAWG ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+// Trending / most-played games this week
+app.get('/api/games/trending', async (req, res) => {
+  try {
+    const data = await rawg('/games', {
+      ordering: '-added',
+      page_size: 20,
+      exclude_additions: true,
+    });
+    res.json(normalizeGames(data.results));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Catalogue with genre/sort/year/search filters
+app.get('/api/games/catalogue', async (req, res) => {
+  try {
+    const { genre, sort = '-added', year_from, year_to, page = 1, search } = req.query;
+    const params = {
+      ordering: sort,
+      page_size: 24,
+      page,
+      exclude_additions: true,
+    };
+    if (genre)     params.genres = genre;
+    if (search)    params.search = search;
+    if (year_from) params.dates = `${year_from}-01-01,${year_to || new Date().getFullYear()}-12-31`;
+    const data = await rawg('/games', params);
+    res.json({ results: normalizeGames(data.results), total_pages: Math.ceil((data.count || 0) / 24) });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Game detail
+app.get('/api/games/:id', async (req, res) => {
+  try {
+    const [detail, screenshots, reviews] = await Promise.all([
+      rawg(`/games/${req.params.id}`),
+      rawg(`/games/${req.params.id}/screenshots`).catch(() => ({ results: [] })),
+      Review.find({ tmdbId: Number(req.params.id), mediaType: 'game' }),
+    ]);
+    const avgScore = reviews.length
+      ? parseFloat((reviews.reduce((s,r) => s + r.totalScore, 0) / reviews.length).toFixed(2))
+      : null;
+    res.json({
+      ...normalizeGame(detail),
+      screenshots: (screenshots.results || []).slice(0, 6).map(s => s.image),
+      ourScore: avgScore,
+      reviewCount: reviews.length,
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Game reviews
+app.get('/api/games/:id/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find({ tmdbId: Number(req.params.id), mediaType: 'game' })
+      .sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Game scores for a batch of IDs
+app.get('/api/games/scores', async (req, res) => {
+  try {
+    const ids = (req.query.ids || '').split(',').map(Number).filter(Boolean);
+    const reviews = await Review.find({ tmdbId: { $in: ids }, mediaType: 'game' });
+    const result = {};
+    ids.forEach(id => {
+      const rr = reviews.filter(r => r.tmdbId === id);
+      result[id] = rr.length
+        ? parseFloat((rr.reduce((s,r) => s + r.totalScore, 0) / rr.length).toFixed(1))
+        : null;
+    });
+    res.json(result);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Game search
+app.get('/api/games/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json([]);
+    const data = await rawg('/games', { search: q, page_size: 8, exclude_additions: true });
+    res.json(normalizeGames(data.results));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Game criteria-avg for compare
+app.get('/api/games/:id/criteria-avg', async (req, res) => {
+  try {
+    const reviews = await Review.find({ tmdbId: Number(req.params.id), mediaType: 'game' });
+    const criteriaList = CRITERIA.game;
+    const criteria = criteriaList.map((c, i) => {
+      const scores = reviews.map(r => r.criteria[i]?.score).filter(v => typeof v === 'number');
+      const avg = scores.length
+        ? parseFloat((scores.reduce((s,v) => s+v, 0) / scores.length).toFixed(2))
+        : null;
+      return { name: c.name, multiplier: c.multiplier, independent: !!c.independent, avg };
+    });
+    const avgTotal = reviews.length
+      ? parseFloat((reviews.reduce((s,r) => s + r.totalScore, 0) / reviews.length).toFixed(2))
+      : null;
+    res.json({ criteria, avgTotal, count: reviews.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Normalize RAWG game → shape similar to TMDB for reuse
+function normalizeGame(g) {
+  const released = g.released || '';
+  return {
+    id:           g.id,
+    title:        g.name,
+    name:         g.name,
+    overview:     g.description_raw || g.description || '',
+    poster_path:  null,  // use background_image instead
+    background_image: g.background_image || null,
+    backdrop_path: null,
+    release_date: released,
+    vote_average: g.rating || 0,
+    genres:       (g.genres || []).map(x => ({ id: x.id, name: x.name })),
+    platforms:    (g.platforms || []).map(p => p.platform?.name).filter(Boolean),
+    developers:   (g.developers || []).map(d => d.name),
+    publishers:   (g.publishers  || []).map(p => p.name),
+    metacritic:   g.metacritic || null,
+    playtime:     g.playtime || null,  // avg hours
+    esrb:         g.esrb_rating?.name || null,
+  };
+}
+function normalizeGames(arr) { return (arr || []).map(normalizeGame); }
+
 // ─── SPA FALLBACK ─────────────────────────────────────────────────────────────
+
+app.get('/game', (req, res) => {
+  res.sendFile(path.join(publicDir, 'game.html'));
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
