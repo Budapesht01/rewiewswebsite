@@ -98,11 +98,11 @@
     font-family:'Bebas Neue',sans-serif;
     font-size: clamp(96px, 14vw, 160px);
     letter-spacing: 0.06em; line-height: 0.9;
-    margin-bottom: 32px;
+    margin-bottom: 56px;
   }
   .hall-monument-sub {
     font-family:'DM Mono',monospace; font-size: 11px; letter-spacing: 0.2em;
-    color: var(--dim); margin-bottom: 56px;
+    color: var(--dim); margin-bottom: 96px;
   }
   .hall-monument-divider { border:none; border-top: 1px solid var(--line); margin-bottom: 36px; }
   .hall-monument-stats {
@@ -227,10 +227,10 @@
 
 <!-- ═══ ACCESS SEQUENCE ═══ -->
 <div id="access-seq">
-  <div class="seq-line" id="seq-1">Initializing Archive...</div>
-  <div class="seq-line" id="seq-2">Loading Wings...</div>
-  <div class="seq-line" id="seq-3">Checking Access...</div>
-  <div class="seq-line granted" id="seq-4">Access Granted.</div>
+  <div class="seq-line" id="seq-1">Unlocking Main Hall...</div>
+  <div class="seq-line" id="seq-2">Opening Cultural Wing...</div>
+  <div class="seq-line" id="seq-3">Entering The Archive...</div>
+  <div class="seq-line granted" id="seq-4">Welcome, Observer.</div>
 </div>
 
 <!-- ═══ UNFOLD ═══ -->
@@ -251,7 +251,7 @@
       <div class="hall-monument-stats">
         <div><span class="stat-num">4</span>Wings</div>
         <div><span class="stat-num">1</span>Available</div>
-        <div><span class="stat-num">3</span>Closed</div>
+        <div><span class="stat-num">3</span>Unavailable</div>
       </div>
     </div>
 
@@ -276,7 +276,7 @@
           <div class="wing-desc">Notes, Memory и Dream Archive — личные записи наблюдателя.</div>
         </div>
         <div class="wing-right">
-          <div class="wing-status">Closed</div>
+          <div class="wing-status">Unavailable</div>
         </div>
       </div>
 
@@ -286,7 +286,7 @@
           <div class="wing-desc">Objects, Quotes, Letters — коллекции артефактов вне основных архивов.</div>
         </div>
         <div class="wing-right">
-          <div class="wing-status">Closed</div>
+          <div class="wing-status">Unavailable</div>
         </div>
       </div>
 
@@ -296,13 +296,17 @@
           <div class="wing-desc">Reports, Statistics, Observer Profile — сводная аналитика по всей системе.</div>
         </div>
         <div class="wing-right">
-          <div class="wing-status">Closed</div>
+          <div class="wing-status">Unavailable</div>
         </div>
       </div>
 
     </div>
 
-    <!-- 3. OBSERVER DOSSIER -->
+    <!-- 4. LATEST ACQUISITIONS -->
+    <div class="acq-title">// LATEST ACQUISITIONS</div>
+    <div class="artifacts-list" id="recent-artifacts"></div>
+
+    <!-- 3. OBSERVER DOSSIER (after artifacts) -->
     <div class="observer-label">// CURRENT OBSERVER DOSSIER</div>
     <div class="observer-dossier">
       <div class="dossier-field">
@@ -322,10 +326,6 @@
         <div class="dossier-field-val">Level II</div>
       </div>
     </div>
-
-    <!-- 4. LATEST ACQUISITIONS -->
-    <div class="acq-title">// LATEST ACQUISITIONS</div>
-    <div class="artifacts-list" id="recent-artifacts"></div>
 
     <!-- 5. FOOTER -->
     <div class="hall-footer">
