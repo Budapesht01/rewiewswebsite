@@ -221,40 +221,81 @@ body {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 2px; margin-top: 4px;
 }
+/* ── CARD — exact cinema system ── */
 .card {
-  aspect-ratio: 3/4; position: relative; overflow: hidden;
-  background: var(--grey); cursor: pointer;
-  transition: transform 0.25s ease;
+  position: relative; overflow: hidden;
+  aspect-ratio: 2/3; cursor: pointer;
+  background: var(--grey);
 }
-.card:hover { transform: scale(1.04); z-index: 3; box-shadow: 0 0 0 1px var(--mid); }
-.card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.card-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(8,8,8,0.92) 0%, transparent 55%);
-  display: flex; flex-direction: column; justify-content: flex-end; padding: 12px;
-  opacity: 0; transition: opacity 0.25s; z-index: 2;
+.card img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.5s;
+  filter: grayscale(100%);
 }
-.card:hover .card-overlay { opacity: 1; }
-.card-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; line-height: 1.4; }
-.card-year  { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); margin-top: 3px; }
-.card-site-score {
-  position: absolute; top: 8px; left: 8px;
-  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
-  background: rgba(8,8,8,0.85); padding: 2px 6px;
-}
-.card-site-score .ssub { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--dim); }
-.card-site-score.gold { color: var(--gold); }
-/* Platforms badge instead of TMDB score */
-.card-platform-badge {
-  position: absolute; bottom: 8px; right: 8px;
-  font-family: 'DM Mono', monospace; font-size: 7px; letter-spacing: 0.08em;
-  color: var(--dim); background: rgba(8,8,8,0.7); padding: 2px 5px;
-}
-/* Pixel-art grain for cards — games have a more digital texture */
+.card:hover img { transform: scale(1.08); filter: grayscale(0%); }
+
+/* border draw on hover */
 .card::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='rgba(0,0,0,0.3)'/%3E%3C/svg%3E");
-  background-size: 4px 4px; opacity: 0.4; mix-blend-mode: multiply; z-index: 1;
+  border: 1px solid transparent;
+  clip-path: polygon(0 0, 0 0, 0 0, 0 0);
+  transition: clip-path 0.35s cubic-bezier(0.4,0,0.2,1), border-color 0.1s;
+}
+.card:hover::after {
+  border-color: rgba(240,239,233,0.35);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 50%);
+  opacity: 0; transition: opacity 0.3s;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 16px 14px;
+}
+.card:hover .card-overlay { opacity: 1; }
+.card-title { font-size: 12px; font-weight: 500; line-height: 1.3; }
+.card-year  { font-size: 10px; color: var(--dim); font-family: 'DM Mono', monospace; margin-top: 3px; }
+
+/* site score — appears on hover */
+.card-site-score {
+  position: absolute; bottom: 42px; left: 10px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+  line-height: 1; color: var(--white);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+  pointer-events: none;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.card:hover .card-site-score { opacity: 1; transform: translateY(0); }
+.card-site-score .ssub { font-family: 'DM Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.5); }
+.card-site-score.gold { color: var(--gold); text-shadow: 0 0 20px rgba(200,169,110,0.5), 0 2px 8px rgba(0,0,0,0.9); }
+
+/* ghost score — faint before hover */
+.card-score-ghost {
+  position: absolute; bottom: 42px; left: 10px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+  line-height: 1; color: rgba(242,242,240,0.1);
+  pointer-events: none; transition: opacity 0.3s;
+}
+.card:hover .card-score-ghost { opacity: 0; }
+
+/* grain overlay on card */
+.card-grain {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none; opacity: 0.14; mix-blend-mode: overlay;
+  transition: opacity 0.5s; z-index: 2;
+}
+.card:hover .card-grain { opacity: 0.04; }
+
+/* platforms badge */
+.card-platform-badge {
+  position: absolute; top: 8px; right: 8px;
+  font-family: 'DM Mono', monospace; font-size: 7px; letter-spacing: 0.08em;
+  color: var(--dim); background: rgba(8,8,8,0.7); padding: 2px 5px;
 }
 .card-featured {
   aspect-ratio: unset; grid-column: span 3;
@@ -290,7 +331,8 @@ body {
   transition: transform 0.2s;
 }
 .genre-reel-frame:hover { transform: scale(1.04); z-index: 2; }
-.genre-reel-frame img { width: 100%; height: 100%; object-fit: cover; }
+.genre-reel-frame img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(80%); transition: filter 0.3s; }
+.genre-reel-frame:hover img { filter: grayscale(0%); }
 .genre-reel-frame-score {
   position: absolute; bottom: 6px; left: 6px;
   font-family: 'Bebas Neue', sans-serif; font-size: 14px;
@@ -1451,7 +1493,8 @@ function gameCardHTML(g, siteScore, featured = false) {
         <div class="card-title">${escHtml(title)}</div>
         ${year ? `<div class="card-year">${year}</div>` : ''}
       </div>
-      ${plat ? `<div class="card-platform-badge">${escHtml(plat)}</div>` : ''}
+      <div class="card-grain"></div>
+      ${siteScore != null ? `<div class="card-score-ghost">${siteScore}</div>` : ''}
       ${siteScoreHTML}
     </div>`;
 }
