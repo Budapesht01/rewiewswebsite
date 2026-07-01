@@ -116,25 +116,32 @@ body::after {
   min-height:100vh;
   scroll-snap-align:start;
   display:flex; flex-direction:column; justify-content:center;
-  padding: 0 60px;
+  align-items:center;        /* center horizontally */
+  padding: 0 40px;
   position:relative;
-  /* reveal animation */
   opacity:0;
   transition: opacity 0.9s ease;
 }
 .sec.visible { opacity:1; }
 
-/* horizontal offsets — not one flat column */
-.sec-monument  { max-width:none; padding-left:60px; padding-right:60px; }
-.sec-wings     { max-width:960px; padding-left:90px; }
-.sec-acq       { max-width:860px; padding-left:60px; }
-.sec-dossier   { max-width:1060px; padding-left:60px; }
+/* inner wrapper — constrains and centers content block */
+.sec-inner {
+  width: 100%;
+  max-width: 860px;          /* consistent reading column */
+}
+
+/* horizontal offsets — removed, all centered now */
+.sec-monument  { }
+.sec-wings     { }
+.sec-acq       { }
+.sec-dossier   { }
 
 /* scroll hint arrow */
 .scroll-hint {
-  position:absolute; bottom:44px; left:60px;
+  position:absolute; bottom:44px; left:50%;
+  transform:translateX(-50%);
   font-size:8px; letter-spacing:0.3em; color:var(--dim);
-  display:flex; align-items:center; gap:12px;
+  display:flex; flex-direction:column; align-items:center; gap:12px;
   opacity:0; transition:opacity 0.6s ease 1.2s;
 }
 .sec.visible .scroll-hint { opacity:1; }
@@ -294,98 +301,100 @@ body::after {
 
   <!-- SCREEN 1: MONUMENT -->
   <section class="sec sec-monument" id="screen-monument">
-    <div class="mon-logo">THE ARCHIVE</div>
-    <div class="mon-sub">// archive of human experience</div>
-    <hr class="mon-rule"/>
-    <div class="mon-stats">
-      <div><span class="stat-num">4</span><span class="stat-lbl">Wings</span></div>
-      <div><span class="stat-num">1</span><span class="stat-lbl">Available</span></div>
-      <div><span class="stat-num">3</span><span class="stat-lbl">Unavailable</span></div>
+    <div class="sec-inner">
+      <div class="mon-logo">THE ARCHIVE</div>
+      <div class="mon-sub">// archive of human experience</div>
+      <hr class="mon-rule"/>
+      <div class="mon-stats">
+        <div><span class="stat-num">4</span><span class="stat-lbl">Wings</span></div>
+        <div><span class="stat-num">1</span><span class="stat-lbl">Available</span></div>
+        <div><span class="stat-num">3</span><span class="stat-lbl">Unavailable</span></div>
+      </div>
     </div>
     <div class="scroll-hint">scroll</div>
   </section>
 
   <!-- SCREEN 2: WINGS -->
   <section class="sec sec-wings" id="screen-wings">
-    <div class="sec-rule">WINGS</div>
-    <div>
-
-      <a class="wing is-active" href="cultural-wing.html">
-        <div>
-          <div class="wing-name">Cultural Wing</div>
-          <div class="wing-desc">Cinema, Literature, Music, Games — formal works of culture processed by the system.</div>
-          <div class="wing-arrow">→ Enter Wing</div>
+    <div class="sec-inner">
+      <div class="sec-rule">WINGS</div>
+      <div>
+        <a class="wing is-active" href="cultural-wing.html">
+          <div>
+            <div class="wing-name">Cultural Wing</div>
+            <div class="wing-desc">Cinema, Literature, Music, Games — formal works of culture processed by the system.</div>
+            <div class="wing-arrow">→ Enter Wing</div>
+          </div>
+          <div class="wing-badge">Active</div>
+        </a>
+        <div class="wing is-locked">
+          <div>
+            <div class="wing-name">Personal Wing</div>
+            <div class="wing-desc">Notes, Memory, Dream Archive — личные записи наблюдателя.</div>
+          </div>
+          <div class="wing-badge">Unavailable</div>
         </div>
-        <div class="wing-badge">Active</div>
-      </a>
-
-      <div class="wing is-locked">
-        <div>
-          <div class="wing-name">Personal Wing</div>
-          <div class="wing-desc">Notes, Memory, Dream Archive — личные записи наблюдателя.</div>
+        <div class="wing is-locked">
+          <div>
+            <div class="wing-name">Collections Wing</div>
+            <div class="wing-desc">Objects, Quotes, Letters — коллекции артефактов.</div>
+          </div>
+          <div class="wing-badge">Unavailable</div>
         </div>
-        <div class="wing-badge">Unavailable</div>
+        <div class="wing is-locked">
+          <div>
+            <div class="wing-name">Research Wing</div>
+            <div class="wing-desc">Reports, Statistics, Observer Profile — аналитика по всей системе.</div>
+          </div>
+          <div class="wing-badge">Unavailable</div>
+        </div>
       </div>
-
-      <div class="wing is-locked">
-        <div>
-          <div class="wing-name">Collections Wing</div>
-          <div class="wing-desc">Objects, Quotes, Letters — коллекции артефактов.</div>
-        </div>
-        <div class="wing-badge">Unavailable</div>
-      </div>
-
-      <div class="wing is-locked">
-        <div>
-          <div class="wing-name">Research Wing</div>
-          <div class="wing-desc">Reports, Statistics, Observer Profile — аналитика по всей системе.</div>
-        </div>
-        <div class="wing-badge">Unavailable</div>
-      </div>
-
     </div>
     <div class="scroll-hint">scroll</div>
   </section>
 
   <!-- SCREEN 3: LATEST ACQUISITIONS -->
   <section class="sec sec-acq" id="screen-acq">
-    <div class="sec-rule">LATEST ACQUISITIONS</div>
-    <div id="acq-list"></div>
+    <div class="sec-inner">
+      <div class="sec-rule">LATEST ACQUISITIONS</div>
+      <div id="acq-list"></div>
+    </div>
     <div class="scroll-hint">scroll</div>
   </section>
 
   <!-- SCREEN 4: DOSSIER + FOOTER -->
   <section class="sec sec-dossier" id="screen-dossier">
-    <div class="sec-rule">CURRENT OBSERVER DOSSIER</div>
-    <div class="dossier-grid">
-      <div class="dossier-cell">
-        <div class="dossier-lbl">Observer ID</div>
-        <div class="dossier-val">271</div>
+    <div class="sec-inner">
+      <div class="sec-rule">CURRENT OBSERVER DOSSIER</div>
+      <div class="dossier-grid">
+        <div class="dossier-cell">
+          <div class="dossier-lbl">Observer ID</div>
+          <div class="dossier-val">271</div>
+        </div>
+        <div class="dossier-cell">
+          <div class="dossier-lbl">Registered</div>
+          <div class="dossier-val">2026</div>
+        </div>
+        <div class="dossier-cell">
+          <div class="dossier-lbl">Archive Entries</div>
+          <div class="dossier-val">12 481</div>
+        </div>
+        <div class="dossier-cell">
+          <div class="dossier-lbl">Classification</div>
+          <div class="dossier-val">Level II</div>
+        </div>
       </div>
-      <div class="dossier-cell">
-        <div class="dossier-lbl">Registered</div>
-        <div class="dossier-val">2026</div>
-      </div>
-      <div class="dossier-cell">
-        <div class="dossier-lbl">Archive Entries</div>
-        <div class="dossier-val">12 481</div>
-      </div>
-      <div class="dossier-cell">
-        <div class="dossier-lbl">Classification</div>
-        <div class="dossier-val">Level II</div>
-      </div>
-    </div>
-
-    <div class="foot">
-      <div class="foot-l">
-        THE ARCHIVE<br/>
-        Archive Status: Operational<br/>
-        Cultural Wing: Online
-      </div>
-      <div class="foot-r">
-        <span class="live-dot"></span>Archive is live<br/>
-        Artifacts Stored: <span class="fval">4 281 492</span><br/>
-        Last Entry: <span class="fval">moments ago</span>
+      <div class="foot">
+        <div class="foot-l">
+          THE ARCHIVE<br/>
+          Archive Status: Operational<br/>
+          Cultural Wing: Online
+        </div>
+        <div class="foot-r">
+          <span class="live-dot"></span>Archive is live<br/>
+          Artifacts Stored: <span class="fval">4 281 492</span><br/>
+          Last Entry: <span class="fval">moments ago</span>
+        </div>
       </div>
     </div>
   </section>
