@@ -594,17 +594,34 @@ app.get('/api/reviews/:type/:id', async (req, res) => {
 // My reviews
 app.get('/api/profile/reviews', auth, async (req, res) => {
   try {
-    const reviews = await Review.find({ userId: req.user.id }).sort({ createdAt: -1 });
-    // enrich with TMDB data
+    const filter = { userId: req.user.id };
+    // ?type=game returns only game reviews; ?type=cinema returns movie+tv
+    if (req.query.type === 'game') {
+      filter.mediaType = 'game';
+    } else if (req.query.type === 'cinema') {
+      filter.mediaType = { $in: ['movie', 'tv'] };
+    }
+    const reviews = await Review.find(filter).sort({ createdAt: -1 });
+    // enrich with TMDB data for cinema, RAWG for games
     const enriched = await Promise.all(reviews.map(async r => {
       try {
-        const data = await tmdb(`/${r.mediaType}/${r.tmdbId}`);
-        return {
-          ...r.toObject(),
-          title:    data.title || data.name,
-          poster:   data.poster_path,
-          year:     (data.release_date || data.first_air_date || '').slice(0, 4)
-        };
+        if (r.mediaType === 'game') {
+          const data = await rawg(`/games/${r.tmdbId}`);
+          return {
+            ...r.toObject(),
+            title:            data.name,
+            background_image: data.background_image,
+            year:             (data.released || '').slice(0, 4)
+          };
+        } else {
+          const data = await tmdb(`/${r.mediaType}/${r.tmdbId}`);
+          return {
+            ...r.toObject(),
+            title:  data.title || data.name,
+            poster: data.poster_path,
+            year:   (data.release_date || data.first_air_date || '').slice(0, 4)
+          };
+        }
       } catch {
         return r.toObject();
       }
@@ -667,17 +684,29 @@ app.get('/api/profile/archive', auth, async (req, res) => {
   }
 });
 
-// Public profile
+// Public profile — filtered by archive type
 app.get('/api/profile/:username', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).select('-password -email');
-    if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+    if (!user) return res.status(404).json({ error: 'Observer не найден' });
 
-    const reviews = await Review.find({ userId: user._id }).sort({ createdAt: -1 });
+    const filter = { userId: user._id };
+    if (req.query.type === 'game') {
+      filter.mediaType = 'game';
+    } else if (req.query.type === 'cinema') {
+      filter.mediaType = { $in: ['movie', 'tv'] };
+    }
+
+    const reviews = await Review.find(filter).sort({ createdAt: -1 });
     const enriched = await Promise.all(reviews.map(async r => {
       try {
-        const data = await tmdb(`/${r.mediaType}/${r.tmdbId}`);
-        return { ...r.toObject(), title: data.title || data.name, poster: data.poster_path };
+        if (r.mediaType === 'game') {
+          const data = await rawg(`/games/${r.tmdbId}`);
+          return { ...r.toObject(), title: data.name, background_image: data.background_image, year: (data.released || '').slice(0,4) };
+        } else {
+          const data = await tmdb(`/${r.mediaType}/${r.tmdbId}`);
+          return { ...r.toObject(), title: data.title || data.name, poster: data.poster_path };
+        }
       } catch { return r.toObject(); }
     }));
     res.json({ user, reviews: enriched });
