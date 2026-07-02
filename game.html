@@ -358,7 +358,9 @@ body {
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-rows: repeat(2, auto);
   gap: 2px;
+  overflow: hidden;
 }
 
 /* ── FEATURED FIRST CARD ── */
@@ -4870,54 +4872,60 @@ async function enrichGridWithScores(grid, items, mediaType, featuredFirst = fals
 
 async function loadGenreSections(mediaType) {
   const wrap = document.getElementById('genre-sections');
-  wrap.innerHTML = morseLoaderHTML();
-  try {
-    const data = { genres: GENRE_DEFS.map(g => ({ id: g.key, name: g.label.replace('// ',''), slug: g.genreId, sortKey: g.sortKey })) };
-    wrap.innerHTML = GENRE_DEFS.map(({ key, label, genreId, sortKey }) => {
-      const items = data[key] || [];
-      if (!items.length) return '';
-      const name = label.replace(/^\/\/ /, '');
-      return `
-        <div class="genre-section genre-curtain" data-curtain-key="${key}">
-          <div class="genre-curtain-panels" onclick="event.stopPropagation()">
-            <div class="genre-curtain-left">
-              <div class="vhs-glitch-bar"></div>
-              <div class="vhs-glitch-bar2"></div>
-              <div class="vhs-rec"><div class="vhs-rec-dot"></div>STORAGE ARCHIVE</div>
-              <div class="vhs-timecode">00:00:00:00</div>
-              <div class="genre-curtain-name">ЖАНР</div>
-            </div>
-            <div class="genre-curtain-right">
-              <div class="vhs-glitch-bar"></div>
-              <div class="vhs-glitch-bar2"></div>
-              <div class="vhs-click-hint">[ НАЖМИ ]</div>
-              <div class="genre-curtain-name">${name}</div>
-            </div>
-          </div>
-          <div class="genre-section-header">
-            <div class="genre-section-label">${label}</div>
-            <button class="genre-see-all" onclick="openCatalogue('${mediaType}', '${genreId}', '${sortKey}', '${label.replace(/\/\/ /,'')}')">Все →</button>
-          </div>
-          <div class="genre-reel-outer">
-            <div class="genre-reel-holes" id="reel-top-${key}"></div>
-            <div class="genre-reel-track" id="genre-row-${key}"></div>
-            <div class="genre-reel-holes genre-reel-holes-bot" id="reel-bot-${key}"></div>
-          </div>
-        </div>`;
-    }).join('');
 
-    // build each reel
-    GENRE_DEFS.forEach(({ key }) => {
-      const items = data[key] || [];
-      if (!items.length) return;
+  // Build HTML scaffolding first (empty reels) — structure appears immediately
+  wrap.innerHTML = GENRE_DEFS.map(({ key, label, genreId, sortKey }) => {
+    const name = label.replace(/^\/\/ /, '');
+    return `
+      <div class="genre-section genre-curtain" data-curtain-key="${key}">
+        <div class="genre-curtain-panels" onclick="event.stopPropagation()">
+          <div class="genre-curtain-left">
+            <div class="vhs-glitch-bar"></div>
+            <div class="vhs-glitch-bar2"></div>
+            <div class="vhs-rec"><div class="vhs-rec-dot"></div>STORAGE ARCHIVE</div>
+            <div class="vhs-timecode">00:00:00:00</div>
+            <div class="genre-curtain-name">ЖАНР</div>
+          </div>
+          <div class="genre-curtain-right">
+            <div class="vhs-glitch-bar"></div>
+            <div class="vhs-glitch-bar2"></div>
+            <div class="vhs-click-hint">[ НАЖМИ ]</div>
+            <div class="genre-curtain-name">${name}</div>
+          </div>
+        </div>
+        <div class="genre-section-header">
+          <div class="genre-section-label">${label}</div>
+          <button class="genre-see-all" onclick="openCatalogue(\'${mediaType}\', \'${genreId}\', \'${sortKey}\', \'${label.replace(/\/\/ /,\'\')}\')">&nbsp;Все →</button>
+        </div>
+        <div class="genre-reel-outer">
+          <div class="genre-reel-holes" id="reel-top-${key}"></div>
+          <div class="genre-reel-track" id="genre-row-${key}">
+            <div class="loader" style="padding:32px"><div class="loader-dots"><span></span><span></span><span></span></div></div>
+          </div>
+          <div class="genre-reel-holes genre-reel-holes-bot" id="reel-bot-${key}"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  observeGenreSections();
+  observeGenreCurtains();
+
+  // Fetch each genre from RAWG concurrently — real data
+  await Promise.all(GENRE_DEFS.map(async ({ key, genreId, sortKey }) => {
+    try {
+      let qs = `/api/games/catalogue?sort=${sortKey}&page=1`;
+      if (genreId) qs += `&genre=${genreId}`;
+      const data = await api(qs);
+      const items = (data.results || []).slice(0, 14);
       buildReelTrack(`genre-row-${key}`, `reel-top-${key}`, `reel-bot-${key}`, items, mediaType);
       enrichReelWithScores(`genre-row-${key}`, items, mediaType);
-    });
-    observeGenreSections();
-    observeGenreCurtains();
-  } catch(e) {
-    wrap.innerHTML = '';
-  }
+    } catch(e) {
+      const track = document.getElementById(`genre-row-${key}`);
+      if (track) track.innerHTML = '';
+    }
+  }));
+}
+
 }
 
 // ─── CATALOGUE ────────────────────────────────────────────────────────────────
