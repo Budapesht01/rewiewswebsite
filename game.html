@@ -2969,6 +2969,70 @@ body.vhs-on {
 }
 .disc-spec-row:last-child { border-bottom:none; }
 
+
+/* ── PROFILE DISC SHELF ── */
+.disc-shelf-wrap { padding: 20px 0 32px; }
+.disc-shelf-row  { display: flex; gap: 18px; flex-wrap: wrap; }
+
+.profile-disc {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: pointer;
+  transition: transform 0.25s ease;
+}
+.profile-disc:hover { transform: translateY(-8px); }
+.profile-disc:hover .profile-disc-body { box-shadow: 0 12px 32px rgba(0,0,0,0.8); }
+
+.profile-disc-body {
+  width: 90px; height: 90px; border-radius: 50%; position: relative;
+  background: radial-gradient(circle at 38% 38%, #2a2a2a 0%, #111 50%, #080808 100%);
+  border: 1px solid #2a2a2a;
+  transition: box-shadow 0.25s;
+  overflow: hidden;
+}
+.profile-disc-body::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 160deg,
+    transparent 0deg, rgba(140,180,140,0.06) 20deg,
+    transparent 50deg, rgba(200,170,110,0.04) 90deg,
+    transparent 145deg, rgba(140,180,140,0.06) 185deg,
+    transparent 230deg
+  );
+}
+.profile-disc-ring {
+  position: absolute; inset: 0; margin: auto;
+  border-radius: 50%; border: 1px solid rgba(255,255,255,0.05);
+}
+.r1 { width: 76px; height: 76px; }
+.r2 { width: 54px; height: 54px; }
+.profile-disc-iris {
+  position: absolute; inset: 0; margin: auto;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--black); border: 1px solid #222;
+}
+.profile-disc-hole {
+  position: absolute; inset: 0; margin: auto;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #0d0d0d; border: 1px solid #2a2a2a;
+}
+.profile-disc-label {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 1px;
+}
+.profile-disc-score {
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px;
+  color: rgba(242,242,240,0.8); line-height: 1;
+}
+.profile-disc-score.gold { color: #c8a96e; }
+.profile-disc-year {
+  font-family: 'DM Mono', monospace; font-size: 7px;
+  color: rgba(242,242,240,0.3); letter-spacing: 0.1em;
+}
+.profile-disc-title {
+  font-family: 'DM Mono', monospace; font-size: 7.5px; letter-spacing: 0.06em;
+  color: var(--dim); text-align: center; max-width: 90px;
+  line-height: 1.3;
+}
+
 </style>
 </head>
 <body>
@@ -3275,26 +3339,25 @@ body.vhs-on {
       </div>
       <select class="filter-select" id="filter-genre" onchange="applyFilters()" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
         <option value="">Все жанры</option>
-        <option value="28">Боевик</option>
-        <option value="27">Хоррор</option>
-        <option value="18">Драма</option>
-        <option value="53">Триллер</option>
-        <option value="878">Фантастика</option>
-        <option value="35">Комедия</option>
-        <option value="80">Криминал</option>
-        <option value="16">Анимация</option>
-        <option value="12">Приключения</option>
-        <option value="10749">Романтика</option>
-        <option value="9648">Мистика</option>
-        <option value="14">Фэнтези</option>
+        <option value="action">Экшен</option>
+        <option value="role-playing-games-rpg">RPG</option>
+        <option value="shooter">Шутер</option>
+        <option value="adventure">Приключения</option>
+        <option value="strategy">Стратегия</option>
+        <option value="puzzle">Головоломка</option>
+        <option value="sports">Спорт</option>
+        <option value="indie">Инди</option>
+        <option value="simulation">Симулятор</option>
+        <option value="fighting">Файтинг</option>
+        <option value="platformer">Платформер</option>
       </select>
       <input type="number" class="filter-input" id="filter-year-from" placeholder="С года" min="1900" max="2030" onchange="applyFilters()"/>
       <input type="number" class="filter-input" id="filter-year-to" placeholder="По год" min="1900" max="2030" onchange="applyFilters()"/>
       <select class="filter-select" id="filter-sort" onchange="applyFilters()">
-        <option value="popularity.desc">Популярность</option>
-        <option value="vote_average.desc">Рейтинг TMDB</option>
-        <option value="release_date.desc">Дата (новые)</option>
-        <option value="release_date.asc">Дата (старые)</option>
+        <option value="-added">Популярность</option>
+        <option value="-rating">Рейтинг Metacritic</option>
+        <option value="-released">Дата (новые)</option>
+        <option value="released">Дата (старые)</option>
       </select>
       <div class="view-toggle" id="catalogue-view-toggle">
         <button class="active" data-view="grid" onclick="setCatalogueView('grid')">■ Сетка</button>
@@ -4783,22 +4846,22 @@ function switchTab(type, btn) {
 
 // ─── GENRE SECTIONS ───────────────────────────────────────────────────────────
 const GENRE_DEFS = [
-  { key: 'newReleases', label: '// новинки',    genreId: '',   sortKey: 'release_date.desc' },
-  { key: 'action',      label: '// боевики',    genreId: '28', sortKey: 'popularity.desc' },
-  { key: 'horror',      label: '// хорроры',    genreId: '27', sortKey: 'popularity.desc' },
-  { key: 'drama',       label: '// драма',      genreId: '18', sortKey: 'popularity.desc' },
-  { key: 'thriller',    label: '// триллеры',   genreId: '53', sortKey: 'popularity.desc' },
-  { key: 'scifi',       label: '// фантастика', genreId: '878',sortKey: 'popularity.desc' },
-  { key: 'comedy',      label: '// комедии',    genreId: '35', sortKey: 'popularity.desc' },
-  { key: 'crime',       label: '// криминал',   genreId: '80', sortKey: 'popularity.desc' },
-  { key: 'animation',   label: '// анимация',   genreId: '16', sortKey: 'popularity.desc' }
+  { key: 'newReleases', label: '// новинки',        genreId: '',         sortKey: 'released.desc' },
+  { key: 'action',      label: '// экшен',          genreId: 'action',   sortKey: '-added' },
+  { key: 'rpg',         label: '// ролевые',        genreId: 'role-playing-games-rpg', sortKey: '-added' },
+  { key: 'shooter',     label: '// шутеры',         genreId: 'shooter',  sortKey: '-added' },
+  { key: 'adventure',   label: '// приключения',    genreId: 'adventure',sortKey: '-added' },
+  { key: 'strategy',    label: '// стратегии',      genreId: 'strategy', sortKey: '-added' },
+  { key: 'puzzle',      label: '// головоломки',    genreId: 'puzzle',   sortKey: '-added' },
+  { key: 'sports',      label: '// спорт / гонки',  genreId: 'sports',   sortKey: '-added' },
+  { key: 'indie',       label: '// инди',           genreId: 'indie',    sortKey: '-rating' }
 ];
 
 // Enrich a rendered grid with site scores fetched from API
 async function enrichGridWithScores(grid, items, mediaType, featuredFirst = false) {
   try {
     const ids = items.map(i => i.id).join(',');
-    const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
+    const scores = await api(`/api/games/scores?ids=${ids}`);
     grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, scores[item.id], featuredFirst && idx === 0)).join('');
   } catch(e) { /* fail silently — cards already visible */ }
   // apply stagger after cards are in DOM (works whether api succeeded or not)
@@ -4809,7 +4872,7 @@ async function loadGenreSections(mediaType) {
   const wrap = document.getElementById('genre-sections');
   wrap.innerHTML = morseLoaderHTML();
   try {
-    const data = await api(`/api/media/genres/${mediaType}`);
+    const data = await api(`/api/games/genres`);
     wrap.innerHTML = GENRE_DEFS.map(({ key, label, genreId, sortKey }) => {
       const items = data[key] || [];
       if (!items.length) return '';
@@ -4883,19 +4946,18 @@ function applyFilters() {
 
 // ─── GENRE DIAL (darkroom timer style filter) ──────────────────────────────────
 const GENRE_DIAL_LIST = [
-  { id: '',     name: 'Все жанры'  },
-  { id: '28',   name: 'Боевик'     },
-  { id: '27',   name: 'Хоррор'     },
-  { id: '18',   name: 'Драма'      },
-  { id: '53',   name: 'Триллер'    },
-  { id: '878',  name: 'Фантастика' },
-  { id: '35',   name: 'Комедия'    },
-  { id: '80',   name: 'Криминал'   },
-  { id: '16',   name: 'Анимация'   },
-  { id: '12',   name: 'Приключения'},
-  { id: '10749',name: 'Романтика'  },
-  { id: '9648', name: 'Мистика'    },
-  { id: '14',   name: 'Фэнтези'    }
+  { id: '',                       name: 'Все жанры'   },
+  { id: 'action',                 name: 'Экшен'       },
+  { id: 'role-playing-games-rpg', name: 'RPG'         },
+  { id: 'shooter',                name: 'Шутер'       },
+  { id: 'adventure',              name: 'Приключения' },
+  { id: 'strategy',               name: 'Стратегия'   },
+  { id: 'puzzle',                 name: 'Головоломка' },
+  { id: 'sports',                 name: 'Спорт'       },
+  { id: 'indie',                  name: 'Инди'        },
+  { id: 'simulation',             name: 'Симулятор'   },
+  { id: 'fighting',               name: 'Файтинг'     },
+  { id: 'platformer',             name: 'Платформер'  }
 ];
 let genreDialIdx = 0;
 
@@ -5032,7 +5094,7 @@ function sheetGridHTML(items, mediaType, scores) {
 async function enrichSheetWithScores(grid, items, mediaType) {
   try {
     const ids = items.map(i => i.id).join(',');
-    const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
+    const scores = await api(`/api/games/scores?ids=${ids}`);
     grid.innerHTML = sheetGridHTML(items, mediaType, scores);
   } catch(e) { /* fail silently — frames already visible */ }
 }
@@ -5099,7 +5161,7 @@ async function renderTrending(type) {
   // enrich scores then build reel
   try {
     const ids = items.map(i => i.id).join(',');
-    const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
+    const scores = await api(`/api/games/scores?ids=${ids}`);
     grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, scores[item.id], idx === 0)).join('');
     // attach scores to items for reel
     items.forEach(item => { item._siteScore = scores[item.id] ?? null; });
@@ -6142,9 +6204,8 @@ function renderProfilePage(user, reviews) {
     </div>
     ${reviews.length
       ? `<div class="shelf-section-title">// архив наблюдений — ${reviews.length} ${reviews.length === 1 ? 'запись' : reviews.length < 5 ? 'записи' : 'записей'}</div>
-         <div class="shelf-wrap" id="profile-shelf">
-           <div class="shelf-row" id="profile-shelf-row"></div>
-           <div class="shelf-plank"></div>
+         <div class="disc-shelf-wrap" id="profile-shelf">
+           <div class="disc-shelf-row" id="profile-shelf-row"></div>
          </div>`
       : '<div class="empty-state"><div class="empty-state-icon">◈</div><p>// наблюдений не зафиксировано</p></div>'}`;
 
@@ -6155,7 +6216,7 @@ function renderProfilePage(user, reviews) {
   const settingsContainer = document.getElementById('vhs-settings-profile-anchor');
   if (settingsContainer) VHSTuner.renderSettings(settingsContainer);
 
-  // Build cassette shelf
+  // Build DISC shelf (game discs instead of cassettes)
   if (reviews.length) {
     const row = document.getElementById('profile-shelf-row');
     if (row) {
@@ -6163,29 +6224,23 @@ function renderProfilePage(user, reviews) {
         const isGold = r.totalScore > 100;
         const title = (r.title || '???').toUpperCase();
         const year = r.releaseDate ? r.releaseDate.slice(0,4) : '';
-        const cas = document.createElement('div');
-        cas.className = 'cassette';
-        cas.title = `${title} · ${r.totalScore}`;
-        cas.onclick = () => openGame(r.tmdbId);
-        cas.innerHTML = `
-          <div class="cassette-body">
-            <div class="cassette-top">
-              <div class="cassette-top-dot"></div>
-              <div class="cassette-top-dot"></div>
-              <div class="cassette-top-dot"></div>
+        const disc = document.createElement('div');
+        disc.className = 'profile-disc';
+        disc.title = `${title} · ${r.totalScore}`;
+        disc.onclick = () => openGame(r.tmdbId);
+        disc.innerHTML = `
+          <div class="profile-disc-body">
+            <div class="profile-disc-ring r1"></div>
+            <div class="profile-disc-ring r2"></div>
+            <div class="profile-disc-iris"></div>
+            <div class="profile-disc-hole"></div>
+            <div class="profile-disc-label">
+              <div class="profile-disc-score${isGold?' gold':''}">${r.totalScore}</div>
+              <div class="profile-disc-year">${year}</div>
             </div>
-            <div class="cassette-window">
-              <div class="cassette-reel"></div>
-              <div class="cassette-reel"></div>
-            </div>
-            <div class="cassette-label">
-              <div class="cassette-stripe"></div>
-              <div class="cassette-label-title">${escHtml(title)}</div>
-              <div class="cassette-label-score${isGold?' gold':''}">${r.totalScore}</div>
-              <div class="cassette-label-year">${year}</div>
-            </div>
-          </div>`;
-        row.appendChild(cas);
+          </div>
+          <div class="profile-disc-title">${escHtml(title.slice(0,20))}${title.length>20?'…':''}</div>`;
+        row.appendChild(disc);
       });
     }
   }
@@ -6579,7 +6634,7 @@ function buildReelTrack(trackId, topId, botId, items, mediaType) {
 async function enrichReelWithScores(trackId, items, mediaType) {
   try {
     const ids = items.map(i => i.id).join(',');
-    const scores = await api(`/api/media/scores?ids=${ids}&type=${mediaType}`);
+    const scores = await api(`/api/games/scores?ids=${ids}`);
     const track = document.getElementById(trackId);
     if (!track) return;
     // add score badges to existing frames
