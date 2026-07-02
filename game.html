@@ -4841,7 +4841,7 @@ function switchTab(type, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   state.activeTab = type;
-  renderTrending(type);
+  renderGamesTrending(state.trendingData || []);
 }
 
 // ─── GENRE SECTIONS ───────────────────────────────────────────────────────────
@@ -4872,7 +4872,7 @@ async function loadGenreSections(mediaType) {
   const wrap = document.getElementById('genre-sections');
   wrap.innerHTML = morseLoaderHTML();
   try {
-    const data = await api(`/api/games/genres`);
+    const data = { genres: GENRE_DEFS.map(g => ({ id: g.key, name: g.label.replace('// ',''), slug: g.genreId, sortKey: g.sortKey })) };
     wrap.innerHTML = GENRE_DEFS.map(({ key, label, genreId, sortKey }) => {
       const items = data[key] || [];
       if (!items.length) return '';
@@ -5027,7 +5027,7 @@ async function fetchCatalogue() {
     const { mediaType, genre, sort, page, view } = catalogueState;
     const yearFrom = document.getElementById('filter-year-from').value;
     const yearTo   = document.getElementById('filter-year-to').value;
-    let qs = `/api/media/catalogue/${mediaType}?sort=${sort}&page=${page}`;
+    let qs = `/api/games/catalogue?sort=${sort}&page=${page}`;
     if (genre)   qs += `&genre=${genre}`;
     if (yearFrom) qs += `&year_from=${yearFrom}`;
     if (yearTo)   qs += `&year_to=${yearTo}`;
@@ -5117,58 +5117,15 @@ function cataloguePage(p) {
 // ─── TRENDING ────────────────────────────────────────────────────────────────
 async function loadTrending() {
   try {
-    const data = await api('/api/media/trending');
+    const data = await api('/api/games/trending');
     state.trendingData = data;
-    renderTrending(state.activeTab);
-    updateSplitCompare(data.movies);
+    renderGamesTrending(data);
   } catch (e) {
     document.getElementById('trending-grid').innerHTML = '<div class="empty-state"><p>Ошибка загрузки данных</p></div>';
   }
 }
 
-function updateSplitCompare(movies) {
-  if (!movies || movies.length < 2) return;
-  const a = movies[0], b = movies[1];
-  const getTitle = m => (m.title || m.name || '').toUpperCase().slice(0, 12);
-  const getYear  = m => (m.release_date || m.first_air_date || '').slice(0, 4);
-  const ta = document.getElementById('scp-title-a'); if (ta) ta.textContent = getTitle(a);
-  const tb = document.getElementById('scp-title-b'); if (tb) tb.textContent = getTitle(b);
-  const sa = document.getElementById('scp-sub-a');   if (sa) sa.textContent = `// объект исследования · ${getYear(a)}`;
-  const sb = document.getElementById('scp-sub-b');   if (sb) sb.textContent = `// объект исследования · ${getYear(b)}`;
-  // Scores will be enriched separately; for now show TMDB as placeholder
-  const sca = document.getElementById('scp-score-a');
-  const scb = document.getElementById('scp-score-b');
-  if (sca && a.vote_average) {
-    const v = (a.vote_average * 10).toFixed(0);
-    sca.innerHTML = `${v}<span style="font-size:22px;color:var(--dim)"> </span>`;
-  }
-  if (scb && b.vote_average) {
-    const v = (b.vote_average * 10).toFixed(0);
-    scb.innerHTML = `${v}<span style="font-size:22px;color:var(--dim)"> </span>`;
-  }
-}
 
-async function renderTrending(type) {
-  const items = type === 'movies' ? state.trendingData.movies : state.trendingData.tv;
-  const mediaType = type === 'movies' ? 'movie' : 'tv';
-  const grid = document.getElementById('trending-grid');
-  if (!items || !items.length) {
-    grid.innerHTML = morseLoaderHTML();
-    return;
-  }
-  grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, null, idx === 0)).join('');
-  loadGenreSections(mediaType);
-  // enrich scores then build reel
-  try {
-    const ids = items.map(i => i.id).join(',');
-    const scores = await api(`/api/games/scores?ids=${ids}`);
-    grid.innerHTML = items.map((item, idx) => cardHTML(item, mediaType, scores[item.id], idx === 0)).join('');
-    // attach scores to items for reel
-    items.forEach(item => { item._siteScore = scores[item.id] ?? null; });
-  } catch(e) {}
-  requestAnimationFrame(() => applyCardStagger(grid));
-  buildGenreReel(items, mediaType);
-}
 
 function cardHTML(item, mediaType, siteScore, featured = false) {
   // Games Archive: use RAWG background_image directly
@@ -5180,13 +5137,13 @@ function cardHTML(item, mediaType, siteScore, featured = false) {
   const siteScoreHTML = siteScore != null
     ? `<div class="card-site-score ${siteScore > 100 ? 'gold' : ''}">${siteScore}<span class="ssub">/110</span></div>`
     : '';
-  const typeLabel = 'Игра';
+
 
   if (featured) {
     const siteScoreFeat = siteScore != null
       ? `<div class="feat-score ${siteScore > 100 ? 'gold' : ''}">${siteScore}<span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)">/110</span></div>
-         <div class="feat-score-sub">${score ? `TMDB ${score} ·` : ''} ${year}</div>`
-      : `<div class="feat-score-sub">${typeLabel}${year ? ` · ${year}` : ''}</div>`;
+         <div class="feat-score-sub">${score ? `MC ${score} · ` : ''}${year}</div>`
+      : `<div class="feat-score-sub">// ИГРА${year ? ` · ${year}` : ''}</div>`;
     return `
       <div class="card card-featured" onclick="openGame(${item.id})">
         ${posterLg ? `<img src="${posterLg}" alt="${escHtml(title)}" loading="eager"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
@@ -5388,17 +5345,38 @@ async function renderCompareResults() {
 }
 
 
+async function renderGamesTrending(games) {
+  const grid = document.getElementById('trending-grid');
+  if (!games || !games.length) {
+    grid.innerHTML = '<div class="empty-state"><p>// нет данных</p></div>';
+    return;
+  }
+  grid.innerHTML = games.map((item, idx) => cardHTML(item, 'game', null, idx === 0)).join('');
+  loadGenreSections('game');
+  try {
+    const ids = games.map(i => i.id).join(',');
+    const scores = await api(`/api/games/scores?ids=${ids}`);
+    grid.innerHTML = games.map((item, idx) => cardHTML(item, 'game', scores[item.id], idx === 0)).join('');
+    games.forEach(item => { item._siteScore = scores[item.id] ?? null; });
+  } catch(e) {}
+  requestAnimationFrame(() => applyCardStagger(grid));
+}
+
+function openGame(id) {
+  return openMedia(id, 'game');
+}
+
 async function openMedia(id, type) {
   showPage('media');
   const content = document.getElementById('media-content');
   content.innerHTML = morseLoaderHTML('min-height:60vh');
   try {
-    const [media, reviews, criteriaList, imdbData] = await Promise.all([
-      api(`/api/media/${type}/${id}`),
-      api(`/api/reviews/${type}/${id}`),
-      api(`/api/criteria/${type}`),
-      api(`/api/media/imdb/${type}/${id}`).catch(() => ({ imdbRating: null }))
+    const [media, reviews, criteriaList] = await Promise.all([
+      api(`/api/games/${id}`),
+      api(`/api/games/${id}/reviews`),
+      api(`/api/criteria/game`)
     ]);
+    const imdbData = {};
     state.currentMedia = { id, type, media };
     state.criteria = criteriaList;
     renderMediaPage(media, type, reviews, criteriaList, imdbData);
@@ -5414,7 +5392,7 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
   const backdrop = media.background_image || '';
   const poster   = media.background_image || '';
   const genres   = (media.genres || []).map(g => typeof g === 'string' ? `<span class="genre-chip">${g}</span>` : `<span class="genre-chip">${g.name}</span>`).join('');
-  const typeLabel = 'Игра';
+
 
   const avgScore = reviews.length
     ? (reviews.reduce((s,r) => s + r.totalScore, 0) / reviews.length).toFixed(1)
@@ -5422,34 +5400,22 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
 
   const myReview = state.user ? reviews.find(r => r.userId === state.user._id || r.userId === state.user.id) : null;
 
-  const releaseYear = parseInt((media.release_date || media.first_air_date || '0').slice(0, 4));
+  const releaseYear = 0; // no film vintage for games
 
   content.innerHTML = `
     <div class="media-hero">
       ${backdrop ? `<div class="media-backdrop" style="background-image:url('${backdrop}')"></div>` : ''}
-      ${releaseYear > 0 && releaseYear <= 1999 ? `
-        <canvas class="hero-burn-canvas" id="hero-burn-canvas"></canvas>
-        <canvas class="hero-grain-canvas" id="hero-grain-canvas"></canvas>` : ''}
       <div class="media-hero-content">
-        ${poster ? `<div class="media-poster${releaseYear > 0 && releaseYear <= 1999 ? ' film-vintage' : ''}">
-          <img src="${poster}" alt="${escHtml(title)}"/>
-          ${releaseYear > 0 && releaseYear <= 1999 ? `
-            <div class="poster-perforations">
-              <div class="poster-perf-strip" id="poster-perf-l"></div>
-              <div class="poster-perf-strip" id="poster-perf-r"></div>
-            </div>
-            <canvas class="poster-grain-canvas"   id="poster-grain"></canvas>
-            <canvas class="poster-scratch-canvas" id="poster-scratch"></canvas>` : ''}
-        </div>` : ''}
+        ${poster ? `<div class="media-poster"><img src="${poster}" alt="${escHtml(title)}"/></div>` : ''}
         <div class="media-info">
-          <div class="media-type-badge">// ${typeLabel}</div>
+          <div class="media-type-badge">// GAMES ARCHIVE · объект исследования</div>
           <h1 class="media-title">${escHtml(title)}</h1>
           <div class="media-meta">
             ${year ? `<span>${year}</span>` : ''}
             ${media.playtime ? `<span>${media.playtime} мин</span>` : ''}
             ${media.number_of_seasons ? `<span>${media.number_of_seasons} сезонов</span>` : ''}
-            ${media.vote_average ? `<span>TMDB ${media.vote_average.toFixed(1)}</span>` : ''}
-            ${imdbData.imdbRating ? `<span><span class="imdb-badge"><span class="imdb-badge-logo">IMDb</span>${imdbData.imdbRating}</span></span>` : ''}
+            ${media.metacritic ? `<span>MC ${media.metacritic}</span>` : ''}
+            
           </div>
           ${avgScore ? `
             <div class="score-display">
@@ -5488,19 +5454,8 @@ function renderMediaPage(media, type, reviews, criteriaList, imdbData = {}) {
   // init review signature canvas
   requestAnimationFrame(() => initReviewSig());
 
-  // cinematic backdrop reveal
-  requestAnimationFrame(() => setTimeout(cinematicReveal, 30));
 
-  // film effects for pre-1999
-  if (releaseYear > 0 && releaseYear <= 1999) {
-    startFilmScratch();
-    requestAnimationFrame(() => {
-      initPosterFilmEffect();
-      initHeroFilmEffect();
-    });
-  } else {
-    stopFilmScratch();
-  }
+
 
   // gold burst for high-score reviews
   requestAnimationFrame(() => observeGoldReviews());
@@ -5647,7 +5602,7 @@ function renderRatingForm(type, criteriaList, myReview) {
       <div class="sig-match-label" id="sig-match-label">// подпись не зафиксирована</div>
     </div>
     <button class="submit-btn" id="submit-review-btn" onclick="submitReview('${myReview ? myReview._id : ''}')">
-      ${myReview ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ'}
+      ${myReview ? 'ОБНОВИТЬ ОТЧЁТ' : 'ЗАФИКСИРОВАТЬ ОТЧЁТ'}
     </button>
     ${myReview ? `<button class="btn-ghost" style="width:100%;margin-top:6px" onclick="deleteReview('${myReview._id}')">УДАЛИТЬ ОЦЕНКУ</button>` : ''}`;
 }
@@ -6106,19 +6061,16 @@ async function submitReview(existingId) {
 
     if (existingId) {
       await api(`/api/reviews/${existingId}`, 'PUT', { criteria, comment, signatureData });
-      showToast('Оценка обновлена');
+      showToast('// отчёт обновлён');
       openMedia(id, type);
     } else {
-      await api('/api/reviews', 'POST', { tmdbId: id, mediaType: type, criteria, comment, signatureData });
-      // Cinematic score reveal
-      const totalScore = parseFloat(document.getElementById('live-score')?.textContent) || 0;
-      const mediaTitle = state.currentMedia?.media?.title || state.currentMedia?.media?.name || '';
-      CinemaReveal.play(totalScore, mediaTitle, () => openMedia(id, type));
+      await api('/api/reviews', 'POST', { tmdbId: id, mediaType: 'game', criteria, comment, signatureData });
+      openMedia(id, type);
     }
   } catch(e) {
     showToast(e.message || 'Ошибка', true);
     btn.disabled = false;
-    btn.textContent = existingId ? 'ОБНОВИТЬ ОЦЕНКУ' : 'ОПУБЛИКОВАТЬ ОЦЕНКУ';
+    btn.textContent = existingId ? 'ОБНОВИТЬ ОТЧЁТ' : 'ЗАФИКСИРОВАТЬ ОТЧЁТ';
   }
 }
 
@@ -6126,7 +6078,7 @@ async function deleteReview(id) {
   if (!confirm('Удалить оценку?')) return;
   try {
     await api(`/api/reviews/${id}`, 'DELETE');
-    showToast('Оценка удалена');
+    showToast('// отчёт удалён');
     const { id: mediaId, type } = state.currentMedia;
     openMedia(mediaId, type);
   } catch(e) {
@@ -6140,7 +6092,7 @@ async function loadProfile() {
   const content = document.getElementById('profile-content');
   content.innerHTML = morseLoaderHTML();
   try {
-    const reviews = await api('/api/profile/reviews');
+    const reviews = (await api('/api/profile/reviews?type=game')).filter(r => r.mediaType === 'game');
     renderProfilePage(state.user, reviews);
   } catch(e) {
     content.innerHTML = '<div class="empty-state"><p>Ошибка загрузки профиля</p></div>';
@@ -6152,8 +6104,8 @@ async function showPublicProfile(username) {
   const content = document.getElementById('profile-content');
   content.innerHTML = morseLoaderHTML();
   try {
-    const data = await api(`/api/profile/${username}`);
-    renderProfilePage(data.user, data.reviews);
+    const data = await api(`/api/profile/${username}?type=game`);
+    renderProfilePage(data.user, data.reviews.filter(r => r.mediaType === 'game'));
   } catch(e) {
     content.innerHTML = '<div class="empty-state"><p>Observer не найден</p></div>';
   }
@@ -6166,15 +6118,15 @@ function renderProfilePage(user, reviews) {
     : '—';
 
   const cards = reviews.map(r => {
-    const poster = r.background_image || r.poster || '';
-    const typeLabel = r.mediaType === 'movie' ? 'фильм' : r.mediaType === 'tv' ? 'сериал' : 'игра';
+    const poster = r.background_image || '';
+
     return `
       <div class="profile-review-card" onclick="openGame(${r.tmdbId})">
         ${poster ? `<img src="${poster}" alt="" loading="lazy"/>` : '<div style="background:var(--grey);width:100%;height:100%"></div>'}
         <div class="profile-review-info">
           <div class="profile-review-score">${r.totalScore}<span>/110</span></div>
           ${r.title ? `<div class="profile-review-title">${escHtml(r.title)}</div>` : ''}
-          <div class="profile-review-type">${typeLabel}</div>
+
         </div>
       </div>`;
   }).join('');
@@ -6193,11 +6145,11 @@ function renderProfilePage(user, reviews) {
                 <span class="odo-unit">FT</span>
               </div>
             </div>
-            <div class="profile-stat-label">Оценок</div>
+            <div class="profile-stat-label">Отчётов</div>
           </div>
           <div class="profile-stat">
             <div class="profile-stat-num">${avgScore}</div>
-            <div class="profile-stat-label">Средний балл</div>
+            <div class="profile-stat-label">Средний результат</div>
           </div>
         </div>
       </div>
@@ -6211,10 +6163,6 @@ function renderProfilePage(user, reviews) {
 
   // Animate odometer
   setTimeout(() => profileAnimateOdometer(reviews.length), 300);
-
-  // Inject VHS settings panel into profile
-  const settingsContainer = document.getElementById('vhs-settings-profile-anchor');
-  if (settingsContainer) VHSTuner.renderSettings(settingsContainer);
 
   // Build DISC shelf (game discs instead of cassettes)
   if (reviews.length) {
