@@ -4848,15 +4848,15 @@ function switchTab(type, btn) {
 
 // ─── GENRE SECTIONS ───────────────────────────────────────────────────────────
 const GENRE_DEFS = [
-  { key: 'newReleases', label: '// новинки',        genreId: '',         sortKey: 'released.desc' },
-  { key: 'action',      label: '// экшен',          genreId: 'action',   sortKey: '-added' },
-  { key: 'rpg',         label: '// ролевые',        genreId: 'role-playing-games-rpg', sortKey: '-added' },
-  { key: 'shooter',     label: '// шутеры',         genreId: 'shooter',  sortKey: '-added' },
-  { key: 'adventure',   label: '// приключения',    genreId: 'adventure',sortKey: '-added' },
-  { key: 'strategy',    label: '// стратегии',      genreId: 'strategy', sortKey: '-added' },
-  { key: 'puzzle',      label: '// головоломки',    genreId: 'puzzle',   sortKey: '-added' },
-  { key: 'sports',      label: '// спорт / гонки',  genreId: 'sports',   sortKey: '-added' },
-  { key: 'indie',       label: '// инди',           genreId: 'indie',    sortKey: '-rating' }
+  { key: 'newReleases', label: '// новинки',        genreId: '',                       sortKey: '-released' },
+  { key: 'action',      label: '// экшен',          genreId: 'action',                 sortKey: '-added'    },
+  { key: 'rpg',         label: '// ролевые',        genreId: 'role-playing-games-rpg', sortKey: '-added'    },
+  { key: 'shooter',     label: '// шутеры',         genreId: 'shooter',                sortKey: '-added'    },
+  { key: 'adventure',   label: '// приключения',    genreId: 'adventure',              sortKey: '-added'    },
+  { key: 'strategy',    label: '// стратегии',      genreId: 'strategy',               sortKey: '-added'    },
+  { key: 'puzzle',      label: '// головоломки',    genreId: 'puzzle',                 sortKey: '-added'    },
+  { key: 'sports',      label: '// спорт / гонки',  genreId: 'sports',                 sortKey: '-added'    },
+  { key: 'indie',       label: '// инди',           genreId: 'indie',                  sortKey: '-rating'   }
 ];
 
 // Enrich a rendered grid with site scores fetched from API
@@ -4895,7 +4895,7 @@ async function loadGenreSections(mediaType) {
         </div>
         <div class="genre-section-header">
           <div class="genre-section-label">${label}</div>
-          <button class="genre-see-all" onclick="openCatalogue('${mediaType}', '${genreId}', '${sortKey}', '${label.replace(/\/\/ /, '')}')">&nbsp;Все →</button>
+          <button class="genre-see-all" onclick="openCatalogue('${mediaType}', '${genreId}', '${sortKey}', '${name}')">&nbsp;Все →</button>
         </div>
         <div class="genre-reel-outer">
           <div class="genre-reel-holes" id="reel-top-${key}"></div>
@@ -6556,9 +6556,10 @@ function buildReelTrack(trackId, topId, botId, items, mediaType) {
     const frame = document.createElement('div');
     frame.className = 'genre-reel-frame';
     frame.onclick = () => openGame(item.id);
-    if (item.poster_path) {
+    const imgSrc = item.background_image || (item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : '');
+    if (imgSrc) {
       const img = document.createElement('img');
-      img.src = item.background_image || '';
+      img.src = imgSrc;
       img.loading = 'lazy';
       frame.appendChild(img);
     }
@@ -6627,9 +6628,10 @@ function buildGenreReel(items, mediaType) {
     const frame = document.createElement('div');
     frame.className = 'genre-reel-frame';
     frame.onclick = () => openGame(item.id);
-    if (item.poster_path) {
+    const imgSrc = item.background_image || (item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : '');
+    if (imgSrc) {
       const img = document.createElement('img');
-      img.src = item.background_image || '';
+      img.src = imgSrc;
       img.loading = 'lazy';
       frame.appendChild(img);
     }
